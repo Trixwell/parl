@@ -1,0 +1,17 @@
+<div class="message">
+    <p>qqw</p>
+    <div class="message__input"
+         contenteditable="true"
+         role="textbox"
+         aria-multiline="true"
+         spellcheck="true"
+         (keydown.enter)="enterDown()"
+         placeholder="Ваш текст..."
+
+         #inputText
+    ></div>
+    <ng-content></ng-content>
+    <button mat-mini-fab class="message__remove" (click)="enterDown()" aria-label="Відправити повідомлення">
+        <mat-icon class="message__remove-icon">add</mat-icon>
+    </button>
+</div>

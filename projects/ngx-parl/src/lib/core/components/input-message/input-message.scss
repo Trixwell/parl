@@ -1,0 +1,6 @@
+@use '../../../styles/tokens' as tokens;
+@use '@angular/material' as mat;
+
+.message{
+    background: red;
+}
