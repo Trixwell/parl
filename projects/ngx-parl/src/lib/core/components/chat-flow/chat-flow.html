@@ -1,5 +1,5 @@
 <div class="chat">
-    <div class="chat__flow" id="chatFlow">
+    <div class="chat__flow" #chatFlowRef>
         @for (message of message_list(); track message) {
             <div class="message"
                  [ngClass]="{
@@ -12,9 +12,7 @@
                         ? (message.avatar || './assets/icons/avatar_anonym.svg')
                         : (message.avatar || './assets/icons/avatar_manager.svg')
                     "
-                         width="36"
-                         height="36"
-                         alt="avatar"
+                         width="36" height="36" alt="avatar"
                     />
                 </div>
 

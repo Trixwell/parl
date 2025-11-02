@@ -1,14 +1,14 @@
 import {Component} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {ChatFlow} from '../core/components/chat-flow/chat-flow';
-import {InputMessage} from '../core/components/input-message/input-message';
-import {MatDialogActions, MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
+import { MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
 import {ChatMessage} from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
+import {InputMessage} from '../core/components/input-message/input-message';
 
 @Component({
     selector: 'ngx-parl',
-    imports: [NgOptimizedImage, ChatFlow, InputMessage, MatDialogActions, MatDialogContent, MatDialogTitle, MatProgressSpinner],
+    imports: [NgOptimizedImage, ChatFlow, MatDialogContent, MatDialogTitle, MatProgressSpinner, InputMessage, InputMessage],
     standalone: true,
     templateUrl: './ngx-parl.html',
     styleUrl: './ngx-parl.scss'
@@ -27,6 +27,21 @@ export class NgxParlComponent {
             new ChatMessage(2, '19:31', 'outgoing', 'Anna', 'Доброго дня. Я ваш віртуальний помічник.', null, null),
             new ChatMessage(3, '19:31', 'incoming', 'Bogdan', 'нема інтернету', null, null),
             new ChatMessage(4, '19:32', 'outgoing', 'Anna', 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+            new ChatMessage(5, '19:33', 'incoming', 'Bogdan', 'test', null, null),
+
+
         ]
     }
 

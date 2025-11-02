@@ -5,13 +5,12 @@
     width: 800px;
     height: 600px;
     border-radius: tokens.$radius-large;
-    border: 1px solid red;
+    border: tokens.$border-1 solid red;
 
     &__body {
-        //display: flex;
-        //flex-direction: column;
-        //justify-content: space-between;
-        //height: 100%;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
     }
 
     &__header {
@@ -41,19 +40,34 @@
     &__actions {
         display: flex;
         gap: tokens.$margin-2;
-
     }
 
     &__content {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
 
-    }
-
-    &__footer {
-        border-bottom-left-radius: tokens.$radius-large;
-        border-bottom-right-radius: tokens.$radius-large;
-
-        .modal-chat__button {
-
+        & app-chat-flow {
+            flex: 1 1 auto;
+            min-height: tokens.$space-0;
+            overflow: auto;
+            display: flex;
+            align-items: flex-end;
         }
     }
+
+    &__input {
+        flex: tokens.$space-0 tokens.$space-0 auto;
+        border-bottom-left-radius: tokens.$radius-large;
+        border-bottom-right-radius: tokens.$radius-large;
+    }
+}
+
+:host ::ng-deep .mat-mdc-dialog-content.modal-chat__content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: tokens.$space-0;
+    max-height: none;
+    overflow: scroll;
 }

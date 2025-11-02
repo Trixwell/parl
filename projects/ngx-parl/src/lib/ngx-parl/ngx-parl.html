@@ -21,15 +21,12 @@
 
         <mat-dialog-content class="modal-chat__content">
             <app-chat-flow [message_list]="message_list"></app-chat-flow>
-        </mat-dialog-content>
 
-        <mat-dialog-actions class="modal-chat__footer">
-            <app-input-message class="modal-chat__input"
-                               (input_textChange)="sendMessage($event)">
+            <app-input-message class="modal-chat__input" (input_textChange)="sendMessage($event)">
                 @if (ai_run_in_progress) {
                     <mat-spinner [diameter]="30"></mat-spinner>
                 }
             </app-input-message>
-        </mat-dialog-actions>
+        </mat-dialog-content>
     </div>
 </div>

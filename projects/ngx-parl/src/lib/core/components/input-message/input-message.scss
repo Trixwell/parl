@@ -1,6 +1,78 @@
 @use '../../../styles/tokens' as tokens;
 @use '@angular/material' as mat;
 
-.message{
-    background: red;
+.message {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: tokens.$neutral-50;
+    border-top: tokens.$border-1 solid #E1E7F8;
+    padding: tokens.$space-1 tokens.$space-2;
+    margin-top: tokens.$space-2;
+    gap: tokens.$margin-2;
+    border-bottom-left-radius: tokens.$radius-large;
+    border-bottom-right-radius: tokens.$radius-large;
+
+    --lh: 24px;
+    --px: #{tokens.$space-2};
+    --py: #{tokens.$space-1};
+    --max-rows: tokens.$space-2;
+
+    &__wrap {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        gap: tokens.$margin-3;
+        flex: 1;
+        min-width: tokens.$space-0;
+
+        &:focus-within {
+            border-color: tokens.$neutral-100;
+        }
+    }
+
+    &__input {
+        flex: 1 1 auto;
+        height: 24px;
+        line-height: var(--lh);
+        font: tokens.$font-body-m;
+        outline: none;
+        border: none;
+        background: transparent;
+        color: tokens.$neutral-800;
+        padding: tokens.$margin-2 tokens.$margin-0;
+        overflow-y: auto;
+        resize: none;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        border-radius: tokens.$radius-medium;
+    }
+
+    &__input:empty::before {
+        content: attr(placeholder);
+        color: tokens.$neutral-400;
+        pointer-events: none;
+    }
+
+    &__button {
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+
+    &__icon {
+        &:hover {
+            filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
+        }
+    }
+
+    &__remove:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    &__remove:hover:not(:disabled),
+    &__remove:focus:not(:disabled) {
+        background: tokens.$primary-600;
+    }
 }
