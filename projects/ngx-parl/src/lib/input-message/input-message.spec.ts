@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { InputMessage } from './input-message';
+import { InputMessageComponent } from './input-message';
 
 describe('InputMessage', () => {
-  let component: InputMessage;
-  let fixture: ComponentFixture<InputMessage>;
+  let component: InputMessageComponent;
+  let fixture: ComponentFixture<InputMessageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [InputMessage]
+      imports: [InputMessageComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(InputMessage);
+    fixture = TestBed.createComponent(InputMessageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

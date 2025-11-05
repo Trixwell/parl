@@ -1,0 +1,91 @@
+<!--input-message.component-->
+<section class="message"
+         [class.message--focus]="focused()"
+         [class.message--filled]="hasText()"
+         [class.message--sending]="sending()">
+
+    <div class="message__wrap">
+        <div class="message__wrap--input">
+            <button class="message__button message__button--attach"
+                    type="button"
+                    [attr.aria-label]="'chat.attach' | transloco"
+                    (click)="fileDialog.click()">
+                <mat-icon svgIcon="attach-filled"
+                          aria-hidden="true"
+                          class="message__icon message__icon--attach">
+                </mat-icon>
+            </button>
+
+            <input type="file"
+                   #fileDialog
+                   multiple
+                   accept="image/*,video/*"
+                   class="hidden"
+                   (change)="inputFileChange($event)">
+
+            <div #inputText
+                 class="message__input"
+                 contenteditable="true"
+                 role="textbox"
+                 aria-multiline="true"
+                 spellcheck="true"
+                 [attr.data-placeholder]="'chat.placeholder' | transloco"
+                 (focus)="onFocus()"
+                 (blur)="onBlur()"
+                 (keydown)="onKeyDown($event)"
+                 (input)="onInput()"
+                 (paste)="onPaste()">
+            </div>
+
+            <div #mirror class="message__input-mirror" aria-hidden="true"></div>
+
+            <ng-content></ng-content>
+        </div>
+
+        <button class="message__button message__button--send"
+                type="button"
+                [attr.aria-label]="'chat.attach' | transloco"
+                (click)="enterDown()"
+                [disabled]="!hasText()">
+            <mat-icon svgIcon="send"
+                      aria-hidden="true"
+                      class="message__icon message__icon--send">
+            </mat-icon>
+        </button>
+    </div>
+
+    @if (previews().length) {
+        <div class="message__files">
+            @for (item of previews(); track $index) {
+                <div class="message__file" [attr.data-kind]="item.originalKind">
+                    <button type="button"
+                            class="message__file-remove"
+                            [attr.aria-label]="'chat.delete_file' | transloco"
+                            (click)="removeFile($index, $event)">
+                        <mat-icon svgIcon="remove"
+                                  aria-hidden="true"
+                                  class="message__icon message__icon--file">
+                        </mat-icon>
+                    </button>
+
+                    <div class="message__file-media" (click)="openPreview(item, $index)">
+                        <img [src]="item.src" [alt]="item.name" class="message__file-img"/>
+
+                        @if (item.originalKind === fileType.GIF) {
+                            <span class="message__file-badge message__file-badge--gif">{{ 'chat.gif' | transloco }}</span>
+                        }
+                        @if (item.originalKind === fileType.VIDEO) {
+                            <span class="message__file-badge message__file-badge--video">
+                                <mat-icon>play_arrow</mat-icon>
+                            </span>
+                            @if (item.duration) {
+                                <span class="message__file-duration">{{ formatDuration(item.duration) }}</span>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
