@@ -1,0 +1,34 @@
+<div class="message"
+     [ngClass]="{
+       'message--outgoing': currentMessage().type === messageType.Outgoing,
+       'message--incoming': currentMessage().type === messageType.Incoming
+     }">
+    <div class="message__avatar">
+        <img [ngSrc]="avatarSrc()" width="36" height="36" alt="avatar"/>
+    </div>
+
+    <div class="message__body">
+        @if (attachments().length) {
+            <div class="message__attachments">
+                @for (file of attachments(); track file) {
+                    <img [ngSrc]="file" width="140" height="140" alt="attachment" class="message__image"/>
+                }
+            </div>
+        }
+
+        <div class="message__bubble"
+             tabindex="0"
+             (focus)="edit.set(true)"
+             (blur)="edit.set(false)"
+             [attr.contenteditable]="edit() ? true : null">
+            <div class="message__text">{{ currentMessage().content }}</div>
+
+            <div class="message__meta">
+                <time class="message__time">  {{ currentMessage().cr_time | date: 'HH:mm' }}</time>
+                @if (currentMessage().type === messageType.Outgoing) {
+                    <mat-icon svgIcon="checked-message" aria-hidden="true" class="message__icon"></mat-icon>
+                }
+            </div>
+        </div>
+    </div>
+</div>
