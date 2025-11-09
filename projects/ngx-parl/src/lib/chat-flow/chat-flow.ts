@@ -1,6 +1,5 @@
 import {
     afterNextRender,
-    ChangeDetectionStrategy,
     Component, computed, effect, ElementRef,
     input, model, ViewChild,
 } from '@angular/core';
@@ -20,79 +19,9 @@ import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-s
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
+    standalone: true,
 })
 export class ChatFlow {
-    // message_list = input.required<ChatMessage[]>();
-    // delete_message = model<ChatMessage>();
-    // edit_message = model<ChatMessage>();
-    // active_message: ChatMessage | null = null;
-    //
-    // @ViewChild('chatFlowRef', {static: true})
-    // private flowRef!: ElementRef<HTMLElement>;
-    //
-    // constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
-    //     this.iconRegistry.addSvgIcon(
-    //         'checked-message',
-    //         this.sanitizer.bypassSecurityTrustResourceUrl('../../ssets/icons/checked-message.svg')
-    //     );
-    //
-    //     afterNextRender(() => this.scrollToBottomInstant());
-    //
-    //     effect(() => {
-    //         const len = this.message_list().length;
-    //         if (len > 0) {
-    //             queueMicrotask(() => this.scrollToBottomSmooth());
-    //         }
-    //     });
-    // }
-    //
-    // trackByMessageId(_index: number, message: ChatMessage): number {
-    //     return message.id;
-    // }
-    //
-    // scrollToBottomInstant() {
-    //     const el = this.flowRef?.nativeElement;
-    //     if (!el) return;
-    //     const prev = el.style.scrollBehavior;
-    //     el.style.scrollBehavior = 'auto';
-    //     el.scrollTop = el.scrollHeight;
-    //     el.style.scrollBehavior = prev;
-    //
-    //     return this;
-    // }
-    //
-    // scrollToBottomSmooth() {
-    //     const el = this.flowRef?.nativeElement;
-    //     if (!el) return;
-    //     el.scrollTo({top: el.scrollHeight, behavior: 'smooth'});
-    //
-    //     return this;
-    // }
-    //
-    // confirmDelete(message: ChatMessage) {
-    //     this.active_message = message;
-    //
-    //     return this;
-    // }
-    //
-    // deleteMessage() {
-    //     if (this.active_message) {
-    //         this.delete_message.set(this.active_message);
-    //     }
-    //
-    //     return this;
-    // }
-    //
-    // updateMessage(message: ChatMessage) {
-    //     message.edit = false;
-    //     this.edit_message.set(message);
-    //
-    //     return this;
-    // }
-    //
-    // public readonly messageType = MessageType;
-
-
     messageListInput = input.required<ChatMessage[]>();
     messageList = computed(() => this.messageListInput());
     // ===== моделі дій (як у старому коді)

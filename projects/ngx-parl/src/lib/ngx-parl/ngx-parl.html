@@ -21,7 +21,7 @@
         </header>
 
         <mat-dialog-content class="modal-chat__content">
-            <app-chat-flow [messageListInput]="message_list"></app-chat-flow>
+            <app-chat-flow [messageListInput]="message_list()"></app-chat-flow>
 
             <app-input-message class="modal-chat__input" (input_textChange)="sendMessage($event)">
                 @if (ai_run_in_progress) {

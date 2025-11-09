@@ -7,55 +7,9 @@
             </lib-chat-message>
             @if (message | toggleDisplayChatStartDay: messageList() : i) {
                 <span class="chat__start-day">
-                    {{ message.cr_time | chatStartDay: 'LLLL d' }}
+                    {{ message.cr_time | chatStartDay:'d MMMM' }}
                 </span>
             }
         }
     </div>
 </div>
-
-
-<!--&lt;!&ndash;chat-flow.component&ndash;&gt;-->
-<!--<div class="chat">-->
-<!--    <div class="chat__flow" #chatFlowRef>-->
-<!--        @for (message of message_list(); track message.id) {-->
-<!--            <div class="message" [ngClass]="{-->
-<!--             'message&#45;&#45;outgoing': message.type === messageType.Outgoing,-->
-<!--             'message&#45;&#45;incoming': message.type === messageType.Incoming-->
-<!--           }">-->
-<!--                <div class="message__avatar">-->
-<!--                    <img [ngSrc]="message.type === messageType.Incoming-->
-<!--                          ? (message.avatar || '../../assets/icons/avatar_anonym.svg')-->
-<!--                          : (message.avatar || '../../assets/icons/avatar_manager.svg')"-->
-<!--                         width="36" height="36" alt="avatar"/>-->
-<!--                </div>-->
-
-<!--                <div class="message__body">-->
-<!--                    @if (message.file_path) {-->
-<!--                        <div class="message__attachments">-->
-<!--                            @for (file of (message.file_path || '').split(','); track file) {-->
-<!--                                <img [ngSrc]="file.trim()" width="140" height="140" alt="attachment"-->
-<!--                                     class="message__image"/>-->
-<!--                            }-->
-<!--                        </div>-->
-<!--                    }-->
-
-<!--                    <div class="message__bubble"-->
-<!--                         tabindex="0"-->
-<!--                         (click)="message.edit = true"-->
-<!--                         (blur)="message.edit = false"-->
-<!--                         [attr.contenteditable]="message.edit">-->
-<!--                        <div class="message__text">{{ message.content }}</div>-->
-
-<!--                        <div class="message__meta">-->
-<!--                            <time class="message__time">{{ message.cr_time }}</time>-->
-<!--                            @if (message.type === messageType.Outgoing) {-->
-<!--                                <mat-icon svgIcon="checked-message" aria-hidden="true" class="message__icon"></mat-icon>-->
-<!--                            }-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        }-->
-<!--    </div>-->
-<!--</div>-->

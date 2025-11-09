@@ -19,7 +19,6 @@ import {TranslocoPipe} from '@ngneat/transloco';
     templateUrl: './input-message.html',
     styleUrl: './input-message.scss',
     standalone: true,
-    changeDetection: ChangeDetectionStrategy.OnPush// this.cdr.markForCheck(); // або detectChanges()
 })
 
 export class InputMessageComponent implements AfterViewInit, OnDestroy {
