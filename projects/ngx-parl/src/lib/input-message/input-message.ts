@@ -16,7 +16,6 @@ import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {ChatMessage, CurrMessage} from '../core/entity/chat';
 
-
 @Component({
     selector: 'app-input-message',
     imports: [MatIcon, TranslocoPipe],
@@ -26,8 +25,8 @@ import {ChatMessage, CurrMessage} from '../core/entity/chat';
 })
 
 export class InputMessageComponent implements AfterViewInit, OnDestroy {
-    @ViewChild('inputText', { static: false }) inputTextElement!: ElementRef<HTMLDivElement>;
-    @ViewChild('mirror', { static: false }) mirrorElement!: ElementRef<HTMLDivElement>;
+    @ViewChild('inputText', {static: false}) inputTextElement!: ElementRef<HTMLDivElement>;
+    @ViewChild('mirror', {static: false}) mirrorElement!: ElementRef<HTMLDivElement>;
 
     // ❗ Тепер приймаємо і ChatMessage, і DTO, і null
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
@@ -48,12 +47,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     public hasText = computed(() => this.draft().trim().length > 0);
 
     public isEditMode = computed(() => !!this.editMessage());
-    public canSend = computed(() => {
-        if (this.hasText()) return true;
-        if (this.hasNewAttachments()) return true;
-        if (this.isEditMode() && this.hasOriginalAttachments()) return true;
-        return false;
-    });
+    public canSend = computed(() =>
+        this.hasText() ||
+        this.hasNewAttachments() ||
+        (this.isEditMode() && this.hasOriginalAttachments())
+    );
 
     public files = model<File[]>([]);
     public previews = model<PreviewItem[]>([]);
@@ -81,6 +79,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
                 const content = (msg as any).content ?? '';
                 this.draft.set(content);
                 el.innerText = content;
+
                 queueMicrotask(() => {
                     this.autoResizeByRows();
                     el.focus();
@@ -104,7 +103,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.updateOverflow(1);
 
         requestAnimationFrame(() => {
-            const { rows, nextHeightPx } = this.measureByMirror();
+            const {rows, nextHeightPx} = this.measureByMirror();
             el.style.height = `${nextHeightPx}px`;
             this.lastRows = rows;
             this.lastHeightPx = nextHeightPx;
@@ -158,9 +157,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const msg = this.editMessage();
 
         if (msg) {
-            this.input_text.set({ id: (msg as any).id, content: text, files: files.length ? files : undefined });
+            this.input_text.set({id: (msg as any).id, content: text, files: files.length ? files : undefined});
         } else {
-            this.input_text.set({ content: text, files: files.length ? files : undefined });
+            this.input_text.set({content: text, files: files.length ? files : undefined});
         }
 
         this.draft.set('');
@@ -232,7 +231,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             list.map(async f => {
                 const src = await this.readFileAsDataURL(f);
                 const originalKind: OriginalKind = (f.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
-                return <PreviewItem>{ src, originalKind, name: f.name, type: f.type || '', size: f.size };
+                return <PreviewItem>{src, originalKind, name: f.name, type: f.type || '', size: f.size};
             })
         )
             .then(items => this.previews.set([...(this.previews() ?? []), ...items]))
@@ -265,7 +264,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     private autoResizeByRows() {
         const el = this.inputTextElement.nativeElement;
-        const { rows, nextHeightPx } = this.measureByMirror();
+        const {rows, nextHeightPx} = this.measureByMirror();
 
         if (rows === this.lastRows) {
             this.updateOverflow(rows);
@@ -308,7 +307,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const rows = Math.min(rawRows, maxRows);
 
         const nextHeightPx = Math.round(rows * lineHeight + paddingY);
-        return { rows, nextHeightPx };
+        return {rows, nextHeightPx};
     }
 
     private initMirror() {
