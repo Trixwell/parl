@@ -1,15 +1,20 @@
+<!--chat-flow.components-->
 <div class="chat">
     <div class="chat__flow" #chatFlowRef>
-        @for (message of messageList(); ; track trackByMessageId(i, message); let i = $index) {
-            <lib-chat-message [currentMessage]="message"
-                              [edit]="message.edit ?? false"
-                              (editChange)="onEditChange(message.id, $event)">
-            </lib-chat-message>
+        @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
             @if (message | toggleDisplayChatStartDay: messageList() : i) {
                 <span class="chat__start-day">
                     {{ message.cr_time | chatStartDay:'d MMMM' }}
                 </span>
             }
+
+            <lib-chat-message [currentMessage]="message"
+                              [edit]="message.edit ?? false"
+                              (editChange)="onEditChange(message.id, $event)"
+                              (requestEditChange)="onRequestEdit($event)"
+                              (requestDeleteChange)="onRequestDelete($event)">
+            </lib-chat-message>
+
         }
     </div>
 </div>

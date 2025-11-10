@@ -3,15 +3,13 @@ export class ImageFile {
         public id: string,
         public url: string,
         public cr_time: string,
-    ) {
-    }
+    ) {}
 }
 
-export type OriginalKind = 'image' | 'gif' | 'video';
+export type OriginalKind = 'image' | 'gif';
 
 export interface PreviewItem {
     originalKind: OriginalKind;
-    duration?: number;
     src: string;
     name: string;
     type: string;
@@ -20,6 +18,5 @@ export interface PreviewItem {
 
 export enum FileType {
     IMAGE = 'image',
-    GIF = 'gif',
-    VIDEO = 'video'
+    GIF = 'gif'
 }

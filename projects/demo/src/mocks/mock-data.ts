@@ -43,7 +43,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: true
     }),
     new ChatMessage({
         id: 5,
@@ -54,7 +54,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test qq',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: true
     }),
     new ChatMessage({
         id: 6,
@@ -65,7 +65,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test q',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: true
     }),
     new ChatMessage({
         id: 7,
@@ -75,8 +75,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Lola',
         content: 'test q',
         avatar: null,
-        file_path: '../../assets/img/img1.jpg, ../../assets/img/img2.jpg',
-        checked: false
+        file_path:['/assets/img/img1.jpg', '/assets/img/img2.jpg'],
+        checked: true
     }),
     new ChatMessage({
         id: 8,
@@ -87,7 +87,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: true
     }),
     new ChatMessage({
         id: 9,
@@ -97,8 +97,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Alex',
         content: 'test qwe',
         avatar: null,
-        file_path: '../../assets/img/img2.jpg',
-        checked: false
+        file_path: ['../../assets/img/img2.jpg'],
+        checked: true
     }),
     new ChatMessage({
         id: 10,
@@ -108,7 +108,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Alex',
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
-        file_path: '../../assets/img/img2.jpg',
+        file_path: ['../../assets/img/img2.jpg'],
         checked: false
     }),
 ];

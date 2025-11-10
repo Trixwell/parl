@@ -13,7 +13,7 @@ import {CHAT_MOCK} from '../mocks/mock-data';
 })
 
 export class App {
-    message_list = model<ChatMessage[]>(CHAT_MOCK);
+    public message_list = model<ChatMessage[]>(CHAT_MOCK);
 
     protected readonly title = signal('demo');
 }

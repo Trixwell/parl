@@ -4,10 +4,33 @@
          [class.message--filled]="hasText()"
          [class.message--sending]="sending()">
 
+    @if (isEditMode()) {
+        <div class="message__wrap">
+            <div class="message__wrap--input">
+                <button class="message__button message__button--attach">
+                    <mat-icon svgIcon="icon-edit"
+                              aria-hidden="true"
+                              class="message__icon message__icon--edit">
+                    </mat-icon>
+                </button>
+
+                <div class="message__edit-hint">
+                    <p>{{ editMessage()?.content }}</p>
+                </div>
+            </div>
+
+            <button class="message__button message__button--close"
+                    type="button"
+                    (click)="cancelEditMessage()">
+                <mat-icon svgIcon="close" aria-hidden="true" class="message__icon message__icon--close"></mat-icon>
+            </button>
+        </div>
+    }
+
     <div class="message__wrap">
         <div class="message__wrap--input">
-            <button class="message__button message__button--attach"
-                    type="button"
+            <button type="button"
+                    class="message__button message__button--attach"
                     [attr.aria-label]="'chat.attach' | transloco"
                     (click)="fileDialog.click()">
                 <mat-icon svgIcon="attach-filled"
@@ -16,25 +39,27 @@
                 </mat-icon>
             </button>
 
-            <input type="file"
-                   #fileDialog
-                   multiple
-                   accept="image/*,video/*"
+            <input #fileDialog
+                   type="file"
                    class="hidden"
+                   accept="image/*"
+                   multiple
                    (change)="inputFileChange($event)">
 
             <div #inputText
-                 class="message__input"
-                 contenteditable="true"
                  role="textbox"
-                 aria-multiline="true"
+                 class="message__input"
                  spellcheck="true"
-                 [attr.data-placeholder]="'chat.placeholder' | transloco"
-                 (focus)="onFocus()"
+                 contenteditable="true"
+                 aria-multiline="true"
+                 [attr.data-placeholder]="isEditMode()
+                   ? ('chat.edit_placeholder' | transloco)
+                   : ('chat.placeholder' | transloco)"
                  (blur)="onBlur()"
-                 (keydown)="onKeyDown($event)"
+                 (focus)="onFocus()"
                  (input)="onInput()"
-                 (paste)="onPaste()">
+                 (paste)="onPaste()"
+                 (keydown)="onKeyDown($event)">
             </div>
 
             <div #mirror class="message__input-mirror" aria-hidden="true"></div>
@@ -44,13 +69,10 @@
 
         <button class="message__button message__button--send"
                 type="button"
-                [attr.aria-label]="'chat.attach' | transloco"
                 (click)="enterDown()"
-                [disabled]="!hasText()">
-            <mat-icon svgIcon="send"
-                      aria-hidden="true"
-                      class="message__icon message__icon--send">
-            </mat-icon>
+                [attr.aria-label]="'chat.send' | transloco"
+                [disabled]="!canSend()">
+            <mat-icon svgIcon="send" aria-hidden="true" class="message__icon message__icon--send"></mat-icon>
         </button>
     </div>
 
@@ -71,16 +93,10 @@
                     <div class="message__file-media" (click)="openPreview(item, $index)">
                         <img [src]="item.src" [alt]="item.name" class="message__file-img"/>
 
-                        @if (item.originalKind === fileType.GIF) {
-                            <span class="message__file-badge message__file-badge--gif">{{ 'chat.gif' | transloco }}</span>
-                        }
-                        @if (item.originalKind === fileType.VIDEO) {
-                            <span class="message__file-badge message__file-badge--video">
-                                <mat-icon>play_arrow</mat-icon>
+                        @if (item.originalKind === FileType.GIF) {
+                            <span class="message__file-badge message__file-badge--gif">
+                                {{ 'chat.gif' | transloco }}
                             </span>
-                            @if (item.duration) {
-                                <span class="message__file-duration">{{ formatDuration(item.duration) }}</span>
-                            }
                         }
                     </div>
                 </div>
@@ -88,4 +104,5 @@
         </div>
     }
 </section>
+
 

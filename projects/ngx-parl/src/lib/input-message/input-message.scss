@@ -122,6 +122,20 @@
         &:not(.message__icon--file):hover {
             filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
         }
+
+        &--focus,
+        &--filled {
+            background: red;
+            filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
+        }
+
+        &--edit {
+            filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(73%) contrast(99%);
+        }
+
+        &--close{
+            filter: invert(1%) sepia(1%) saturate(1%) hue-rotate(100deg) brightness(100%) contrast(30%);
+        }
     }
 
     &__files {
@@ -236,6 +250,29 @@
                 width: 14px;
                 height: 14px;
             }
+        }
+    }
+
+    &__edit-hint {
+        max-width: 100%; // або вкажи конкретну ширину, наприклад 300px
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: tokens.$space-2;
+        border-radius: tokens.$radius-small;
+        border-left: tokens.$border-2 solid tokens.$primary-600;
+        padding: tokens.$margin-1 tokens.$margin-2;
+
+
+        p {
+           color: tokens.$neutral-400;
+            font: tokens.$font-body-m;
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 }

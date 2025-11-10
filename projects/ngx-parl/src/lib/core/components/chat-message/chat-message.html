@@ -1,3 +1,4 @@
+<!-- chat-message.component.html -->
 <div class="message"
      [ngClass]="{
        'message--outgoing': currentMessage().type === messageType.Outgoing,
@@ -7,28 +8,52 @@
         <img [ngSrc]="avatarSrc()" width="36" height="36" alt="avatar"/>
     </div>
 
-    <div class="message__body">
+    <div class="message__body"
+         #menuTrigger="matMenuTrigger"
+         [matMenuTriggerFor]="messageMenu"
+         (contextmenu)="openContextMenu($event, menuTrigger)"
+         (keydown.shift.F10)="openContextMenu($event, menuTrigger)">
+
         @if (attachments().length) {
             <div class="message__attachments">
                 @for (file of attachments(); track file) {
-                    <img [ngSrc]="file" width="140" height="140" alt="attachment" class="message__image"/>
+                    <img [src]="file"
+                         alt="attachment"
+                         class="message__image"
+                         loading="lazy" />
                 }
             </div>
         }
 
-        <div class="message__bubble"
-             tabindex="0"
-             (focus)="edit.set(true)"
-             (blur)="edit.set(false)"
-             [attr.contenteditable]="edit() ? true : null">
+
+        <div class="message__bubble" tabindex="0">
             <div class="message__text">{{ currentMessage().content }}</div>
 
             <div class="message__meta">
-                <time class="message__time">  {{ currentMessage().cr_time | date: 'HH:mm' }}</time>
+                <time class="message__time">{{ currentMessage().cr_time | date:'HH:mm' }}</time>
                 @if (currentMessage().type === messageType.Outgoing) {
-                    <mat-icon svgIcon="checked-message" aria-hidden="true" class="message__icon"></mat-icon>
+                    @if (currentMessage().checked) {
+                        <mat-icon svgIcon="checked-message" aria-hidden="true" class="message__icon"></mat-icon>
+                    } @else {
+                        <mat-icon svgIcon="no-check" aria-hidden="true" class="message__icon"></mat-icon>
+                    }
                 }
             </div>
         </div>
     </div>
 </div>
+
+<mat-menu #messageMenu="matMenu" xPosition="before" yPosition="below" class="message__menu">
+    @if (currentMessage().type === messageType.Outgoing) {
+        <button mat-menu-item (click)="editMessage(currentMessage())">
+            <mat-icon svgIcon="icon-edit" aria-hidden="true" class="message__icon"></mat-icon>
+            <span>Редагувати</span>
+        </button>
+    }
+    @if (canDelete(currentMessage())) {
+        <button mat-menu-item (click)="deleteMessage(currentMessage())">
+            <mat-icon svgIcon="trash" aria-hidden="true" class="message__icon"></mat-icon>
+            <span>Видалити</span>
+        </button>
+    }
+</mat-menu>

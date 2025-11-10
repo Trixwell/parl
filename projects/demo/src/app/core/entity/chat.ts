@@ -15,24 +15,6 @@
 //     }
 // }
 
-export enum MessageType  {
-    Incoming = 'incoming',
-    Outgoing = 'outgoing'
-}
-
-export type ChatMessageType = 'incoming' | 'outgoing' | 'system';
-
-export interface ChatMessageDTO {
-    id: number;
-    chat_id: number;
-    cr_time: string; // ISO or 'YYYY-MM-DD HH:mm:ss'
-    type: ChatMessageType;
-    user: string;
-    content: string;
-    avatar?: string | null;
-    file_path?: string | null;
-    checked?: boolean | null;
-}
 
 export class ChatMessage {
     public id: number;
@@ -42,7 +24,7 @@ export class ChatMessage {
     public user: string;
     public content: string;
     public avatar: string | null;
-    public file_path: string | null;
+    public file_path: string[] | null;
     public checked: boolean | null;
 
     public edit = false;
@@ -73,4 +55,21 @@ export class ChatMessage {
         const mm = String(d.getMinutes()).padStart(2, '0');
         return `${hh}:${mm}`;
     }
+}
+export interface ChatMessageDTO {
+    id: number;
+    chat_id: number;
+    cr_time: string;                     // ISO або 'YYYY-MM-DD HH:mm:ss'
+    type: ChatMessageType;               // 'incoming' | 'outgoing'
+    user: string;
+    content: string;
+    avatar?: string | null;
+    file_path?: string[] | null;
+    checked?: boolean | null;
+}
+export type ChatMessageType = 'incoming' | 'outgoing';
+
+export enum MessageType {
+    Incoming = 'incoming',
+    Outgoing = 'outgoing'
 }

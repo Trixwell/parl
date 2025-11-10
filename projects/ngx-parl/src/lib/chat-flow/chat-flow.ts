@@ -1,8 +1,4 @@
-import {
-    afterNextRender,
-    Component, computed, effect, ElementRef,
-    input, model, ViewChild,
-} from '@angular/core';
+import {Component, computed, effect, ElementRef, model, ViewChild,} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
@@ -15,91 +11,183 @@ import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-s
         FormsModule,
         ChatMessageComponent,
         ChatStartDayPipe,
-        ToggleDisplayChatStartDayPipe
+        ToggleDisplayChatStartDayPipe,
+        ChatMessageComponent
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
     standalone: true,
 })
-export class ChatFlow {
-    messageListInput = input.required<ChatMessage[]>();
-    messageList = computed(() => this.messageListInput());
-    // ===== моделі дій (як у старому коді)
-    delete_message = model<ChatMessage>();
-    edit_message = model<ChatMessage>();
-    active_message: ChatMessage | null = null;
 
-    // ===== ViewChild для скролу
+// export class ChatFlowComponent {
+//     @ViewChild('chatFlowRef', {static: true}) private flowRef!: ElementRef<HTMLElement>;
+//
+//     public messageListInput = model.required<ChatMessage[]>();
+//     public messageList = computed(() => this.messageListInput());
+//
+//     // двостороння модель для вибраного повідомлення
+//     public selectedForEdit = model.required<ChatMessage | null>();
+//
+//     public delete_message = model<ChatMessage>();
+//     public edit_message = model<ChatMessage>();
+//
+//     constructor() {
+//         effect(() => {
+//             const length = this.messageList().length;
+//             if (length > 0) {
+//                 queueMicrotask(() => this.scrollToBottomSmooth());
+//             }
+//         });
+//     }
+//
+//     private scrollToBottomSmooth() {
+//         const element = this.flowRef?.nativeElement;
+//         if (!element) return this;
+//         element.scrollTo({top: element.scrollHeight, behavior: 'smooth'});
+//         return this;
+//     }
+//
+//     startEdit(message: ChatMessage) {
+//         // 1) скинути прапорці edit у всіх, крім поточного
+//         this.messageList().forEach(currMessage => {
+//             if (currMessage.id !== message.id && currMessage.edit) {
+//                 currMessage.edit = false;
+//             }
+//         });
+//
+//         // 2) позначити поточний як редагований
+//         message.edit = true;
+//
+//         // 3) форсувати зміну selectedForEdit навіть якщо це той самий обʼєкт
+//         if (this.selectedForEdit()?.id === message.id) {
+//             this.selectedForEdit.set(null);
+//             queueMicrotask(() => this.selectedForEdit.set(message));
+//         } else {
+//             this.selectedForEdit.set(message);
+//         }
+//         return this;
+//     }
+//
+//     onEditChange(id: number, isEdit: boolean) {
+//         const message = this.messageList().find(m => m.id === id);
+//         if (!message) return this;
+//
+//         if (isEdit) {
+//             return this.startEdit(message);
+//         } else {
+//             message.edit = false;
+//             if (this.selectedForEdit()?.id === id) {
+//                 this.selectedForEdit.set(null);
+//             }
+//         }
+//
+//         return this;
+//     }
+//
+//     onRequestEdit(message: ChatMessage | null) {
+//         if (message) {
+//             return this.startEdit(message);
+//         }
+//
+//         this.selectedForEdit.set(null);
+//         return this;
+//     }
+//
+//     onRequestDelete(messageId: number | null) {
+//         if (!messageId) {
+//             return this;
+//         }
+//
+//         const next = this.messageList().filter(m => m.id !== messageId);
+//         this.selectedForEdit.set(null); // якщо редагувався — скинути
+//         // 🟢 піднімаємо оновлений список нагору
+//         queueMicrotask(() => this.messageListInput.set(next));
+//
+//         return this;
+//     }
+//
+//     trackByMessageId(_index: number, message: ChatMessage): number {
+//         return message.id;
+//     }
+// }
+
+export class ChatFlowComponent {
     @ViewChild('chatFlowRef', {static: true}) private flowRef!: ElementRef<HTMLElement>;
 
-    // vm як проєкція — залишається
-    // vm = computed(() => this.message_list());
+    public messageListInput = model.required<ChatMessage[]>();
+    public messageList = computed(() => this.messageListInput());
+
+    // двостороння модель для вибраного повідомлення
+    public selectedForEdit = model.required<ChatMessage | null>();
+
+    // ❌ НЕ ВИКОРИСТОВУЄТЬСЯ: дублює події/стан вище
+    // public delete_message = model<ChatMessage>();
+    // public edit_message = model<ChatMessage>();
 
     constructor() {
-        // миттєво у самий низ після першого рендеру
-        afterNextRender(() => this.scrollToBottomInstant());
-
-        // плавний доскрол при кожній зміні довжини списку
         effect(() => {
-            const len = this.messageList().length;
-            if (len > 0) {
+            const length = this.messageList().length;
+            if (length > 0) {
                 queueMicrotask(() => this.scrollToBottomSmooth());
             }
         });
     }
 
-    // ===== скроли
-    scrollToBottomInstant() {
-        const el = this.flowRef?.nativeElement;
-        if (!el) return;
-        const prev = el.style.scrollBehavior;
-        el.style.scrollBehavior = 'auto';
-        el.scrollTop = el.scrollHeight;
-        el.style.scrollBehavior = prev;
-
+    private scrollToBottomSmooth() {
+        const element = this.flowRef?.nativeElement;
+        if (!element) return this;
+        element.scrollTo({top: element.scrollHeight, behavior: 'smooth'});
         return this;
     }
 
-    scrollToBottomSmooth() {
-        const el = this.flowRef?.nativeElement;
-        if (!el) return;
-        el.scrollTo({top: el.scrollHeight, behavior: 'smooth'});
+    startEdit(message: ChatMessage) {
+        this.messageList().forEach(currMessage => {
+            if (currMessage.id !== message.id && currMessage.edit) {
+                currMessage.edit = false;
+            }
+        });
 
-        return this;
-    }
+        message.edit = true;
 
-    // ===== дії з повідомленнями (логіка зі старого коду)
-    confirmDelete(message: ChatMessage) {
-        this.active_message = message;
-
-        return this;
-    }
-
-    deleteMessage() {
-        if (this.active_message) {
-            this.delete_message.set(this.active_message);
-            this.active_message = null;
+        if (this.selectedForEdit()?.id === message.id) {
+            this.selectedForEdit.set(null);
+            queueMicrotask(() => this.selectedForEdit.set(message));
+        } else {
+            this.selectedForEdit.set(message);
         }
-
         return this;
     }
 
-    updateMessage(message: ChatMessage) {
-        // Після редагування знімаємо edit і віддаємо нагору зміну
-        message.edit = false;
-        this.edit_message.set(message);
-
-        return this;
-    }
-
-    // приймаємо двобінд з дочірнього компоненту і піднімаємо зміну нагору (бо input.required)
     onEditChange(id: number, isEdit: boolean) {
-        const next = this.messageList().map(m => m.id === id ? {...m, edit: isEdit} : m);
+        const message = this.messageList().find(m => m.id === id);
+        if (!message) return this;
 
+        if (isEdit) {
+            return this.startEdit(message);
+        } else {
+            message.edit = false;
+            if (this.selectedForEdit()?.id === id) {
+                this.selectedForEdit.set(null);
+            }
+        }
         return this;
-        // важливо: для input.required оновлює БАТЬКО; тут лише піднімаємо намір,
-        // або, якщо у вас є локальний signal, можна set(next).
-        // this.messageList.set(next);
+    }
+
+    onRequestEdit(message: ChatMessage | null) {
+        if (message) {
+            return this.startEdit(message);
+        }
+        this.selectedForEdit.set(null);
+        return this;
+    }
+
+    onRequestDelete(messageId: number | null) {
+        if (!messageId) return this;
+
+        const next = this.messageList().filter(m => m.id !== messageId);
+        this.selectedForEdit.set(null);
+        queueMicrotask(() => this.messageListInput.set(next));
+        return this;
     }
 
     trackByMessageId(_index: number, message: ChatMessage): number {
