@@ -2,7 +2,7 @@ import {Component, model} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
-import {ChatMessage, ChatMessageDTO, ChatMessageType, currMessage, MessageType} from '../core/entity/chat';
+import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageType} from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
 import {TranslocoPipe} from '@ngneat/transloco';
@@ -35,7 +35,10 @@ export class NgxParlComponent {
         return this;
     }
 
-    sendMessage(event: | string | currMessage | undefined) {
+    sendMessage(event: | string | { id: number; content: string; files?: string[] } | {
+        content: string;
+        files?: string[]
+    } | undefined) {
         if (!event) {
             return this;
         }

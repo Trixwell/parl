@@ -47,13 +47,13 @@
     @if (currentMessage().type === messageType.Outgoing) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
             <mat-icon svgIcon="icon-edit" aria-hidden="true" class="message__icon"></mat-icon>
-            <span>Редагувати</span>
+            <span>{{ 'chat.edit' | transloco }}</span>
         </button>
     }
     @if (canDelete(currentMessage())) {
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
             <mat-icon svgIcon="trash" aria-hidden="true" class="message__icon"></mat-icon>
-            <span>Видалити</span>
+            <span>{{ 'chat.remove' | transloco }}</span>
         </button>
     }
 </mat-menu>

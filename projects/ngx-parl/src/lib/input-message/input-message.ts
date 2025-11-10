@@ -14,7 +14,7 @@ import {MatIcon, MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
-import {currMessage} from '../core/entity/chat';
+import {ChatMessage, CurrMessage} from '../core/entity/chat';
 
 
 @Component({
@@ -26,22 +26,22 @@ import {currMessage} from '../core/entity/chat';
 })
 
 export class InputMessageComponent implements AfterViewInit, OnDestroy {
-    @ViewChild('inputText', {static: false}) inputTextElement!: ElementRef<HTMLDivElement>;
-    @ViewChild('mirror', {static: false}) mirrorElement!: ElementRef<HTMLDivElement>;
+    @ViewChild('inputText', { static: false }) inputTextElement!: ElementRef<HTMLDivElement>;
+    @ViewChild('mirror', { static: false }) mirrorElement!: ElementRef<HTMLDivElement>;
 
-    public editMessage = input<currMessage | null>(null);
+    // ❗ Тепер приймаємо і ChatMessage, і DTO, і null
+    public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
 
     public hasOriginalAttachments = computed(() => {
-        const fp = this.editMessage()?.file_path ?? null;
-        return Array.isArray(fp) && fp.length > 0;
+        const fp = this.editFilePaths();
+        return fp.length > 0;
     });
 
     public hasNewAttachments = computed(() => (this.previews()?.length ?? 0) > 0);
 
     public cancelEdit = model<number | null>(null);
-    public input_text = model<string | currMessage>('');
+    public input_text = model<string | CurrMessage>('');
 
-    // Стан
     public draft = signal<string>('');
     public focused = signal<boolean>(false);
     public sending = signal<boolean>(false);
@@ -55,7 +55,6 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return false;
     });
 
-    // Файли/прев’ю (тільки зображення/GIF)
     public files = model<File[]>([]);
     public previews = model<PreviewItem[]>([]);
 
@@ -74,19 +73,17 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/close.svg'));
 
         effect(() => {
-            const message = this.editMessage();
-            const element = this.inputTextElement?.nativeElement;
-            if (!element) {
-                return;
-            }
+            const msg = this.editMessage();
+            const el = this.inputTextElement?.nativeElement;
+            if (!el) return;
 
-            if (message) {
-                this.draft.set(message.content ?? '');
-                element.innerText = message.content ?? '';
-
+            if (msg) {
+                const content = (msg as any).content ?? '';
+                this.draft.set(content);
+                el.innerText = content;
                 queueMicrotask(() => {
                     this.autoResizeByRows();
-                    element.focus();
+                    el.focus();
                     this.focused.set(true);
                 });
             }
@@ -94,21 +91,21 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit() {
-        const elemInput = this.inputTextElement.nativeElement;
-        elemInput.style.transition = 'height 160ms ease';
+        const el = this.inputTextElement.nativeElement;
+        el.style.transition = 'height 160ms ease';
         this.initMirror();
 
-        const computedStyle = getComputedStyle(elemInput);
-        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+        const cs = getComputedStyle(el);
+        const lineHeight = this.cssNum(cs.lineHeight, 24);
 
-        elemInput.style.height = `${lineHeight}px`;
+        el.style.height = `${lineHeight}px`;
         this.lastHeightPx = lineHeight;
         this.lastRows = 1;
         this.updateOverflow(1);
 
         requestAnimationFrame(() => {
-            const {rows, nextHeightPx} = this.measureByMirror();
-            elemInput.style.height = `${nextHeightPx}px`;
+            const { rows, nextHeightPx } = this.measureByMirror();
+            el.style.height = `${nextHeightPx}px`;
             this.lastRows = rows;
             this.lastHeightPx = nextHeightPx;
             this.updateOverflow(rows);
@@ -122,54 +119,58 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
     }
 
-    private collectAttachmentSources(): string[] {
-        return (this.previews() ?? []).map(preview => preview.src).filter(Boolean);
+    /** Повертає file_path редагованого повідомлення як масив */
+    private editFilePaths(): string[] {
+        const msg = this.editMessage();
+        if (!msg) return [];
+        const fp = (msg as any).file_path;
+        return Array.isArray(fp) ? fp : [];
+        // за твоїми останніми правками file_path — масив або null
     }
 
-    /** Закрити поле редагування (клік по “хрестику”) */
+    private collectAttachmentSources(): string[] {
+        return (this.previews() ?? []).map(p => p.src).filter(Boolean);
+    }
+
     cancelEditMessage() {
-        const currentMessage = this.editMessage();
-        this.cancelEdit.set(currentMessage?.id ?? null);
+        const msg = this.editMessage();
+        this.cancelEdit.set((msg as any)?.id ?? null);
         queueMicrotask(() => this.cancelEdit.set(null));
 
         this.draft.set('');
-        const element = this.inputTextElement?.nativeElement;
-        if (element) {
-            element.innerHTML = '';
+        const el = this.inputTextElement?.nativeElement;
+        if (el) {
+            el.innerHTML = '';
             this.autoResizeByRows();
-            element.focus();
+            el.focus();
         }
-
         return this;
     }
 
     enterDown() {
-        const element = this.inputTextElement.nativeElement;
+        const el = this.inputTextElement.nativeElement;
         const text = this.draft().trim();
-        if (!this.canSend()) {
-            return this;
-        }
+        if (!this.canSend()) return this;
 
         this.sending.set(true);
 
         const files = this.collectAttachmentSources();
-        const editMessage = this.editMessage();
+        const msg = this.editMessage();
 
-        if (editMessage) {
-            this.input_text.set({id: editMessage.id, content: text, files: files.length ? files : undefined});
+        if (msg) {
+            this.input_text.set({ id: (msg as any).id, content: text, files: files.length ? files : undefined });
         } else {
-            this.input_text.set({content: text, files: files.length ? files : undefined});
+            this.input_text.set({ content: text, files: files.length ? files : undefined });
         }
 
         this.draft.set('');
-        element.innerHTML = '';
+        el.innerHTML = '';
         this.files.set([]);
         this.previews.set([]);
-        element.focus();
+        el.focus();
         this.autoResizeByRows();
 
         setTimeout(() => this.sending.set(false), 150);
-
         return this;
     }
 
@@ -178,13 +179,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.inputTextElement.nativeElement.innerHTML = '';
         }
         this.focused.set(true);
-
         return this;
     }
 
     onBlur() {
         this.focused.set(false);
-
         return this;
     }
 
@@ -195,14 +194,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             return this;
         }
         queueMicrotask(() => this.autoResizeByRows());
-
         return this;
     }
 
     onInput() {
         this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
         this.autoResizeByRows();
-
         return this;
     }
 
@@ -211,44 +208,35 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
             this.autoResizeByRows();
         });
-
         return this;
     }
 
-    /** ✅ Спрощено: один метод читає вибрані файли і формує прев’ю */
+    /** Один метод читає вибрані файли і формує прев’ю */
     inputFileChange(event: Event) {
-        const input = event.target as HTMLInputElement;
-        const selected = input.files;
-
+        const inputEl = event.target as HTMLInputElement;
+        const selected = inputEl.files;
         if (!selected?.length) {
-            input.value = '';
+            inputEl.value = '';
             return this;
         }
 
-        const list = Array.from(selected).filter(f => this.isImageFile(f));
+        const list = Array.from(selected).filter(f => (f.type || '').startsWith('image/'));
         if (!list.length) {
-            input.value = '';
+            inputEl.value = '';
             return this;
         }
 
-        // Оновлюємо state файлів
         this.files.set([...(this.files() ?? []), ...list]);
 
-        // Читаємо всі зображення в data URL та будуємо прев’ю
-        Promise
-            .all(list.map(async f => {
+        Promise.all(
+            list.map(async f => {
                 const src = await this.readFileAsDataURL(f);
-                const originalKind: OriginalKind = this.getOriginalKind(f);
-                return <PreviewItem>{
-                    src,
-                    originalKind,
-                    name: f.name,
-                    type: f.type || '',
-                    size: f.size
-                };
-            }))
+                const originalKind: OriginalKind = (f.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
+                return <PreviewItem>{ src, originalKind, name: f.name, type: f.type || '', size: f.size };
+            })
+        )
             .then(items => this.previews.set([...(this.previews() ?? []), ...items]))
-            .finally(() => (input.value = ''));
+            .finally(() => (inputEl.value = ''));
 
         return this;
     }
@@ -266,7 +254,6 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             filesArr.splice(index, 1);
             this.files.set(filesArr);
         }
-
         return this;
     }
 
@@ -274,17 +261,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    private isImageFile(file: File): boolean {
-        return (file.type || '').startsWith('image/');
-    }
-
-    private getOriginalKind(file: File): OriginalKind {
-        return (file.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
-    }
+    // ——— Допоміжні ———
 
     private autoResizeByRows() {
-        const elemInput = this.inputTextElement.nativeElement;
-        const {rows, nextHeightPx} = this.measureByMirror();
+        const el = this.inputTextElement.nativeElement;
+        const { rows, nextHeightPx } = this.measureByMirror();
 
         if (rows === this.lastRows) {
             this.updateOverflow(rows);
@@ -292,35 +273,34 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
 
         if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
-        elemInput.style.height = `${this.lastHeightPx}px`;
+        el.style.height = `${this.lastHeightPx}px`;
 
         this.resizeRaf = requestAnimationFrame(() => {
-            elemInput.style.height = `${nextHeightPx}px`;
+            el.style.height = `${nextHeightPx}px`;
             this.lastHeightPx = nextHeightPx;
             this.lastRows = rows;
             this.updateOverflow(rows);
         });
-
         return this;
     }
 
     private measureByMirror(): { rows: number; nextHeightPx: number } {
         const inputEl = this.inputTextElement.nativeElement;
         const mirrorEl = this.mirrorElement.nativeElement;
-        const computedStyle = getComputedStyle(inputEl);
+        const cs = getComputedStyle(inputEl);
 
         let text = inputEl.innerText;
         if (!text || text === '\n') text = '\u00A0';
 
-        mirrorEl.style.width = computedStyle.width;
+        mirrorEl.style.width = cs.width;
         mirrorEl.textContent = text;
 
-        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
-        const paddingTop = this.cssNum(computedStyle.paddingTop, 0);
-        const paddingBottom = this.cssNum(computedStyle.paddingBottom, 0);
-        const paddingY = paddingTop + paddingBottom;
+        const lineHeight = this.cssNum(cs.lineHeight, 24);
+        const pt = this.cssNum(cs.paddingTop, 0);
+        const pb = this.cssNum(cs.paddingBottom, 0);
+        const paddingY = pt + pb;
 
-        const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
+        const maxRowsCss = cs.getPropertyValue('--max-rows').trim();
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
 
         const contentH = mirrorEl.offsetHeight;
@@ -328,51 +308,47 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const rows = Math.min(rawRows, maxRows);
 
         const nextHeightPx = Math.round(rows * lineHeight + paddingY);
-
-        return {rows, nextHeightPx};
+        return { rows, nextHeightPx };
     }
 
     private initMirror() {
-        const mirrorElem = this.mirrorElement.nativeElement;
-        const inputElem = this.inputTextElement.nativeElement;
-        const computedStyle = getComputedStyle(inputElem);
+        const mirror = this.mirrorElement.nativeElement;
+        const input = this.inputTextElement.nativeElement;
+        const cs = getComputedStyle(input);
 
-        mirrorElem.style.position = 'absolute';
-        mirrorElem.style.visibility = 'hidden';
-        mirrorElem.style.pointerEvents = 'none';
-        mirrorElem.style.zIndex = '-1';
-        mirrorElem.style.whiteSpace = 'pre-wrap';
-        mirrorElem.style.overflowWrap = 'break-word';
-        mirrorElem.style.wordBreak = 'normal';
+        mirror.style.position = 'absolute';
+        mirror.style.visibility = 'hidden';
+        mirror.style.pointerEvents = 'none';
+        mirror.style.zIndex = '-1';
+        mirror.style.whiteSpace = 'pre-wrap';
+        mirror.style.overflowWrap = 'break-word';
+        mirror.style.wordBreak = 'normal';
 
-        const styleProperties = [
+        const props = [
             'font', 'font-size', 'font-family', 'font-weight', 'font-style',
             'line-height', 'letter-spacing', 'word-spacing',
             'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
             'border-top-width', 'border-bottom-width', 'border-left-width', 'border-right-width',
             'white-space', 'text-transform', 'box-sizing'
         ];
-        styleProperties.forEach(props => (mirrorElem.style as any)[props] = computedStyle.getPropertyValue(props));
-        mirrorElem.style.paddingTop = '0px';
-        mirrorElem.style.paddingBottom = '0px';
-
-        return this;
+        props.forEach(p => (mirror.style as any)[p] = cs.getPropertyValue(p));
+        mirror.style.paddingTop = '0px';
+        mirror.style.paddingBottom = '0px';
     }
 
     private updateOverflow(rows: number) {
-        const elementInput = this.inputTextElement.nativeElement;
-        const computedStyle = getComputedStyle(elementInput);
-        const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
+        const el = this.inputTextElement.nativeElement;
+        const cs = getComputedStyle(el);
+        const maxRowsCss = cs.getPropertyValue('--max-rows').trim();
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
-        elementInput.style.overflowY = rows >= maxRows ? 'auto' : 'hidden';
-
+        el.style.overflowY = rows >= maxRows ? 'auto' : 'hidden';
         return this;
     }
 
     private readFileAsDataURL(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = event => resolve((event.target?.result as string) || '');
+            reader.onload = e => resolve((e.target?.result as string) || '');
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
@@ -380,7 +356,6 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     private cssNum(v: string, fb = 0): number {
         const n = parseFloat(v);
-
         return Number.isFinite(n) ? n : fb;
     }
 

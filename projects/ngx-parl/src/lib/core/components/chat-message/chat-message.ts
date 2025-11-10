@@ -4,6 +4,7 @@ import {MatIcon, MatIconRegistry} from '@angular/material/icon';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
+import {TranslocoPipe} from '@ngneat/transloco';
 
 @Component({
     selector: 'lib-chat-message',
@@ -15,6 +16,7 @@ import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
         MatMenu,
         MatMenuItem,
         MatMenuTrigger,
+        TranslocoPipe,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',

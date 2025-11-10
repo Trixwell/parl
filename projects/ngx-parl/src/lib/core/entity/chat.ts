@@ -75,9 +75,8 @@ export enum MessageType {
     Outgoing = 'outgoing'
 }
 
-export interface currMessage {
+export interface CurrMessage {
     id?: number;
     content: string;
-    file_path?: string
-    files?: string[]
+    files?: string[];
 }

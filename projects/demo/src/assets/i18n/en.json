@@ -9,6 +9,8 @@
         "edit_placeholder": "Update a message...",
         "delete_file": "Remove file",
         "gif": "GIF",
-        "video": "Video"
+        "video": "Video",
+        "edit" : "Edit",
+        "remove" : "Delete"
     }
 }
