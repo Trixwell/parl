@@ -10,7 +10,9 @@ export class ChatStartDayPipe implements PipeTransform {
     constructor(protected utils: UtilsService, private transloco: TranslocoService) {}
 
     transform(value: string, format: string = 'd MMMM'): string {
-        if (!value) return '';
+        if (!value) {
+            return '';
+        }
 
         const locale = this.utils.langToLocale(this.transloco.getActiveLang());
         const datePipe = new DatePipe(locale);

@@ -78,5 +78,6 @@ export enum MessageType {
 export interface currMessage {
     id?: number;
     content: string;
+    file_path?: string
     files?: string[]
 }
