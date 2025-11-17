@@ -3,7 +3,7 @@ import {ChatMessage} from '../app/core/entity/chat';
 export const CHAT_MESSAGE_MOCK: ChatMessage = new ChatMessage({
     id: 11,
     chat_id: 1,
-    cr_time: '2025-11-17T17:46:00',
+    cr_time: '2025-11-17 17:46:00',
     type: 'incoming',
     user: 'Lola',
     content: 'lorem ipsum dolar',
@@ -43,7 +43,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         cr_time: '2023-10-24T08:00:00',
         type: 'incoming',
         user: 'Lola',
-        content: 'Вітаю',
+        content: 'Hello',
         avatar: null,
         file_path: null,
         checked: false
@@ -54,7 +54,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         cr_time: '2023-10-30T23:01:00',
         type: 'outgoing',
         user: 'Alex',
-        content: 'Доброго дня. Я ваш віртуальний помічник.',
+        content: 'Good afternoon. I am your virtual assistant.',
         avatar: null,
         file_path: null,
         checked: true
@@ -65,7 +65,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         cr_time: '2023-10-30T23:01:00',
         type: 'incoming',
         user: 'Lola',
-        content: 'нема інтернету',
+        content: 'no connection',
         avatar: null,
         file_path: null,
         checked: true
@@ -76,7 +76,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         cr_time: '2023-10-30T23:01:00',
         type: 'outgoing',
         user: 'Alex',
-        content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
+        content: 'Sorry, I didn\'t quite understand your question. Please clarify how I can help you?',
         avatar: null,
         file_path: null,
         checked: true
@@ -87,7 +87,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         cr_time: '2023-10-30T23:05:00',
         type: 'incoming',
         user: 'Lola',
-        content: 'test qq',
+        content: 'test test test',
         avatar: null,
         file_path: null,
         checked: true
@@ -100,22 +100,11 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Lola',
         content: 'test q',
         avatar: null,
-        file_path: null,
+        file_path: ['/assets/img/user_4.jpg', '/assets/img/user_5.jpg'],
         checked: true
     }),
     new ChatMessage({
         id: 7,
-        chat_id: 1,
-        cr_time: '2023-10-30T23:05:00',
-        type: 'incoming',
-        user: 'Lola',
-        content: 'test q',
-        avatar: null,
-        file_path: ['/assets/img/img1.jpg', '/assets/img/img2.jpg'],
-        checked: true
-    }),
-    new ChatMessage({
-        id: 8,
         chat_id: 1,
         cr_time: '2023-10-30T23:05:00',
         type: 'outgoing',
@@ -126,7 +115,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         checked: true
     }),
     new ChatMessage({
-        id: 9,
+        id: 8,
         chat_id: 1,
         cr_time: '2023-10-30T23:06:00',
         type: 'outgoing',
@@ -137,7 +126,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         checked: true
     }),
     new ChatMessage({
-        id: 10,
+        id: 9,
         chat_id: 1,
         cr_time: '2023-09-30T11:02:00',
         type: 'outgoing',

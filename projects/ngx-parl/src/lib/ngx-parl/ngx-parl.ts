@@ -19,7 +19,6 @@ import {UtilsService} from '../core/service/utils/utils';
 export class NgxParlComponent {
     public ai_run_in_progress = false;
     public header = input<boolean>(true);
-
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
 

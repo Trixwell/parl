@@ -2,58 +2,78 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.6.
 
-## Development server
+## Overview
 
-To start a local development server, run:
+![img_1.png](img_1.png)
 
-```bash
-ng serve
+NgxParl is an Angular chat component that renders a fully interactive, customizable messaging interface. It supports features such as real-time message updates from external sources, sending and editing messages, deleting messages, day separators, and smooth auto-scrolling. The component is backend-agnostic, works with any data source, and integrates seamlessly with Angular Material, making it easy to plug into different projects as an open-source chat UI.
+
+# GitHub Repository: [Trixwell/parl](https://github.com/Trixwell/parl)
+
+## Installation
+To use NgxParl, ensure you have Angular and Angular Material installed. Then, import the component into your module:
+
+```
+npm install ngx-parl
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Required peer dependencies:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+npm install @angular/material
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+In your app.module.ts:
 
-```bash
-ng generate --help
+```
+import { NgxParl } from 'ngx-parl';
+
+@NgModule({
+declarations: [AppComponent],
+imports: [NgxParl],
+bootstrap: [AppComponent],
+})
+export class AppModule {}
 ```
 
-## Building
+Signal Data
 
-To build the project run:
+|     Name      |     Type      |                            Description                            |
+|:-------------:|:-------------:|:-----------------------------------------------------------------:|
+|    header     |    boolean    |     Display the chat title with the name of the interlocutor      |
+|  messageList  | ChatMessage[] |              List of chat messages, user information              |
+| messageUpdate |  ChatMessage  |  Subject / Observable / Signal, який надсилає нове повідомлення   |
 
-```bash
-ng build
+# Example Usage
+
+## Component Setup
+```
+public header = input<boolean>(true);
+public messageList = model<ChatMessage[]>([]);
+public messageUpdate = model<ChatMessage>();
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Entity
+```
+export interface ChatMessageDTO {
+    id: number;
+    chat_id: number;
+    cr_time: string; // ISO or 'YYYY-MM-DD HH:mm:ss'
+    type: ChatMessageType;
+    user: string;
+    content: string;
+    avatar?: string | null;
+    file_path?: string[] | null;
+    checked?: boolean | null;
+}
 
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+export type ChatMessageType = 'incoming' | 'outgoing';
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
+## Template
 ```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+<ngx-parl [header]="header()"
+          [(messageList)]="messageList"
+          [(messageUpdate)]="messageUpdate">
+</ngx-parl>
+```
