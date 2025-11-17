@@ -14,7 +14,7 @@ NgxParl is an Angular chat component that renders a fully interactive, customiza
 To use NgxParl, ensure you have Angular and Angular Material installed. Then, import the component into your module:
 
 ```
-npm install ngx-parl
+npm install @trixwell/ngx-parl
 ```
 
 ## Required peer dependencies:
