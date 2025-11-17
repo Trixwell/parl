@@ -53,5 +53,29 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "ng-packagr": "^20.3.0",
     "typescript": "~5.9.2"
-  }
+  },
+  "description": "NgxParl is an Angular chat component that renders a fully interactive, customizable messaging interface. It supports features such as real-time message updates from external sources, sending and editing messages, deleting messages, day separators, and smooth auto-scrolling. The component is backend-agnostic, works with any data source, and integrates seamlessly with Angular Material, making it easy to plug into different projects as an open-source chat UI.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Trixwell/parl.git"
+  },
+  "keywords": [
+    "angular",
+    "parl",
+    "chat",
+    "chat-component",
+    "ngx",
+    "material",
+    "message",
+    "filter",
+    "online",
+    "online-chat"
+  ],
+  "author": "cattallina",
+  "license": "LGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Trixwell/parl/issues"
+  },
+  "homepage": "https://github.com/Trixwell/parl#readme"
 }
