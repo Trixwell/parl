@@ -1,0 +1,61 @@
+@use '../../styles/tokens' as tokens;
+@use '@angular/material' as mat;
+
+:host {
+    display: block;
+    height: 100%;
+    min-height: 0;
+}
+
+.chat {
+    background: tokens.$neutral-50;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    &__flow {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: tokens.$space-3;
+        padding: tokens.$margin-3 tokens.$margin-4;
+        scroll-behavior: smooth;
+        overscroll-behavior: contain;
+    }
+
+    &__start-day {
+        display: flex;
+        justify-content: center;
+        background: tokens.$neutral-100;
+        color: tokens.$neutral-600;
+        font: tokens.$font-body-xs;
+        width: 78px;
+        height: 22px;
+        margin: 0 auto;
+        border-radius: tokens.$radius-round;
+        gap: tokens.$space-2;
+        padding: tokens.$margin-1 tokens.$margin-3;
+
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: tokens.$neutral-200;
+        border-radius: tokens.$radius-small;
+        border: tokens.$border-1 solid tokens.$neutral-200;
+    }
+
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
+}

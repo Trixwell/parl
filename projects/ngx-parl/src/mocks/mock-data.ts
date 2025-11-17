@@ -1,0 +1,138 @@
+import {ChatMessage} from '../lib/core/entity/chat';
+
+export const CHAT_MESSAGE_MOCK: ChatMessage = new ChatMessage({
+    id: 11,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:46:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'lorem ipsum dolar',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
+export const CHAT_MESSAGE_SECOND_MOCK: ChatMessage = new ChatMessage({
+    id: 12,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:47:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'test test',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
+export const CHAT_MOCK: ChatMessage[] = [
+    new ChatMessage({
+        id: 1,
+        chat_id: 1,
+        cr_time: '2023-10-24T08:00:00',
+        type: 'incoming',
+        user: 'Lola',
+        content: 'Вітаю',
+        avatar: null,
+        file_path: null,
+        checked: false
+    }),
+    new ChatMessage({
+        id: 2,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:01:00',
+        type: 'outgoing',
+        user: 'Alex',
+        content: 'Доброго дня. Я ваш віртуальний помічник.',
+        avatar: null,
+        file_path: null,
+        checked: false
+    }),
+    new ChatMessage({
+        id: 3,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:01:00',
+        type: 'incoming',
+        user: 'Lola',
+        content: 'нема інтернету',
+        avatar: null,
+        file_path: null,
+        checked: true
+    }),
+    new ChatMessage({
+        id: 4,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:01:00',
+        type: 'outgoing',
+        user: 'Alex',
+        content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
+        avatar: null,
+        file_path: null,
+        checked: true
+    }),
+    new ChatMessage({
+        id: 5,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:05:00',
+        type: 'incoming',
+        user: 'Lola',
+        content: 'test qq',
+        avatar: null,
+        file_path: null,
+        checked: true
+    }),
+    new ChatMessage({
+        id: 6,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:05:00',
+        type: 'incoming',
+        user: 'Lola',
+        content: 'test q',
+        avatar: null,
+        file_path: null,
+        checked: true
+    }),
+    new ChatMessage({
+        id: 7,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:05:00',
+        type: 'incoming',
+        user: 'Lola',
+        content: 'test q',
+        avatar: null,
+        file_path: ['../../assets/img/img1.jpg, ../../assets/img/img2.jpg'],
+        checked: true
+    }),
+    new ChatMessage({
+        id: 8,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:05:00',
+        type: 'outgoing',
+        user: 'Alex',
+        content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
+        avatar: null,
+        file_path: null,
+        checked: true
+    }),
+    new ChatMessage({
+        id: 9,
+        chat_id: 1,
+        cr_time: '2023-10-30T23:06:00',
+        type: 'outgoing',
+        user: 'Alex',
+        content: 'test qwe',
+        avatar: null,
+        file_path: ['../../assets/img/img2.jpg'],
+        checked: false
+    }),
+    new ChatMessage({
+        id: 10,
+        chat_id: 1,
+        cr_time: '2023-09-30T11:02:00',
+        type: 'outgoing',
+        user: 'Alex',
+        content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Будь ласка, уточніть, чим я можу вам допомогти?',
+        avatar: null,
+        file_path: ['../../assets/img/img2.jpg'],
+        checked: false
+    }),
+];

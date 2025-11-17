@@ -1,0 +1,31 @@
+{
+    "name": "@trixwell/ngx-parl",
+    "version": "1.0.1",
+    "license": "LGPL-3.0",
+    "description": "Highly customizable Angular Material chat component",
+    "keywords": [
+        "angular",
+        "parl",
+        "chat",
+        "chat-component",
+        "ngx",
+        "material",
+        "message",
+        "filter",
+        "online",
+        "online-chat"
+    ],
+    "peerDependencies": {
+        "@angular/common": "^20.3.0",
+        "@angular/core": "^20.3.0"
+    },
+    "dependencies": {
+        "tslib": "^2.3.0"
+    },
+    "sideEffects": false,
+    "devDependencies": {
+        "@angular/animations": "^20.3.7",
+        "@angular/cdk": "^20.2.10",
+        "@angular/material": "^20.2.10"
+    }
+}

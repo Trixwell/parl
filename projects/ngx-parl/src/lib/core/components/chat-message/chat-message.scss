@@ -1,0 +1,164 @@
+@use '../../../../styles/tokens' as tokens;
+@use '@angular/material' as mat;
+
+.message {
+    display: flex;
+    gap: tokens.$margin-2;
+    align-items: flex-end;
+    max-width: 80%;
+    animation: pop 120ms ease-out;
+
+    &__avatar img {
+        display: block;
+        border-radius: tokens.$radius-round;
+    }
+
+    &__body {
+        padding: tokens.$margin-2 tokens.$margin-3;
+        min-width: 0;
+        font: tokens.$font-body-m;
+        border-radius: tokens.$radius-large;
+    }
+
+    &__bubble {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: tokens.$margin-2;
+        align-items: end;
+        max-width: 100%;
+        word-break: break-word;
+        white-space: pre-wrap;
+    }
+
+    &__text {
+        min-width: 0;
+    }
+
+    &__meta {
+        display: inline-flex;
+        align-items: center;
+        gap: tokens.$margin-1;
+        user-select: none;
+        line-height: 1;
+        margin: 0;
+    }
+
+    &__time {
+        font: tokens.$font-body-xs;
+    }
+
+    &__attachments {
+        display: grid;
+        gap: tokens.$margin-2;
+        justify-content: start;
+        width: 100%;
+        margin-bottom: tokens.$margin-2;
+
+        &:has(:only-child) {
+            grid-template-columns: repeat(1, minmax(0, 140px));
+        }
+
+        &:has(:nth-child(2):last-child) {
+            grid-template-columns: repeat(2, minmax(0, 140px));
+        }
+
+        &:has(:nth-child(3)) {
+            grid-template-columns: repeat(3, minmax(0, 140px));
+        }
+    }
+
+    &__image {
+        display: block;
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: tokens.$radius-medium-extra;
+        aspect-ratio: 1 / 1;
+    }
+
+    &__bubble::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+
+    &__time {
+        font: tokens.$font-body-xs;
+        min-width: 30px;
+    }
+
+    &__icon {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+    }
+
+    &--incoming {
+        margin-right: auto;
+
+        .message__body {
+            background: tokens.$neutral-200;
+            color: tokens.$neutral-800;
+            border-bottom-right-radius: tokens.$radius-large;
+        }
+
+        .message__bubble {
+            border-top-left-radius: tokens.$radius-small;
+        }
+
+        .message__time {
+            color: tokens.$neutral-500;
+        }
+    }
+
+    &--outgoing {
+        margin-left: auto;
+        flex-direction: row-reverse;
+
+        .message__body {
+            background: tokens.$primary-600;
+            color: tokens.$neutral-50;
+            border-bottom-left-radius: tokens.$radius-large;
+        }
+
+        .message__bubble {
+            border-top-right-radius: 4px;
+        }
+
+        .message__time {
+            color: tokens.$neutral-200;
+        }
+    }
+}
+
+@keyframes pop {
+    from {
+        transform: translateY(2px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+::ng-deep {
+    .mat-mdc-menu-content {
+        background: tokens.$neutral-50;
+        width: 160px;
+        border-radius: tokens.$radius-medium;
+        gap: tokens.$space-1;
+        border: tokens.$border-1 solid tokens.$primary-100;
+        padding: tokens.$margin-2 tokens.$space-1;
+        box-shadow: tokens.$shadow-light;
+        overflow: hidden;
+        font: tokens.$font-body-s;
+    }
+
+    .mat-mdc-menu-item-text {
+        font: tokens.$font-body-s !important;
+        font-weight: 500 !important;
+        color: tokens.$neutral-800 !important;
+    }
+
+}

@@ -1,0 +1,107 @@
+<section class="message"
+         [class.message--focus]="focused()"
+         [class.message--filled]="hasText()"
+         [class.message--sending]="sending()">
+
+    @if (isEditMode()) {
+        <div class="message__wrap">
+            <div class="message__wrap--input">
+                <button class="message__button message__button--attach">
+                    <mat-icon svgIcon="icon-edit"
+                              aria-hidden="true"
+                              class="message__icon message__icon--edit">
+                    </mat-icon>
+                </button>
+
+                <div class="message__edit-hint">
+                    <p>{{ editMessage()?.content }}</p>
+                </div>
+            </div>
+
+            <button class="message__button message__button--close"
+                    type="button"
+                    (click)="cancelEditMessage()">
+                <mat-icon svgIcon="close" aria-hidden="true" class="message__icon message__icon--close"></mat-icon>
+            </button>
+        </div>
+    }
+
+    <div class="message__wrap">
+        <div class="message__wrap--input">
+            <button type="button"
+                    class="message__button message__button--attach"
+                    [attr.aria-label]="'chat.attach' | transloco"
+                    (click)="fileDialog.click()">
+                <mat-icon svgIcon="attach-filled"
+                          aria-hidden="true"
+                          class="message__icon message__icon--attach">
+                </mat-icon>
+            </button>
+
+            <input #fileDialog
+                   type="file"
+                   class="hidden"
+                   accept="image/*"
+                   multiple
+                   (change)="inputFileChange($event)">
+
+            <div #inputText
+                 role="textbox"
+                 class="message__input"
+                 spellcheck="true"
+                 contenteditable="true"
+                 aria-multiline="true"
+                 [attr.data-placeholder]="isEditMode()
+                   ? ('chat.edit_placeholder' | transloco)
+                   : ('chat.placeholder' | transloco)"
+                 (blur)="onBlur()"
+                 (focus)="onFocus()"
+                 (input)="onInput()"
+                 (paste)="onPaste()"
+                 (keydown)="onKeyDown($event)">
+            </div>
+
+            <div #mirror class="message__input-mirror" aria-hidden="true"></div>
+
+            <ng-content></ng-content>
+        </div>
+
+        <button class="message__button message__button--send"
+                type="button"
+                (click)="enterDown()"
+                [attr.aria-label]="'chat.send' | transloco"
+                [disabled]="!canSend()">
+            <mat-icon svgIcon="send" aria-hidden="true" class="message__icon message__icon--send"></mat-icon>
+        </button>
+    </div>
+
+    @if (previews().length) {
+        <div class="message__files">
+            @for (item of previews(); track $index) {
+                <div class="message__file" [attr.data-kind]="item.originalKind">
+                    <button type="button"
+                            class="message__file-remove"
+                            [attr.aria-label]="'chat.delete_file' | transloco"
+                            (click)="removeFile($index, $event)">
+                        <mat-icon svgIcon="remove"
+                                  aria-hidden="true"
+                                  class="message__icon message__icon--file">
+                        </mat-icon>
+                    </button>
+
+                    <div class="message__file-media" (click)="openPreview(item, $index)">
+                        <img [src]="item.src" [alt]="item.name" class="message__file-img"/>
+
+                        @if (item.originalKind === FileType.GIF) {
+                            <span class="message__file-badge message__file-badge--gif">
+                                {{ 'chat.gif' | transloco }}
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+

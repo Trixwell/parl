@@ -1,0 +1,32 @@
+<div class="modal-chat">
+    <div class="modal-chat__body">
+        @if (header()) {
+            <header class="modal-chat__header" mat-dialog-title>
+                <div class="modal-chat__hide-block"></div>
+
+                <div class="modal-chat__title">
+                    <h1 class="modal-chat__heading">{{ 'chat.title' | transloco }} {{ incomingUser() }}</h1>
+                </div>
+
+                <div class="modal-chat__actions">
+                    <img ngSrc="../../assets/icons/hide.svg" class="modal-chat__icon modal-chat__icon--hide"
+                         width="24" height="24" alt="hide" priority/>
+                    <img ngSrc="../../assets/icons/close.svg" class="modal-chat__icon modal-chat__icon--close"
+                         width="24" height="24" alt="close" priority/>
+                </div>
+            </header>
+        }
+
+        <mat-dialog-content class="modal-chat__content">
+            <app-chat-flow [messageListInput]="messageList()" [(selectedForEdit)]="selectedForEdit"></app-chat-flow>
+
+            <app-input-message [editMessage]="selectedForEdit()"
+                               (cancelEditChange)="onCancelEdit($event)"
+                               (input_textChange)="sendMessage($event)">
+                @if (ai_run_in_progress) {
+                    <mat-spinner [diameter]="30"></mat-spinner>
+                }
+            </app-input-message>
+        </mat-dialog-content>
+    </div>
+</div>

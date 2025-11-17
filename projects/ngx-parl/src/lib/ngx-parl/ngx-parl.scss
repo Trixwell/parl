@@ -1,0 +1,77 @@
+@use '../../styles/tokens' as tokens;
+@use '@angular/material' as mat;
+
+.modal-chat {
+    width: 800px;
+    height: 600px;
+    border-radius: tokens.$radius-large;
+    border: tokens.$border-1 solid #d5d5d5;
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    &__header {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: tokens.$space-0 tokens.$space-4;
+        gap: tokens.$margin-3;
+        background: tokens.$primary-500;
+        border-top-left-radius: tokens.$radius-large;
+        border-top-right-radius: tokens.$radius-large;
+    }
+
+    &__hide-block {
+        width: 48px;
+        color: tokens.$primary-500;
+    }
+
+    &__title {
+        .modal-chat__heading {
+            color: tokens.$neutral-50;
+            font: tokens.$font-h4;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        gap: tokens.$margin-2;
+    }
+
+    &__content {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+
+        & app-chat-flow {
+            flex: 1 1 auto;
+            min-height: tokens.$space-0;
+            overflow: auto;
+            display: flex;
+            align-items: flex-end;
+        }
+    }
+
+    &__input {
+        flex: tokens.$space-0 tokens.$space-0 auto;
+        border-bottom-left-radius: tokens.$radius-large;
+        border-bottom-right-radius: tokens.$radius-large;
+    }
+}
+
+:host ::ng-deep .mat-mdc-dialog-content.modal-chat__content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: tokens.$space-0;
+    max-height: none;
+    overflow: hidden;
+}
+
+img {
+    cursor: pointer;
+}
