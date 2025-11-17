@@ -1,4 +1,4 @@
-import {Component, model} from '@angular/core';
+import {Component, computed, effect, input, model} from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
@@ -6,6 +6,7 @@ import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageType} from '../core
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
 import {TranslocoPipe} from '@ngneat/transloco';
+import {UtilsService} from '../core/service/utils/utils';
 
 @Component({
     selector: 'ngx-parl',
@@ -17,43 +18,114 @@ import {TranslocoPipe} from '@ngneat/transloco';
 
 export class NgxParlComponent {
     public ai_run_in_progress = false;
+    public header = input<boolean>(true);
 
-    public message_list = model<ChatMessage[]>([]);
+    public messageList = model<ChatMessage[]>([]);
+    public messageUpdate = model<ChatMessage>();
+
     public selectedForEdit = model<ChatMessage | null>(null);
+
+    public incomingUser = computed(() => {
+        return (
+            this.messageList().find((message) => message.type === MessageType.Incoming,)?.user ?? ''
+        );
+    });
+
+    private lastUpdateKey: string | null = null;
+
+    constructor(private utils: UtilsService) {
+        effect(() => {
+            const updatedMessage = this.messageUpdate();
+
+            if (!updatedMessage) {
+                return;
+            }
+
+            const key = `${updatedMessage.id}-${updatedMessage.cr_time}-${updatedMessage.type}`;
+            if (this.lastUpdateKey === key) {
+                return;
+            }
+
+            this.lastUpdateKey = key;
+
+            if (updatedMessage.type !== MessageType.Incoming) {
+                return;
+            }
+
+            this.messageList.update((currentList) => {
+                const list = [...currentList];
+
+                const incomingIndex = list.findIndex(
+                    (message) =>
+                        message.id === updatedMessage.id &&
+                        message.type === MessageType.Incoming,
+                );
+
+                if (incomingIndex > -1) {
+                    list[incomingIndex] = updatedMessage;
+                    return list;
+                }
+
+                list.push(updatedMessage);
+
+                return list;
+            });
+        });
+    }
 
     onCancelEdit(messageId: number | null) {
         if (messageId != null) {
-            this.message_list.update(curr => {
-                const next = [...curr];
-                const i = next.findIndex(m => m.id === messageId);
-                if (i > -1) next[i].edit = false;
-                return next;
+            this.messageList.update((currentList) => {
+                const updatedList = [...currentList];
+                const index = updatedList.findIndex(
+                    (message) => message.id === messageId,
+                );
+
+                if (index > -1) {
+                    updatedList[index].edit = false;
+                }
+
+                return updatedList;
             });
         }
+
         this.selectedForEdit.set(null);
 
         return this;
     }
 
-    sendMessage(event: | string | { id: number; content: string; files?: string[] } | {
-        content: string;
-        files?: string[]
-    } | undefined) {
+    sendMessage(
+        event:
+            | string
+            | { id: number; content: string; files?: string[]; }
+            | { content: string; files?: string[]; }
+            | undefined
+    ) {
         if (!event) {
             return this;
         }
 
+        // edit message
         if (typeof event !== 'string' && 'id' in event) {
             const {id, content, files} = event;
-            this.message_list.update(curr => {
-                const next = [...curr];
-                const findIndex = next.findIndex(m => m.id === id);
-                if (findIndex > -1) {
-                    next[findIndex].content = (content ?? '').trim();
-                    if (Array.isArray(files)) next[findIndex].file_path = files.length ? files : null;
-                    next[findIndex].edit = false;
+
+            this.messageList.update((currentList) => {
+                const updatedList = [...currentList];
+                const index = updatedList.findIndex(
+                    (message) => message.id === id,
+                );
+
+                if (index > -1) {
+                    updatedList[index].content = (content ?? '').trim();
+
+                    if (Array.isArray(files)) {
+                        updatedList[index].file_path = files.length ? files : null;
+                    }
+
+                    updatedList[index].edit = false;
                 }
-                return next;
+
+                return updatedList;
             });
 
             this.selectedForEdit.set(null);
@@ -61,51 +133,67 @@ export class NgxParlComponent {
             return this;
         }
 
+        // new message
         if (typeof event === 'string') {
             const text = event.trim();
+
             if (!text) {
                 return this;
             }
 
-            const lastId = this.message_list().at(-1)?.id ?? 0;
+            const messages = this.messageList();
+            const lastId = messages.at(-1)?.id ?? 0;
+
+            const lastOutgoing = [...messages]
+                .reverse()
+                .find((message) => message.type === MessageType.Outgoing,);
+
             const dto: ChatMessageDTO = {
                 id: lastId + 1,
-                chat_id: 1,
-                cr_time: new Date().toISOString(),
+                chat_id: lastOutgoing?.chat_id ?? 1,
+                cr_time: this.utils.getLocalISODate(),
                 type: MessageType.Outgoing as ChatMessageType,
-                user: 'Alex',
+                user: lastOutgoing?.user ?? '',
                 content: text,
-                avatar: null,
+                avatar: lastOutgoing?.avatar ?? null,
                 file_path: null,
-                checked: false
+                checked: false,
             };
 
-            this.message_list.update(list => [...list, new ChatMessage(dto)]);
+            this.messageList.update((list) => [...list, new ChatMessage(dto)]);
 
             return this;
         }
 
+        // new message + files
         const {content, files} = event;
         const text = (content ?? '').trim();
         const hasFiles = Array.isArray(files) && files.length > 0;
+
         if (!text && !hasFiles) {
             return this;
         }
 
-        const lastId = this.message_list().at(-1)?.id ?? 0;
+        const messages = this.messageList();
+        const lastId = messages.at(-1)?.id ?? 0;
+
+        const lastOutgoing = [...messages]
+            .reverse()
+            .find((message) => message.type === MessageType.Outgoing,);
+
         const dto: ChatMessageDTO = {
             id: lastId + 1,
-            chat_id: 1,
-            cr_time: new Date().toISOString(),
+            chat_id: lastOutgoing?.chat_id ?? 1,
+            cr_time: this.utils.getLocalISODate(),
             type: MessageType.Outgoing as ChatMessageType,
-            user: 'Alex',
+            user: lastOutgoing?.user ?? '',
             content: text,
-            avatar: null,
-            file_path: hasFiles ? files! : null,
-            checked: false
+            avatar: lastOutgoing?.avatar ?? null,
+            file_path: hasFiles ? files : null,
+            checked: false,
         };
 
-        this.message_list.update(list => [...list, new ChatMessage(dto)]);
+        this.messageList.update((list) => [...list, new ChatMessage(dto)]);
 
         return this;
     }

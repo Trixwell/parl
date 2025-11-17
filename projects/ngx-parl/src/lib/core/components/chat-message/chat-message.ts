@@ -39,6 +39,10 @@ export class ChatMessageComponent {
             this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/trash.svg'));
         this.iconRegistry.addSvgIcon('icon-edit',
             this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/icon-edit.svg'));
+
+        setTimeout(() => {
+            this.currentMessage().checked = true;
+        }, 600);
     }
 
     private normalizeSourcePath(sourcePath: string): string {

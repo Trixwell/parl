@@ -10,6 +10,7 @@ export type OriginalKind = 'image' | 'gif';
 
 export interface PreviewItem {
     originalKind: OriginalKind;
+    duration?: number;
     src: string;
     name: string;
     type: string;

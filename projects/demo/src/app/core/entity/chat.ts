@@ -1,21 +1,3 @@
-// export class ChatMessage {
-//     public edit = false;
-//
-//     constructor(
-//         public id: number,
-//         public chat_id: number,
-//         public cr_time: string,
-//         public type: string,
-//         public user: string,
-//         public content: string,
-//         public avatar: string | null = null,
-//         public file_path: string | null = null,
-//         public checked: boolean | null = null,
-//     ) {
-//     }
-// }
-
-
 export class ChatMessage {
     public id: number;
     public chat_id: number;
@@ -56,20 +38,29 @@ export class ChatMessage {
         return `${hh}:${mm}`;
     }
 }
+
 export interface ChatMessageDTO {
     id: number;
     chat_id: number;
-    cr_time: string;                     // ISO або 'YYYY-MM-DD HH:mm:ss'
-    type: ChatMessageType;               // 'incoming' | 'outgoing'
+    cr_time: string; // ISO або 'YYYY-MM-DD HH:mm:ss'
+    type: ChatMessageType;
     user: string;
     content: string;
     avatar?: string | null;
     file_path?: string[] | null;
     checked?: boolean | null;
 }
+
 export type ChatMessageType = 'incoming' | 'outgoing';
 
 export enum MessageType {
     Incoming = 'incoming',
     Outgoing = 'outgoing'
 }
+
+export interface CurrMessage {
+    id?: number;
+    content: string;
+    files?: string[];
+}
+

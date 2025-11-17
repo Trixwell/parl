@@ -66,15 +66,16 @@ export class ChatFlowComponent {
     }
 
     onEditChange(id: number, isEdit: boolean) {
-        const message = this.messageList().find(m => m.id === id);
-        if (!message) {
+        const messageList = this.messageList().find(message => message.id === id);
+        if (!messageList) {
             return this;
         }
 
         if (isEdit) {
-            return this.startEdit(message);
+            return this.startEdit(messageList);
         } else {
-            message.edit = false;
+            messageList.edit = false;
+
             if (this.selectedForEdit()?.id === id) {
                 this.selectedForEdit.set(null);
             }
@@ -97,14 +98,16 @@ export class ChatFlowComponent {
             return this;
         }
 
-        const next = this.messageList().filter(m => m.id !== messageId);
+        const updatedList = this.messageList().filter(m => m.id !== messageId);
         this.selectedForEdit.set(null);
-        queueMicrotask(() => this.messageListInput.set(next));
+
+        queueMicrotask(() => this.messageListInput.set(updatedList));
 
         return this;
     }
 
-    trackByMessageId(_index: number, message: ChatMessage): number {
-        return message.id;
+    trackByMessageId(_index: number, message: ChatMessage): string {
+        // return message.id;
+        return `${message.chat_id}-${message.type}-${message.id}`;
     }
 }

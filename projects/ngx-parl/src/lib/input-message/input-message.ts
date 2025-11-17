@@ -28,12 +28,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     @ViewChild('inputText', {static: false}) inputTextElement!: ElementRef<HTMLDivElement>;
     @ViewChild('mirror', {static: false}) mirrorElement!: ElementRef<HTMLDivElement>;
 
-    // ❗ Тепер приймаємо і ChatMessage, і DTO, і null
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
 
     public hasOriginalAttachments = computed(() => {
-        const fp = this.editFilePaths();
-        return fp.length > 0;
+        const filePaths = this.editFilePaths();
+        return filePaths.length > 0;
     });
 
     public hasNewAttachments = computed(() => (this.previews()?.length ?? 0) > 0);
@@ -71,18 +70,21 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/close.svg'));
 
         effect(() => {
-            const msg = this.editMessage();
-            const el = this.inputTextElement?.nativeElement;
-            if (!el) return;
+            const message = this.editMessage();
+            const element = this.inputTextElement?.nativeElement;
 
-            if (msg) {
-                const content = (msg as any).content ?? '';
+            if (!element) {
+                return;
+            }
+
+            if (message) {
+                const content = (message as any).content ?? '';
                 this.draft.set(content);
-                el.innerText = content;
+                element.innerText = content;
 
                 queueMicrotask(() => {
                     this.autoResizeByRows();
-                    el.focus();
+                    element.focus();
                     this.focused.set(true);
                 });
             }
@@ -90,21 +92,22 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit() {
-        const el = this.inputTextElement.nativeElement;
-        el.style.transition = 'height 160ms ease';
+        const element = this.inputTextElement.nativeElement;
+        element.style.transition = 'height 160ms ease';
         this.initMirror();
 
-        const cs = getComputedStyle(el);
-        const lineHeight = this.cssNum(cs.lineHeight, 24);
+        const computedStyle = getComputedStyle(element);
+        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
 
-        el.style.height = `${lineHeight}px`;
+        element.style.height = `${lineHeight}px`;
         this.lastHeightPx = lineHeight;
         this.lastRows = 1;
         this.updateOverflow(1);
 
         requestAnimationFrame(() => {
             const {rows, nextHeightPx} = this.measureByMirror();
-            el.style.height = `${nextHeightPx}px`;
+            element.style.height = `${nextHeightPx}px`;
+
             this.lastRows = rows;
             this.lastHeightPx = nextHeightPx;
             this.updateOverflow(rows);
@@ -118,13 +121,15 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
     }
 
-    /** Повертає file_path редагованого повідомлення як масив */
     private editFilePaths(): string[] {
-        const msg = this.editMessage();
-        if (!msg) return [];
-        const fp = (msg as any).file_path;
-        return Array.isArray(fp) ? fp : [];
-        // за твоїми останніми правками file_path — масив або null
+        const message = this.editMessage();
+        if (!message) {
+            return [];
+        }
+
+        const file_path = (message as any).file_path;
+
+        return Array.isArray(file_path) ? file_path : [];
     }
 
     private collectAttachmentSources(): string[] {
@@ -132,44 +137,47 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     cancelEditMessage() {
-        const msg = this.editMessage();
-        this.cancelEdit.set((msg as any)?.id ?? null);
+        const message = this.editMessage();
+        this.cancelEdit.set((message as any)?.id ?? null);
         queueMicrotask(() => this.cancelEdit.set(null));
 
         this.draft.set('');
-        const el = this.inputTextElement?.nativeElement;
-        if (el) {
-            el.innerHTML = '';
+        const element = this.inputTextElement?.nativeElement;
+
+        if (element) {
+            element.innerHTML = '';
             this.autoResizeByRows();
-            el.focus();
+            element.focus();
         }
+
         return this;
     }
 
     enterDown() {
-        const el = this.inputTextElement.nativeElement;
+        const element = this.inputTextElement.nativeElement;
         const text = this.draft().trim();
         if (!this.canSend()) return this;
 
         this.sending.set(true);
 
         const files = this.collectAttachmentSources();
-        const msg = this.editMessage();
+        const message = this.editMessage();
 
-        if (msg) {
-            this.input_text.set({id: (msg as any).id, content: text, files: files.length ? files : undefined});
+        if (message) {
+            this.input_text.set({id: (message as any).id, content: text, files: files.length ? files : undefined});
         } else {
             this.input_text.set({content: text, files: files.length ? files : undefined});
         }
 
         this.draft.set('');
-        el.innerHTML = '';
+        element.innerHTML = '';
         this.files.set([]);
         this.previews.set([]);
-        el.focus();
+        element.focus();
         this.autoResizeByRows();
 
         setTimeout(() => this.sending.set(false), 150);
+
         return this;
     }
 
@@ -178,11 +186,13 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.inputTextElement.nativeElement.innerHTML = '';
         }
         this.focused.set(true);
+
         return this;
     }
 
     onBlur() {
         this.focused.set(false);
+
         return this;
     }
 
@@ -190,15 +200,18 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             this.enterDown();
+
             return this;
         }
         queueMicrotask(() => this.autoResizeByRows());
+
         return this;
     }
 
     onInput() {
         this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
         this.autoResizeByRows();
+
         return this;
     }
 
@@ -207,21 +220,24 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
             this.autoResizeByRows();
         });
+
         return this;
     }
 
-    /** Один метод читає вибрані файли і формує прев’ю */
     inputFileChange(event: Event) {
         const inputEl = event.target as HTMLInputElement;
         const selected = inputEl.files;
+
         if (!selected?.length) {
             inputEl.value = '';
+
             return this;
         }
 
         const list = Array.from(selected).filter(f => (f.type || '').startsWith('image/'));
         if (!list.length) {
             inputEl.value = '';
+
             return this;
         }
 
@@ -244,9 +260,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         event?.stopPropagation();
         event?.preventDefault();
 
-        const prevs = [...(this.previews() ?? [])];
-        prevs.splice(index, 1);
-        this.previews.set(prevs);
+        const previews = [...(this.previews() ?? [])];
+        previews.splice(index, 1);
+        this.previews.set(previews);
 
         const filesArr = [...(this.files() ?? [])];
         if (index >= 0 && index < filesArr.length) {
@@ -260,46 +276,51 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    // ——— Допоміжні ———
-
     private autoResizeByRows() {
-        const el = this.inputTextElement.nativeElement;
+        const element = this.inputTextElement.nativeElement;
         const {rows, nextHeightPx} = this.measureByMirror();
 
         if (rows === this.lastRows) {
             this.updateOverflow(rows);
+
             return this;
         }
 
-        if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
-        el.style.height = `${this.lastHeightPx}px`;
+        if (this.resizeRaf) {
+            cancelAnimationFrame(this.resizeRaf);
+        }
+
+        element.style.height = `${this.lastHeightPx}px`;
 
         this.resizeRaf = requestAnimationFrame(() => {
-            el.style.height = `${nextHeightPx}px`;
+            element.style.height = `${nextHeightPx}px`;
             this.lastHeightPx = nextHeightPx;
             this.lastRows = rows;
             this.updateOverflow(rows);
         });
+
         return this;
     }
 
     private measureByMirror(): { rows: number; nextHeightPx: number } {
         const inputEl = this.inputTextElement.nativeElement;
         const mirrorEl = this.mirrorElement.nativeElement;
-        const cs = getComputedStyle(inputEl);
+        const computedStyle = getComputedStyle(inputEl);
 
         let text = inputEl.innerText;
-        if (!text || text === '\n') text = '\u00A0';
+        if (!text || text === '\n') {
+            text = '\u00A0';
+        }
 
-        mirrorEl.style.width = cs.width;
+        mirrorEl.style.width = computedStyle.width;
         mirrorEl.textContent = text;
 
-        const lineHeight = this.cssNum(cs.lineHeight, 24);
-        const pt = this.cssNum(cs.paddingTop, 0);
-        const pb = this.cssNum(cs.paddingBottom, 0);
-        const paddingY = pt + pb;
+        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+        const paddingTop = this.cssNum(computedStyle.paddingTop, 0);
+        const paddingBottom = this.cssNum(computedStyle.paddingBottom, 0);
+        const paddingY = paddingTop + paddingBottom;
 
-        const maxRowsCss = cs.getPropertyValue('--max-rows').trim();
+        const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
 
         const contentH = mirrorEl.offsetHeight;
@@ -307,13 +328,14 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const rows = Math.min(rawRows, maxRows);
 
         const nextHeightPx = Math.round(rows * lineHeight + paddingY);
+
         return {rows, nextHeightPx};
     }
 
     private initMirror() {
         const mirror = this.mirrorElement.nativeElement;
         const input = this.inputTextElement.nativeElement;
-        const cs = getComputedStyle(input);
+        const computedStyle = getComputedStyle(input);
 
         mirror.style.position = 'absolute';
         mirror.style.visibility = 'hidden';
@@ -323,24 +345,26 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         mirror.style.overflowWrap = 'break-word';
         mirror.style.wordBreak = 'normal';
 
-        const props = [
+        const properties = [
             'font', 'font-size', 'font-family', 'font-weight', 'font-style',
             'line-height', 'letter-spacing', 'word-spacing',
             'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
             'border-top-width', 'border-bottom-width', 'border-left-width', 'border-right-width',
             'white-space', 'text-transform', 'box-sizing'
         ];
-        props.forEach(p => (mirror.style as any)[p] = cs.getPropertyValue(p));
+
+        properties.forEach(property => (mirror.style as any)[property] = computedStyle.getPropertyValue(property));
         mirror.style.paddingTop = '0px';
         mirror.style.paddingBottom = '0px';
     }
 
     private updateOverflow(rows: number) {
-        const el = this.inputTextElement.nativeElement;
-        const cs = getComputedStyle(el);
-        const maxRowsCss = cs.getPropertyValue('--max-rows').trim();
+        const element = this.inputTextElement.nativeElement;
+        const computedStyle = getComputedStyle(element);
+        const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
-        el.style.overflowY = rows >= maxRows ? 'auto' : 'hidden';
+        element.style.overflowY = rows >= maxRows ? 'auto' : 'hidden';
+
         return this;
     }
 

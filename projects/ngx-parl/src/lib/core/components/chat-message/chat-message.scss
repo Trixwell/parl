@@ -36,7 +36,7 @@
 
     &__meta {
         display: inline-flex;
-        align-items: baseline;
+        align-items: center;
         gap: tokens.$margin-1;
         user-select: none;
         line-height: 1;
@@ -103,7 +103,7 @@
         }
 
         .message__bubble {
-            border-top-left-radius: 4px;
+            border-top-left-radius: tokens.$radius-small;
         }
 
         .message__time {
@@ -114,7 +114,6 @@
     &--outgoing {
         margin-left: auto;
         flex-direction: row-reverse;
-        //justify-content: flex-end;
 
         .message__body {
             background: tokens.$primary-600;

@@ -20,6 +20,5 @@ export interface PreviewItem {
 
 export enum FileType {
     IMAGE = 'image',
-    GIF = 'gif',
-    VIDEO = 'video'
+    GIF = 'gif'
 }

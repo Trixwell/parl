@@ -1,4 +1,3 @@
-<!-- chat-message.component.html -->
 <div class="message"
      [ngClass]="{
        'message--outgoing': currentMessage().type === messageType.Outgoing,
@@ -20,11 +19,10 @@
                     <img [src]="file"
                          alt="attachment"
                          class="message__image"
-                         loading="lazy" />
+                         loading="lazy"/>
                 }
             </div>
         }
-
 
         <div class="message__bubble" tabindex="0">
             <div class="message__text">{{ currentMessage().content }}</div>

@@ -1,4 +1,6 @@
-<ngx-parl [(message_list)]="message_list"></ngx-parl>
+<ngx-parl [header]="header()"
+          [(messageList)]="messageList"
+          [(messageUpdate)]="messageUpdate">
+</ngx-parl>
 
-
-<router-outlet />
+<router-outlet/>

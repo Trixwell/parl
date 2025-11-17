@@ -1,5 +1,41 @@
 import {ChatMessage} from '../app/core/entity/chat';
 
+export const CHAT_MESSAGE_MOCK: ChatMessage = new ChatMessage({
+    id: 11,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:46:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'lorem ipsum dolar',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
+export const CHAT_MESSAGE_SECOND_MOCK: ChatMessage = new ChatMessage({
+    id: 12,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:47:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'qwe - test',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
+export const CHAT_MESSAGE_THIRD_MOCK: ChatMessage = new ChatMessage({
+    id: 13,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:49:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'qwe test qwe-qwe, test test qwe qwe test',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
 export const CHAT_MOCK: ChatMessage[] = [
     new ChatMessage({
         id: 1,
@@ -75,7 +111,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Lola',
         content: 'test q',
         avatar: null,
-        file_path:['/assets/img/img1.jpg', '/assets/img/img2.jpg'],
+        file_path: ['/assets/img/img1.jpg', '/assets/img/img2.jpg'],
         checked: true
     }),
     new ChatMessage({

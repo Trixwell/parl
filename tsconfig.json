@@ -9,7 +9,9 @@
     "noImplicitReturns": true,
     "paths": {
       "ngx-parl": [
-        "./dist/ngx-parl"
+//        "./dist/ngx-parl"
+          "./projects/ngx-parl/src/public-api.ts",
+          "./dist/ngx-parl"
       ]
     },
     "noFallthroughCasesInSwitch": true,

@@ -1,20 +1,3 @@
-// export class ChatMessage {
-//     public edit = false;
-//
-//     constructor(
-//         public id: number,
-//         public chat_id: number,
-//         public cr_time: string,
-//         public type: string,
-//         public user: string,
-//         public content: string,
-//         public avatar: string | null = null,
-//         public file_path: string | null = null,
-//         public checked: boolean | null = null,
-//     ) {
-//     }
-// }
-
 export class ChatMessage {
     public id: number;
     public chat_id: number;
@@ -23,7 +6,7 @@ export class ChatMessage {
     public user: string;
     public content: string;
     public avatar: string | null;
-    public file_path: string[] | null;           // ⬅️ масив шляхів до зображень/GIF
+    public file_path: string[] | null;
     public checked: boolean | null;
 
     public edit = false;
@@ -36,7 +19,7 @@ export class ChatMessage {
         this.user = data.user;
         this.content = data.content;
         this.avatar = data.avatar ?? null;
-        this.file_path = data.file_path ?? null;   // ⬅️ масив або null
+        this.file_path = data.file_path ?? null;
         this.checked = data.checked ?? null;
     }
 
@@ -64,7 +47,7 @@ export interface ChatMessageDTO {
     user: string;
     content: string;
     avatar?: string | null;
-    file_path?: string[] | null;                 // ⬅️ масив або null
+    file_path?: string[] | null;
     checked?: boolean | null;
 }
 

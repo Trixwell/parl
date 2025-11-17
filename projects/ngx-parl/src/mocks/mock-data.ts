@@ -1,5 +1,28 @@
 import {ChatMessage} from '../lib/core/entity/chat';
 
+export const CHAT_MESSAGE_MOCK: ChatMessage = new ChatMessage({
+    id: 11,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:46:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'lorem ipsum dolar',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
+
+export const CHAT_MESSAGE_SECOND_MOCK: ChatMessage = new ChatMessage({
+    id: 12,
+    chat_id: 1,
+    cr_time: '2025-11-17T17:47:00',
+    type: 'incoming',
+    user: 'Lola',
+    content: 'test test',
+    avatar: null,
+    file_path: null,
+    checked: false
+})
 
 export const CHAT_MOCK: ChatMessage[] = [
     new ChatMessage({
