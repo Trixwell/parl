@@ -99,7 +99,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Lola',
         content: 'test q',
         avatar: null,
-        file_path: ['../../assets/img/img1.jpg, ../../assets/img/img2.jpg'],
+        file_path: ['../../assets/img/user_4.jpg, ../../assets/img/user_4.jpg'],
         checked: true
     }),
     new ChatMessage({
@@ -121,7 +121,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Alex',
         content: 'test qwe',
         avatar: null,
-        file_path: ['../../assets/img/img2.jpg'],
+        file_path: ['../../assets/img/user_4.jpg'],
         checked: false
     }),
     new ChatMessage({
@@ -132,7 +132,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         user: 'Alex',
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
-        file_path: ['../../assets/img/img2.jpg'],
+        file_path: ['../../assets/img/user_4.jpg'],
         checked: false
     }),
 ];
