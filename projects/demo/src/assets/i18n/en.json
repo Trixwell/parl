@@ -1,0 +1,16 @@
+{
+    "chat": {
+        "title": "Telegram",
+        "hide": "Hide",
+        "close": "Close",
+        "attach": "Attach",
+        "send": "Send message",
+        "placeholder": "Type a message...",
+        "edit_placeholder": "Update a message...",
+        "delete_file": "Remove file",
+        "gif": "GIF",
+        "video": "Video",
+        "edit" : "Edit",
+        "remove" : "Delete"
+    }
+}

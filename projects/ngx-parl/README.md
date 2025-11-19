@@ -1,6 +1,4 @@
-# NgxParl
-
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.6.
+# NgxParl Component Documentation
 
 ## Overview
 
@@ -72,8 +70,9 @@ export type ChatMessageType = 'incoming' | 'outgoing';
 
 ## Template
 ```
-<ngx-parl [header]="header()"
-          [(messageList)]="messageList"
-          [(messageUpdate)]="messageUpdate">
+<ngx-parl 
+    [header]="header()"
+    [(messageList)]="messageList"
+    [(messageUpdate)]="messageUpdate">
 </ngx-parl>
 ```
