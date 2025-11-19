@@ -2,7 +2,7 @@
 
 ## Overview
 
-![img_1.png](img_1.png)
+![chat_view.png](chat_view.png)
 
 NgxParl is an Angular chat component that renders a fully interactive, customizable messaging interface. It supports features such as real-time message updates from external sources, sending and editing messages, deleting messages, day separators, and smooth auto-scrolling. The component is backend-agnostic, works with any data source, and integrates seamlessly with Angular Material, making it easy to plug into different projects as an open-source chat UI.
 

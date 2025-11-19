@@ -1,0 +1,36 @@
+@use '../tokens' as tokens;
+
+@mixin flow-theme-common(
+    $header-bg,
+    $header-color,
+    $incoming-bg,
+    $incoming-color,
+    $outgoing-bg,
+    $outgoing-color,
+) {
+    ::ng-deep {
+
+        .modal-chat {
+            &__header{
+                background-color: $header-bg;
+                color: $header-color;
+            }
+        }
+
+        .message {
+            &--incoming {
+                .message__body {
+                    background: $incoming-bg;
+                    color: $incoming-color;
+                }
+            }
+
+            &--outgoing {
+                .message__body {
+                    background: $outgoing-bg;
+                    color: $outgoing-color;
+                }
+            }
+        }
+    }
+}

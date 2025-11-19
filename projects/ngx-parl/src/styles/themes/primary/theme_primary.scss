@@ -1,0 +1,14 @@
+@use 'tokens' as tokens;
+@use '../theme' as common;
+@use '@angular/material' as mat;
+
+.flow-theme-primary {
+    @include common.flow-theme-common(
+        $header-bg: tokens.$primary-500,
+        $header-color: tokens.$neutral-50,
+        $incoming-bg: tokens.$neutral-200,
+        $incoming-color: tokens.$neutral-800,
+        $outgoing-bg: tokens.$primary-600,
+        $outgoing-color: tokens.$neutral-50
+    );
+}

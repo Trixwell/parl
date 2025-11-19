@@ -1,5 +1,5 @@
 import {Component, computed, effect, input, model} from '@angular/core';
-import {NgOptimizedImage} from '@angular/common';
+import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
 import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageType} from '../core/entity/chat';
@@ -7,10 +7,11 @@ import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
+import {FlowTheme} from '../core/entity/theme';
 
 @Component({
     selector: 'ngx-parl',
-    imports: [NgOptimizedImage, ChatFlowComponent, MatDialogContent, MatDialogTitle, MatProgressSpinner, InputMessageComponent, InputMessageComponent, InputMessageComponent, InputMessageComponent, TranslocoPipe, ChatFlowComponent, InputMessageComponent],
+    imports: [NgOptimizedImage, ChatFlowComponent, MatDialogContent, MatDialogTitle, MatProgressSpinner, InputMessageComponent, InputMessageComponent, InputMessageComponent, InputMessageComponent, TranslocoPipe, ChatFlowComponent, InputMessageComponent, NgClass],
     standalone: true,
     templateUrl: './ngx-parl.html',
     styleUrl: './ngx-parl.scss',
@@ -18,10 +19,13 @@ import {UtilsService} from '../core/service/utils/utils';
 
 export class NgxParlComponent {
     public ai_run_in_progress = false;
+    private lastUpdateKey: string | null = null;
+
+    public theme = input<FlowTheme>(FlowTheme.PRIMARY);
     public header = input<boolean>(true);
+
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
-
     public selectedForEdit = model<ChatMessage | null>(null);
 
     public incomingUser = computed(() => {
@@ -29,8 +33,6 @@ export class NgxParlComponent {
             this.messageList().find((message) => message.type === MessageType.Incoming,)?.user ?? ''
         );
     });
-
-    private lastUpdateKey: string | null = null;
 
     constructor(private utils: UtilsService) {
         effect(() => {
@@ -196,4 +198,6 @@ export class NgxParlComponent {
 
         return this;
     }
+
+    protected readonly FlowTheme = FlowTheme;
 }

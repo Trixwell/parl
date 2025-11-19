@@ -1,19 +1,29 @@
 <div class="chat">
-    <div class="chat__flow" #chatFlowRef>
-        @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
-            @if (message | toggleDisplayChatStartDay: messageList() : i) {
-                <span class="chat__start-day">
+    @if (messageList()) {
+        <div class="chat__flow" #chatFlowRef>
+            @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
+                @if (message | toggleDisplayChatStartDay: messageList() : i) {
+                    <span class="chat__start-day">
                     {{ message.cr_time | chatStartDay:'d MMMM' }}
                 </span>
+                }
+
+                <lib-chat-message [currentMessage]="message"
+                                  [edit]="message.edit ?? false"
+                                  (editChange)="onEditChange(message.id, $event)"
+                                  (requestEditChange)="onRequestEdit($event)"
+                                  (requestDeleteChange)="onRequestDelete($event)">
+                </lib-chat-message>
             }
+        </div>
+    } @else {
+        <div class="chat__flow__empty">
+            <mat-icon svgIcon="lucide_send" aria-hidden="true" class="message__icon"></mat-icon>
 
-            <lib-chat-message [currentMessage]="message"
-                              [edit]="message.edit ?? false"
-                              (editChange)="onEditChange(message.id, $event)"
-                              (requestEditChange)="onRequestEdit($event)"
-                              (requestDeleteChange)="onRequestDelete($event)">
-            </lib-chat-message>
-
-        }
-    </div>
+            <div class="chat__flow__empty--header">
+                <h3 class="chat__flow__empty--title">{{ 'chat.chat_empty_title' | transloco }}</h3>
+                <p class="chat__flow__empty--subscription">{{ 'chat.chat_empty_subscription' | transloco }}</p>
+            </div>
+        </div>
+    }
 </div>

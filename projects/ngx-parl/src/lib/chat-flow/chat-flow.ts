@@ -4,6 +4,9 @@ import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
+import {TranslocoPipe} from '@ngneat/transloco';
+import {MatIcon, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
 
 @Component({
     selector: 'app-chat-flow',
@@ -12,7 +15,9 @@ import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-s
         ChatMessageComponent,
         ChatStartDayPipe,
         ToggleDisplayChatStartDayPipe,
-        ChatMessageComponent
+        ChatMessageComponent,
+        TranslocoPipe,
+        MatIcon
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
@@ -27,7 +32,10 @@ export class ChatFlowComponent {
 
     public selectedForEdit = model.required<ChatMessage | null>();
 
-    constructor() {
+    constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
+        this.iconRegistry.addSvgIcon('lucide_send',
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/lucide_send.svg'));
+
         effect(() => {
             const length = this.messageList().length;
             if (length > 0) {

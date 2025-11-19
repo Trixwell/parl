@@ -61,13 +61,13 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
         this.iconRegistry.addSvgIcon('attach-filled',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/attach-filled.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/attach-filled.svg'));
         this.iconRegistry.addSvgIcon('send',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/send.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/send.svg'));
         this.iconRegistry.addSvgIcon('remove',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/remove-badge.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/remove-badge.svg'));
         this.iconRegistry.addSvgIcon('close',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/close.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/close.svg'));
 
         effect(() => {
             const message = this.editMessage();

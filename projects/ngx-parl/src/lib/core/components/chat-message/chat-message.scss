@@ -1,5 +1,7 @@
 @use '../../../../styles/tokens' as tokens;
 @use '@angular/material' as mat;
+@use '../../../../styles/themes/primary/theme_primary';
+@use '../../../../styles/themes/secondary/theme_secondary';
 
 .message {
     display: flex;
@@ -97,8 +99,6 @@
         margin-right: auto;
 
         .message__body {
-            background: tokens.$neutral-200;
-            color: tokens.$neutral-800;
             border-bottom-right-radius: tokens.$radius-large;
         }
 
@@ -116,8 +116,6 @@
         flex-direction: row-reverse;
 
         .message__body {
-            background: tokens.$primary-600;
-            color: tokens.$neutral-50;
             border-bottom-left-radius: tokens.$radius-large;
         }
 

@@ -1,5 +1,4 @@
 import {Injectable} from '@angular/core';
-import {TranslocoLoader} from '@ngneat/transloco';
 import {HttpClient} from '@angular/common/http';
 
 
