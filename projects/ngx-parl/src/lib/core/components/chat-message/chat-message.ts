@@ -32,13 +32,13 @@ export class ChatMessageComponent {
 
     constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
         this.iconRegistry.addSvgIcon('checked-message',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/checked-message.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/checked-message.svg'));
         this.iconRegistry.addSvgIcon('no-check',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/no-check.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/no-check.svg'));
         this.iconRegistry.addSvgIcon('trash',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/trash.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/trash.svg'));
         this.iconRegistry.addSvgIcon('icon-edit',
-            this.sanitizer.bypassSecurityTrustResourceUrl('../../assets/icons/icon-edit.svg'));
+            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/icon-edit.svg'));
 
         setTimeout(() => {
             this.currentMessage().checked = true;
@@ -104,8 +104,8 @@ export class ChatMessageComponent {
     avatarSrc = computed(() => {
         const message = this.currentMessage();
         const fallback = message.type === 'incoming'
-            ? '../../assets/icons/avatar_anonym.svg'
-            : '../../assets/icons/avatar_manager.svg';
+            ? 'assets/ngx-parl/icons/avatar_anonym.svg'
+            : 'assets/ngx-parl/icons/avatar_manager.svg';
 
         return message.avatar || fallback;
     });

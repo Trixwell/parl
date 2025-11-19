@@ -54,7 +54,12 @@
                                 "glob": "**/*",
                                 "input": "projects/demo/public"
                             },
-                            "projects/demo/src/assets"
+                            "projects/demo/src/assets",
+                            {
+                                "glob": "**/*",
+                                "input": "projects/ngx-parl/src/assets",
+                                "output": "assets/ngx-parl"
+                            }
                         ],
                         "styles": [
                             "projects/demo/src/styles.scss",

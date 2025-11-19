@@ -1,11 +1,12 @@
 @use '../../styles/tokens' as tokens;
 @use '@angular/material' as mat;
+@use '../../styles/themes/primary/theme_primary';
+@use '../../styles/themes/secondary/theme_secondary';
 
 .modal-chat {
     width: 800px;
     height: 600px;
     border-radius: tokens.$radius-large;
-    border: tokens.$border-1 solid #d5d5d5;
 
     &__body {
         display: flex;
@@ -20,7 +21,6 @@
         justify-content: space-between;
         padding: tokens.$space-0 tokens.$space-4;
         gap: tokens.$margin-3;
-        background: tokens.$primary-500;
         border-top-left-radius: tokens.$radius-large;
         border-top-right-radius: tokens.$radius-large;
     }

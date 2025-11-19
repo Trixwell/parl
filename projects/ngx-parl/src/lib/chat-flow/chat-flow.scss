@@ -13,6 +13,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    width: 100%;
 
     &__flow {
         flex: 1 1 auto;
@@ -24,6 +25,41 @@
         padding: tokens.$margin-3 tokens.$margin-4;
         scroll-behavior: smooth;
         overscroll-behavior: contain;
+
+        &__empty {
+            display: flex;
+            gap: tokens.$space-4;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: tokens.$space-12 tokens.$space-4;
+            height: 100%;
+
+            .message__icon {
+                width: 56px;
+                height: 56px;
+            }
+
+            &--header {
+                width: 285px;
+                display: flex;
+                gap: tokens.$space-3;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            &--title {
+                margin: 0;
+                font: tokens.$font-h4;
+                color: tokens.$neutral-900;
+            }
+
+            &--subscription {
+                margin: 0;
+                font: tokens.$font-body-m;
+                color: tokens.$neutral-700;
+            }
+        }
     }
 
     &__start-day {

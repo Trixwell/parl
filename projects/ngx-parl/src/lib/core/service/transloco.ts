@@ -8,6 +8,6 @@ export class AppTranslocoLoader implements TranslocoLoader {
     }
 
     getTranslation(lang: string) {
-        return this.http.get(`../../assets/i18n/${lang}.json`);
+        return this.http.get(`assets/ngx-parl/i18n/${lang}.json`);
     }
 }
