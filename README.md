@@ -1,4 +1,4 @@
-# NgxParl
+# NgxParl Component Documentation
 
 ## Overview
 
