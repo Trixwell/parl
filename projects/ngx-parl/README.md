@@ -9,6 +9,7 @@ NgxParl is an Angular chat component that renders a fully interactive, customiza
 # GitHub Repository: [Trixwell/parl](https://github.com/Trixwell/parl)
 
 ## Installation
+
 To use NgxParl, ensure you have Angular and Angular Material installed. Then, import the component into your module:
 
 ```
@@ -34,13 +35,25 @@ bootstrap: [AppComponent],
 export class AppModule {}
 ```
 
-Signal Data
+Add the NgxParl providers to your application configuration:
 
-|     Name      |     Type      |                            Description                            |
-|:-------------:|:-------------:|:-----------------------------------------------------------------:|
-|    header     |    boolean    |     Display the chat title with the name of the interlocutor      |
-|  messageList  | ChatMessage[] |              List of chat messages, user information              |
-| messageUpdate |  ChatMessage  |  Subject / Observable / Signal, який надсилає нове повідомлення   |
+```
+export const appConfig: ApplicationConfig = {
+    providers: [provideNgxParl()] 
+}
+```
+
+Enables i18n, translations and core chat configuration
+
+## Signal Data
+
+|     Name      |     Type      |                        Description                        |
+|:-------------:|:-------------:|:---------------------------------------------------------:|
+|    header     |    boolean    | Display the chat title with the name of the interlocutor  |
+|     theme     |    string     | Choose a theme color   (```primary``` or ```secondary```) |
+|   language    |    string     |   Set language (```uk``` or ```en```). Default ```en```   |
+|  messageList  | ChatMessage[] |          List of chat messages, user information          |
+| messageUpdate |  ChatMessage  |  Subject / Observable / Signal, who sends a new message   | 
 
 # Example Usage
 
@@ -70,9 +83,8 @@ export type ChatMessageType = 'incoming' | 'outgoing';
 
 ## Template
 ```
-<ngx-parl 
-    [header]="header()"
-    [(messageList)]="messageList"
-    [(messageUpdate)]="messageUpdate">
+<ngx-parl [header]="header()"
+          [(messageList)]="messageList"
+          [(messageUpdate)]="messageUpdate">
 </ngx-parl>
 ```
