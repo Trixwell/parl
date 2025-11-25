@@ -44,6 +44,9 @@ export class NgxParlComponent {
         );
     });
 
+    public hideHandler = input<(() => unknown) | null>(null);
+    public closeHandler = input<(() => unknown) | null>(null);
+
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
         effect(() => {
@@ -211,6 +214,26 @@ export class NgxParlComponent {
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
+
+        return this;
+    }
+
+    onHideClick() {
+        const handler = this.hideHandler();
+
+        if (handler) {
+            handler();
+        }
+
+        return this;
+    }
+
+    onCloseClick() {
+        const handler = this.closeHandler();
+
+        if (handler) {
+            handler();
+        }
 
         return this;
     }
