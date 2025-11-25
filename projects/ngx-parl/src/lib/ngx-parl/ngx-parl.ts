@@ -5,16 +5,25 @@ import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
 import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageType} from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
-import {TranslocoPipe} from '@ngneat/transloco';
+import {
+    TranslocoModule,
+    TranslocoPipe,
+    TranslocoService,
+} from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
 import {FlowTheme} from '../core/entity/theme';
 
 @Component({
     selector: 'ngx-parl',
-    imports: [NgOptimizedImage, ChatFlowComponent, MatDialogContent, MatDialogTitle, MatProgressSpinner, InputMessageComponent, InputMessageComponent, InputMessageComponent, InputMessageComponent, TranslocoPipe, ChatFlowComponent, InputMessageComponent, NgClass],
     standalone: true,
+    imports: [
+        NgOptimizedImage, NgClass, MatDialogContent, MatDialogTitle, MatProgressSpinner, ChatFlowComponent, InputMessageComponent,
+        TranslocoModule,
+        TranslocoPipe
+    ],
     templateUrl: './ngx-parl.html',
     styleUrl: './ngx-parl.scss',
+    providers: [],
 })
 
 export class NgxParlComponent {
@@ -23,6 +32,7 @@ export class NgxParlComponent {
 
     public theme = input<FlowTheme>(FlowTheme.PRIMARY);
     public header = input<boolean>(true);
+    public language = input<'en' | 'uk'>('en');
 
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
@@ -30,14 +40,20 @@ export class NgxParlComponent {
 
     public incomingUser = computed(() => {
         return (
-            this.messageList().find((message) => message.type === MessageType.Incoming,)?.user ?? ''
+            this.messageList().find((message) => message.type === MessageType.Incoming)?.user ?? ''
         );
     });
 
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
 
-    constructor(private utils: UtilsService) {
+    constructor(private utils: UtilsService,
+                private transloco: TranslocoService) {
+        effect(() => {
+            const lang = this.language();
+            this.transloco.setActiveLang(lang);
+        });
+
         effect(() => {
             const updatedMessage = this.messageUpdate();
 
