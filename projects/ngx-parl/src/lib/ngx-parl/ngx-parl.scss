@@ -19,10 +19,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: tokens.$space-0 tokens.$space-4;
+        padding: tokens.$space-4 tokens.$space-4;
         gap: tokens.$margin-3;
         border-top-left-radius: tokens.$radius-large;
         border-top-right-radius: tokens.$radius-large;
+        flex-direction: row;
     }
 
     &__hide-block {
@@ -47,6 +48,8 @@
         display: flex;
         flex-direction: column;
         background: tokens.$neutral-50;
+        border-bottom-left-radius: tokens.$radius-large;
+        border-bottom-right-radius: tokens.$radius-large;
 
         & app-chat-flow {
             flex: 1 1 auto;
