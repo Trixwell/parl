@@ -31,7 +31,7 @@
     }
 
     &__title {
-        .modal-chat__heading {
+        #modal-chat__heading {
             color: tokens.$neutral-50;
             font: tokens.$font-h4;
         }
@@ -46,6 +46,7 @@
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
+        background: tokens.$neutral-50;
 
         & app-chat-flow {
             flex: 1 1 auto;
