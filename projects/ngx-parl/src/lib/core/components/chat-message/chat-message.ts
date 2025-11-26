@@ -27,11 +27,7 @@ export class ChatMessageComponent {
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
 
-    constructor() {
-        setTimeout(() => {
-            this.currentMessage().checked = true;
-        }, 1000);
-    }
+    constructor() {}
 
     private normalizeSourcePath(sourcePath: string): string {
         const cleanedPath = (sourcePath ?? '').trim();
