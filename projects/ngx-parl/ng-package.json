@@ -5,6 +5,13 @@
         "entryFile": "src/public-api.ts"
     },
     "assets": [
-        "src/assets"
+        {
+            "input": "src/assets",
+            "glob": "**/*",
+            "output": "assets"
+        }
+    ],
+    "allowedNonPeerDependencies": [
+        "tslib"
     ]
 }

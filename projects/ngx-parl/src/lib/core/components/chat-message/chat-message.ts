@@ -1,8 +1,6 @@
 import {Component, computed, input, model} from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
-import {MatIcon, MatIconRegistry} from '@angular/material/icon';
 import {ChatMessage, MessageType} from '../../entity/chat';
-import {DomSanitizer} from '@angular/platform-browser';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 
@@ -11,7 +9,6 @@ import {TranslocoPipe} from '@ngneat/transloco';
     imports: [
         NgClass,
         NgOptimizedImage,
-        MatIcon,
         DatePipe,
         MatMenu,
         MatMenuItem,
@@ -30,20 +27,7 @@ export class ChatMessageComponent {
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
 
-    constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
-        this.iconRegistry.addSvgIcon('checked-message',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/checked-message.svg'));
-        this.iconRegistry.addSvgIcon('no-check',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/no-check.svg'));
-        this.iconRegistry.addSvgIcon('trash',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/trash.svg'));
-        this.iconRegistry.addSvgIcon('icon-edit',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/icon-edit.svg'));
-
-        setTimeout(() => {
-            this.currentMessage().checked = true;
-        }, 600);
-    }
+    constructor() {}
 
     private normalizeSourcePath(sourcePath: string): string {
         const cleanedPath = (sourcePath ?? '').trim();

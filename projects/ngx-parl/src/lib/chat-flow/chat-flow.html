@@ -18,7 +18,10 @@
         </div>
     } @else {
         <div class="chat__flow__empty">
-            <mat-icon svgIcon="lucide_send" aria-hidden="true" class="message__icon"></mat-icon>
+            <img ngSrc="assets/ngx-parl/icons/lucide_send.svg"
+                 class="message__icon"
+                 width="18" height="24" alt="hide" priority/>
+
 
             <div class="chat__flow__empty--header">
                 <h3 class="chat__flow__empty--title">{{ 'chat.chat_empty_title' | transloco }}</h3>
