@@ -11,6 +11,9 @@
             "architect": {
                 "build": {
                     "builder": "@angular/build:ng-packagr",
+                    "options": {
+                        "project": "projects/ngx-parl/ng-package.json"
+                    },
                     "configurations": {
                         "production": {
                             "tsConfig": "projects/ngx-parl/tsconfig.lib.prod.json"
