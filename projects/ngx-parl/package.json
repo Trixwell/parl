@@ -1,6 +1,18 @@
 {
     "name": "@trixwell/ngx-parl",
-    "version": "1.2.3",
+    "version": "1.2.4",
+    "main": "bundles/trixwell-ngx-parl.umd.js",
+    "module": "fesm2022/trixwell-ngx-parl.mjs",
+    "typings": "lib/public-api.d.ts",
+    "files": [
+        "bundles/",
+        "fesm2022/",
+        "esm2022/",
+        "lib/",
+        "assets/",
+        "package.json",
+        "README.md"
+    ],
     "license": "LGPL-3.0",
     "description": "Highly customizable Angular Material chat component",
     "keywords": [

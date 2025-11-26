@@ -31,9 +31,13 @@
                 <time class="message__time">{{ currentMessage().cr_time | date:'HH:mm' }}</time>
                 @if (currentMessage().type === messageType.Outgoing) {
                     @if (currentMessage().checked) {
-                        <mat-icon svgIcon="checked-message" aria-hidden="true" class="message__icon"></mat-icon>
+                        <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
+                             class="message__icon"
+                             width="18" height="18" alt="hide" priority/>
                     } @else {
-                        <mat-icon svgIcon="no-check" aria-hidden="true" class="message__icon"></mat-icon>
+                        <img ngSrc="assets/ngx-parl/icons/no-check"
+                             class="message__icon"
+                             width="18" height="18" alt="hide" priority/>
                     }
                 }
             </div>
@@ -44,13 +48,17 @@
 <mat-menu #messageMenu="matMenu" xPosition="before" yPosition="below" class="message__menu">
     @if (currentMessage().type === messageType.Outgoing) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
-            <mat-icon svgIcon="icon-edit" aria-hidden="true" class="message__icon"></mat-icon>
+            <img ngSrc="assets/ngx-parl/icons/icon-edit"
+                 class="message__icon"
+                 width="18" height="18" alt="hide" priority/>
             <span>{{ 'chat.edit' | transloco }}</span>
         </button>
     }
     @if (canDelete(currentMessage())) {
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
-            <mat-icon svgIcon="trash" aria-hidden="true" class="message__icon"></mat-icon>
+            <img ngSrc="assets/ngx-parl/icons/trash"
+                 class="message__icon"
+                 width="18" height="18" alt="hide" priority/>
             <span>{{ 'chat.remove' | transloco }}</span>
         </button>
     }

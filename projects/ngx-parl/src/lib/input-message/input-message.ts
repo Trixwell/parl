@@ -10,15 +10,14 @@ import {
     signal,
     ViewChild
 } from '@angular/core';
-import {MatIcon, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {ChatMessage, CurrMessage} from '../core/entity/chat';
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
     selector: 'app-input-message',
-    imports: [MatIcon, TranslocoPipe],
+    imports: [TranslocoPipe, NgOptimizedImage],
     templateUrl: './input-message.html',
     styleUrl: './input-message.scss',
     standalone: true,
@@ -59,16 +58,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private lastRows = 1;
     private resizeRaf: number | null = null;
 
-    constructor(private iconRegistry: MatIconRegistry, private sanitizer: DomSanitizer) {
-        this.iconRegistry.addSvgIcon('attach-filled',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/attach-filled.svg'));
-        this.iconRegistry.addSvgIcon('send',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/send.svg'));
-        this.iconRegistry.addSvgIcon('remove',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/remove-badge.svg'));
-        this.iconRegistry.addSvgIcon('close',
-            this.sanitizer.bypassSecurityTrustResourceUrl('assets/ngx-parl/icons/close.svg'));
-
+    constructor() {
         effect(() => {
             const message = this.editMessage();
             const element = this.inputTextElement?.nativeElement;

@@ -1,10 +1,14 @@
 {
-    "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-    "dest": "../../dist/ngx-parl",
+    "$schema": "../../../node_modules/ng-packagr/ng-package.schema.json",
+    "dest": "../../../dist/ngx-parl",
     "lib": {
         "entryFile": "src/public-api.ts"
     },
     "assets": [
-        "src/assets"
+        {
+            "input": "src/assets",
+            "glob": "**/*",
+            "output": "assets"
+        }
     ]
 }
