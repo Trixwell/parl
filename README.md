@@ -19,6 +19,7 @@ npm install @trixwell/ngx-parl
 
 ```
 npm install @angular/material
+npm install @ngneat/transloco
 ```
 
 In your app.module.ts:
