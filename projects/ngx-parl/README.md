@@ -46,6 +46,26 @@ export const appConfig: ApplicationConfig = {
 
 Enables i18n, translations and core chat configuration
 
+## Assets Setup
+
+To enable media files (icons, images, etc.) used by @trixwell/ngx-parl, you must add the library’s assets path to your project’s angular.json:
+
+```
+"assets": [
+  {
+    "glob": "**/*",
+    "input": "node_modules/@trixwell/ngx-parl/src/assets",
+    "output": "assets/ngx-parl"
+  }
+]
+```
+
+This makes the assets available at:
+
+```
+assets/ngx-parl/...
+```
+
 ## Signal Data
 
 |     Name      |     Type      |                        Description                        |
@@ -59,6 +79,7 @@ Enables i18n, translations and core chat configuration
 # Example Usage
 
 ## Component Setup
+
 ```
 public header = input<boolean>(true);
 public messageList = model<ChatMessage[]>([]);
@@ -66,6 +87,7 @@ public messageUpdate = model<ChatMessage>();
 ```
 
 ## Entity
+
 ```
 export interface ChatMessageDTO {
     id: number;
@@ -83,6 +105,7 @@ export type ChatMessageType = 'incoming' | 'outgoing';
 ```
 
 ## Template
+
 ```
 <ngx-parl [header]="header()"
           [(messageList)]="messageList"
