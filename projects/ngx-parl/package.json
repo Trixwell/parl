@@ -1,6 +1,6 @@
 {
     "name": "@trixwell/ngx-parl",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "main": "bundles/trixwell-ngx-parl.umd.js",
     "module": "fesm2022/trixwell-ngx-parl.mjs",
     "typings": "lib/public-api.d.ts",
