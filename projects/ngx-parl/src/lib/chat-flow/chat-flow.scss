@@ -50,13 +50,13 @@
 
             &--title {
                 margin: 0;
-                font: tokens.$font-h4;
+                font: tokens.$font-h5-600;
                 color: tokens.$neutral-900;
             }
 
             &--subscription {
                 margin: 0;
-                font: tokens.$font-body-m;
+                font: tokens.$font-body-m-400;
                 color: tokens.$neutral-700;
             }
         }
@@ -67,7 +67,7 @@
         justify-content: center;
         background: tokens.$neutral-100;
         color: tokens.$neutral-600;
-        font: tokens.$font-body-xs;
+        font: tokens.$font-caption-m-400;
         width: 78px;
         height: 22px;
         margin: 0 auto;

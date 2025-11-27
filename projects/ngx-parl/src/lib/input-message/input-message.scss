@@ -63,7 +63,7 @@
         flex: 1 1 auto;
         min-height: var(--lh);
         line-height: var(--lh);
-        font: tokens.$font-body-m;
+        font: tokens.$font-body-m-400;
         outline: none;
         border: none;
         background: transparent;
@@ -180,7 +180,7 @@
             height: 18px;
             padding: 0 tokens.$border-6;
             border-radius: tokens.$radius-small;
-            font: tokens.$font-body-m;
+            font: tokens.$font-body-m-400;
             background: rgba(0, 0, 0, .6);
             color: #fff;
             letter-spacing: .3px;
@@ -216,7 +216,7 @@
             color: #fff;
             border-radius: tokens.$radius-small;
             padding: tokens.$border-1 tokens.$border-1;
-            font: tokens.$font-body-m;
+            font: tokens.$font-body-m-400;
             z-index: tokens.$border-2;
             line-height: 1.1;
         }
@@ -267,7 +267,7 @@
 
         p {
            color: tokens.$neutral-400;
-            font: tokens.$font-body-m;
+            font: tokens.$font-body-m-400;
             margin: 0;
             overflow: hidden;
             text-overflow: ellipsis;
