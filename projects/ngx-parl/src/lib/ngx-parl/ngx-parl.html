@@ -5,7 +5,9 @@
                 <div class="modal-chat__hide-block"></div>
 
                 <div class="modal-chat__title">
-                    <h1 class="modal-chat__heading" id="modal-chat__heading">{{ 'chat.title' | transloco }} {{ incomingUser() }}</h1>
+                    <h1 class="modal-chat__heading" id="modal-chat__heading">
+                        {{ 'chat.title' | transloco }} {{ incomingUser() }}
+                    </h1>
                 </div>
 
                 <div class="modal-chat__actions">
@@ -19,7 +21,8 @@
             </header>
         }
 
-        <mat-dialog-content class="modal-chat__content">
+        <mat-dialog-content class="modal-chat__content"
+                            [class.modal-chat__content--header]="header() === false">
             <app-chat-flow [messageListInput]="messageList()" [(selectedForEdit)]="selectedForEdit"></app-chat-flow>
 
             <app-input-message [editMessage]="selectedForEdit()"
