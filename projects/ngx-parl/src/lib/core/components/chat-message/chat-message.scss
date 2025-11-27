@@ -18,7 +18,7 @@
     &__body {
         padding: tokens.$margin-2 tokens.$margin-3;
         min-width: 0;
-        font: tokens.$font-body-m;
+        font: tokens.$font-body-m-400;
         border-radius: tokens.$radius-large;
     }
 
@@ -46,7 +46,7 @@
     }
 
     &__time {
-        font: tokens.$font-body-xs;
+        font: tokens.$font-caption-m-400;
     }
 
     &__attachments {
@@ -85,7 +85,7 @@
     }
 
     &__time {
-        font: tokens.$font-body-xs;
+        font: tokens.$font-caption-m-400;
         min-width: 30px;
     }
 
@@ -150,11 +150,11 @@
         padding: tokens.$margin-2 tokens.$space-1;
         box-shadow: tokens.$shadow-light;
         overflow: hidden;
-        font: tokens.$font-body-s;
+        font: tokens.$font-body-s-400;
     }
 
     .mat-mdc-menu-item-text {
-        font: tokens.$font-body-s !important;
+        font: tokens.$font-body-s-400 !important;
         font-weight: 500 !important;
         color: tokens.$neutral-800 !important;
     }
