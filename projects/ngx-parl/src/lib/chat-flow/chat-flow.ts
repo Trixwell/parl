@@ -1,4 +1,4 @@
-import {Component, computed, effect, ElementRef, model, ViewChild,} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, ElementRef, model, ViewChild,} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
@@ -23,37 +23,53 @@ import {NgOptimizedImage} from '@angular/common';
     standalone: true,
 })
 
-export class ChatFlowComponent {
-    @ViewChild('chatFlowRef', {static: true}) private flowRef!: ElementRef<HTMLElement>;
+export class ChatFlowComponent implements AfterViewInit {
+    @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
     public messageListInput = model.required<ChatMessage[]>();
     public messageList = computed(() => this.messageListInput());
 
     public selectedForEdit = model.required<ChatMessage | null>();
 
+    private viewInitialized = false;
+
     constructor() {
         effect(() => {
             const length = this.messageList().length;
-            if (length > 0) {
-                queueMicrotask(() => this.scrollToBottomSmooth());
+
+            if (!this.viewInitialized || length === 0) {
+                return;
             }
+
+            queueMicrotask(() => this.scrollToBottomSmooth());
         });
+    }
+
+    ngAfterViewInit() {
+        this.viewInitialized = true;
+
+        queueMicrotask(() => this.scrollToBottomSmooth());
     }
 
     private scrollToBottomSmooth() {
         const element = this.flowRef?.nativeElement;
+
         if (!element) {
             return this;
         }
-        element.scrollTo({top: element.scrollHeight, behavior: 'smooth'});
+
+        element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth',
+        });
 
         return this;
     }
 
     startEdit(message: ChatMessage) {
-        this.messageList().forEach(currMessage => {
-            if (currMessage.id !== message.id && currMessage.edit) {
-                currMessage.edit = false;
+        this.messageList().forEach(currentMessage => {
+            if (currentMessage.id !== message.id && currentMessage.edit) {
+                currentMessage.edit = false;
             }
         });
 
@@ -70,19 +86,20 @@ export class ChatFlowComponent {
     }
 
     onEditChange(id: number, isEdit: boolean) {
-        const messageList = this.messageList().find(message => message.id === id);
-        if (!messageList) {
+        const message = this.messageList().find(item => item.id === id);
+
+        if (!message) {
             return this;
         }
 
         if (isEdit) {
-            return this.startEdit(messageList);
-        } else {
-            messageList.edit = false;
+            return this.startEdit(message);
+        }
 
-            if (this.selectedForEdit()?.id === id) {
-                this.selectedForEdit.set(null);
-            }
+        message.edit = false;
+
+        if (this.selectedForEdit()?.id === id) {
+            this.selectedForEdit.set(null);
         }
 
         return this;
@@ -92,6 +109,7 @@ export class ChatFlowComponent {
         if (message) {
             return this.startEdit(message);
         }
+
         this.selectedForEdit.set(null);
 
         return this;
@@ -102,7 +120,7 @@ export class ChatFlowComponent {
             return this;
         }
 
-        const updatedList = this.messageList().filter(m => m.id !== messageId);
+        const updatedList = this.messageList().filter(message => message.id !== messageId);
         this.selectedForEdit.set(null);
 
         queueMicrotask(() => this.messageListInput.set(updatedList));

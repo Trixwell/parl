@@ -1,3 +1,6 @@
+@use '@angular/material' as mat;
+@use 'sass:map';
+
 $space-0: 0px;
 $space-1: 4px;
 $space-2: 8px;
@@ -32,15 +35,15 @@ $font-h1-500: 500 32px / 36px inter, sans-serif;
 $font-h2-500: 500 24px / 28px inter, sans-serif;
 $font-h3-600: 600 24px / 28px inter, sans-serif;
 $font-h4-600: 600 20px / 24px inter, sans-serif;
-$font-h5-600: 600 16рх / 20 рх inter, sans-serif;
+$font-h5-600: 600 16рх / 20рх inter, sans-serif;
 
-$font-data-m-600: 600 14рх / 18 рх inter, sans-serif;
-$font-data-s-600: 600 12рх / 16 рх inter, sans-serif;
-$font-body-l-400: 400 18рх / 22 рх inter, sans-serif;
-$font-body-m-400: 400 16рх / 20 рх inter, sans-serif;
-$font-body-s-400: 400 14рх / 18 рх inter, sans-serif;
-$font-body-s-500: 500 14рх / 18 рх inter, sans-serif;
-$font-caption-m-400: 400 12рх / 16 рх inter, sans-serif;
+$font-data-m-600: 600 14рх / 18рх inter, sans-serif;
+$font-data-s-600: 600 12рх / 16рх inter, sans-serif;
+$font-body-l-400: 400 18рх / 22рх inter, sans-serif;
+$font-body-m-400: 400 16рх / 20рх inter, sans-serif;
+$font-body-s-400: 400 14рх / 18рх inter, sans-serif;
+$font-body-s-500: 500 14рх / 18рх inter, sans-serif;
+$font-caption-m-400: 400 12рх / 16рх inter, sans-serif;
 
 $radius-small: 4px;
 $radius-medium: 8px;

@@ -48,17 +48,17 @@
 <mat-menu #messageMenu="matMenu" xPosition="before" yPosition="below" class="message__menu">
     @if (currentMessage().type === messageType.Outgoing) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
-            <img ngSrc="assets/ngx-parl/icons/icon-edit"
-                 class="message__icon"
-                 width="18" height="18" alt="hide" priority/>
+            <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
+                 class="message__icon--menu"
+                 width="20" height="20" alt="hide" priority/>
             <span>{{ 'chat.edit' | transloco }}</span>
         </button>
     }
     @if (canDelete(currentMessage())) {
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
-            <img ngSrc="assets/ngx-parl/icons/trash"
-                 class="message__icon"
-                 width="18" height="18" alt="hide" priority/>
+            <img ngSrc="assets/ngx-parl/icons/trash.svg"
+                 class="message__icon--menu"
+                 width="20" height="20" alt="hide" priority/>
             <span>{{ 'chat.remove' | transloco }}</span>
         </button>
     }
