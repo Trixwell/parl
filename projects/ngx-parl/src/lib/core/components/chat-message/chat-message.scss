@@ -93,6 +93,11 @@
         width: 14px;
         height: 14px;
         vertical-align: middle;
+
+        &--menu {
+            width: 20px;
+            height: 20px;
+        }
     }
 
     &--incoming {
@@ -157,6 +162,9 @@
         font: tokens.$font-body-s-400 !important;
         font-weight: 500 !important;
         color: tokens.$neutral-800 !important;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: tokens.$margin-1;
     }
-
 }
