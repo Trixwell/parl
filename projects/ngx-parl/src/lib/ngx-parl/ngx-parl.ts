@@ -2,7 +2,7 @@ import {Component, computed, effect, input, model} from '@angular/core';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
-import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageType} from '../core/entity/chat';
+import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageActionEvent, MessageType} from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
 import {
@@ -37,6 +37,7 @@ export class NgxParlComponent {
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
     public selectedForEdit = model<ChatMessage | null>(null);
+    public messageAction = model<MessageActionEvent | null>(null);
 
     public incomingUser = computed(() => {
         return (
@@ -114,6 +115,24 @@ export class NgxParlComponent {
         return this;
     }
 
+    onRequestDelete(messageId: number | null) {
+        if (messageId == null) {
+            return this;
+        }
+
+        this.messageList.update((currentList) => {
+            const updatedList = currentList.filter((m) => m.id !== messageId);
+            return [...updatedList];
+        });
+
+        this.pushMessageAction({
+            action: 'delete',
+            chatMessageId: messageId,
+            content: '',
+        });
+
+        return this;
+    }
     sendMessage(
         event:
             | string
@@ -150,6 +169,14 @@ export class NgxParlComponent {
 
             this.selectedForEdit.set(null);
 
+            this.pushMessageAction({
+                action: 'edit',
+                chatMessageId: id,
+                content: (content ?? '').trim(),
+                files: Array.isArray(files) && files.length ? files : undefined,
+            });
+
+
             return this;
         }
 
@@ -181,6 +208,12 @@ export class NgxParlComponent {
             };
 
             this.messageList.update((list) => [...list, new ChatMessage(dto)]);
+
+            this.pushMessageAction({
+                action: 'send',
+                chatMessageId: dto.id,
+                content: text,
+            });
 
             return this;
         }
@@ -214,6 +247,21 @@ export class NgxParlComponent {
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
+
+        this.pushMessageAction({
+            action: 'send',
+            chatMessageId: dto.id,
+            content: text,
+            files: hasFiles ? files : undefined,
+        });
+
+        return this;
+    }
+
+    pushMessageAction(event: MessageActionEvent) {
+        this.messageAction.set(event);
+
+        setTimeout(() => this.messageAction.set(null), 0);
 
         return this;
     }

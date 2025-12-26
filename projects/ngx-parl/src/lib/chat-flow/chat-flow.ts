@@ -30,6 +30,7 @@ export class ChatFlowComponent implements AfterViewInit {
     public messageList = computed(() => this.messageListInput());
 
     public selectedForEdit = model.required<ChatMessage | null>();
+    public requestDelete = model<number | null>(null);
 
     private viewInitialized = false;
 
@@ -116,14 +117,14 @@ export class ChatFlowComponent implements AfterViewInit {
     }
 
     onRequestDelete(messageId: number | null) {
-        if (!messageId) {
+        if (messageId == null) {
             return this;
         }
 
-        const updatedList = this.messageList().filter(message => message.id !== messageId);
         this.selectedForEdit.set(null);
 
-        queueMicrotask(() => this.messageListInput.set(updatedList));
+        this.requestDelete.set(messageId);
+        queueMicrotask(() => this.requestDelete.set(null));
 
         return this;
     }

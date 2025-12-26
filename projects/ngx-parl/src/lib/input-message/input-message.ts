@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
-import {ChatMessage, CurrMessage} from '../core/entity/chat';
+import {ChatMessage, CurrMessage, MessageActionEvent, MessageActionType} from '../core/entity/chat';
 import {NgOptimizedImage} from '@angular/common';
 
 @Component({
@@ -57,6 +57,8 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private lastHeightPx = 0;
     private lastRows = 1;
     private resizeRaf: number | null = null;
+
+    public messageEvent = model<MessageActionEvent | null>(null);
 
     constructor() {
         effect(() => {
@@ -152,6 +154,16 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
         const files = this.collectAttachmentSources();
         const message = this.editMessage();
+        const action: MessageActionType = message ? 'edit' : 'send';
+
+        this.messageEvent.set({
+            action,
+            chatMessageId: message ? (message as any).id : undefined,
+            content: text,
+            files: files.length ? files : undefined,
+        });
+
+        queueMicrotask(() => this.messageEvent.set(null));
 
         if (message) {
             this.input_text.set({id: (message as any).id, content: text, files: files.length ? files : undefined});

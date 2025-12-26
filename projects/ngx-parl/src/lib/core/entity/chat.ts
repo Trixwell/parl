@@ -63,3 +63,12 @@ export interface CurrMessage {
     content: string;
     files?: string[];
 }
+
+export type MessageActionType = 'send' | 'edit' | 'delete';
+
+export interface MessageActionEvent {
+    action: MessageActionType;
+    chatMessageId?: number;
+    content: string;
+    files?: string[];
+}
