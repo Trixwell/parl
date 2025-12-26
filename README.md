@@ -68,13 +68,14 @@ assets/ngx-parl/...
 
 ## Signal Data
 
-|     Name      |     Type      |                        Description                        |
-|:-------------:|:-------------:|:---------------------------------------------------------:|
-|    header     |    boolean    | Display the chat title with the name of the interlocutor  |
-|     theme     |    string     | Choose a theme color   (```primary``` or ```secondary```) |
-|   language    |    string     |   Set language (```uk``` or ```en```). Default ```en```   |
-|  messageList  | ChatMessage[] |          List of chat messages, user information          |
-| messageUpdate |  ChatMessage  |  Subject / Observable / Signal, who sends a new message   |
+|     Name      |        Type        |                            Description                            |
+|:-------------:|:------------------:|:-----------------------------------------------------------------:|
+|    header     |      boolean       |     Display the chat title with the name of the interlocutor      |
+|     theme     |       string       |     Choose a theme color   (```primary``` or ```secondary```)     |
+|   language    |       string       |       Set language (```uk``` or ```en```). Default ```en```       |
+|  messageList  |   ChatMessage[]    |              List of chat messages, user information              |
+| messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
+| messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
 
 # Example Usage
 
@@ -109,6 +110,7 @@ export type ChatMessageType = 'incoming' | 'outgoing';
 ```
 <ngx-parl [header]="header()"
           [(messageList)]="messageList"
-          [(messageUpdate)]="messageUpdate">
+          [(messageUpdate)]="messageUpdate"
+          [(messageAction)]="messageAction">
 </ngx-parl>
 ```
