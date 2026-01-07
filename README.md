@@ -77,6 +77,7 @@ assets/ngx-parl/...
 | messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
 | messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
 
+
 # Example Usage
 
 ## Component Setup
@@ -114,3 +115,6 @@ export type ChatMessageType = 'incoming' | 'outgoing';
           [(messageAction)]="messageAction">
 </ngx-parl>
 ```
+
+Use the scrollToBottom() to control scrolling down.
+

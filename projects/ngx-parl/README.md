@@ -115,3 +115,6 @@ export type ChatMessageType = 'incoming' | 'outgoing';
           [(messageAction)]="messageAction">
 </ngx-parl>
 ```
+
+
+Use the scrollToBottom() to control scrolling down.

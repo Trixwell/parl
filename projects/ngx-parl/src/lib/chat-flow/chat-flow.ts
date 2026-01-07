@@ -25,6 +25,7 @@ import {NgOptimizedImage} from '@angular/common';
 
 export class ChatFlowComponent implements AfterViewInit {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
+    public scrollToBottomTrigger = model<number>(0);
 
     public messageListInput = model.required<ChatMessage[]>();
     public messageList = computed(() => this.messageListInput());
@@ -44,6 +45,13 @@ export class ChatFlowComponent implements AfterViewInit {
 
             queueMicrotask(() => this.scrollToBottomSmooth());
         });
+
+        effect(() => {
+            this.scrollToBottomTrigger();
+            if (this.viewInitialized) {
+                queueMicrotask(() => this.scrollToBottomSmooth());
+            }
+        });
     }
 
     ngAfterViewInit() {
@@ -52,7 +60,7 @@ export class ChatFlowComponent implements AfterViewInit {
         queueMicrotask(() => this.scrollToBottomSmooth());
     }
 
-    private scrollToBottomSmooth() {
+    scrollToBottomSmooth() {
         const element = this.flowRef?.nativeElement;
 
         if (!element) {

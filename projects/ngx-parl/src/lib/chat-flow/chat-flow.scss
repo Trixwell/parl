@@ -68,12 +68,12 @@
         background: tokens.$neutral-100;
         color: tokens.$neutral-600;
         font: tokens.$font-caption-m-400;
-        width: 78px;
+        width: 80px;
         height: 22px;
-        margin: 0 auto;
+        margin: tokens.$margin-0 auto;
         border-radius: tokens.$radius-round;
         gap: tokens.$space-2;
-        padding: tokens.$margin-1 tokens.$margin-3;
+        padding: tokens.$margin-1 tokens.$margin-2;
 
     }
 

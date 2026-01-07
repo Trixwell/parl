@@ -24,7 +24,8 @@
         <mat-dialog-content class="modal-chat__content" [class.modal-chat__content--header]="header() === false">
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
-                           (requestDeleteChange)="onRequestDelete($event)">
+                           (requestDeleteChange)="onRequestDelete($event)"
+                           [(scrollToBottomTrigger)]="scrollToBottomTrigger">
             </app-chat-flow>
 
             <app-input-message [editMessage]="selectedForEdit()"

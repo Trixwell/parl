@@ -48,6 +48,8 @@ export class NgxParlComponent {
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
 
+    public scrollToBottomTrigger = model<number>(0);
+
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
         effect(() => {
@@ -133,6 +135,7 @@ export class NgxParlComponent {
 
         return this;
     }
+
     sendMessage(
         event:
             | string
@@ -282,6 +285,12 @@ export class NgxParlComponent {
         if (handler) {
             handler();
         }
+
+        return this;
+    }
+
+    scrollToBottom() {
+        this.scrollToBottomTrigger.update(value => value + 1);
 
         return this;
     }
