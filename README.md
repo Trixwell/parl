@@ -77,6 +77,7 @@ assets/ngx-parl/...
 | messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
 | messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
 
+Use the scrollToBottom() to control scrolling down.
 
 # Example Usage
 
@@ -99,11 +100,20 @@ export interface ChatMessageDTO {
     user: string;
     content: string;
     avatar?: string | null;
-    file_path?: string[] | null;
+    file_path?: string[] | [] | null;
+    file_list?: File[] | [] | null;
     checked?: boolean | null;
 }
 
 export type ChatMessageType = 'incoming' | 'outgoing';
+
+export interface MessageActionEvent {
+    action: MessageActionType;
+    chatMessageId?: number;
+    content: string;
+    files?: string[];
+    file_list?: File[];
+}
 ```
 
 ## Template
@@ -115,6 +125,4 @@ export type ChatMessageType = 'incoming' | 'outgoing';
           [(messageAction)]="messageAction">
 </ngx-parl>
 ```
-
-Use the scrollToBottom() to control scrolling down.
 

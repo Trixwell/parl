@@ -7,8 +7,9 @@ export class ChatMessage {
     public content: string;
     public avatar: string | null;
     public file_path: string[] | null;
-    public checked: boolean | null;
+    public file_list: File[] | null;
 
+    public checked: boolean | null;
     public edit = false;
 
     constructor(data: ChatMessageDTO) {
@@ -19,8 +20,9 @@ export class ChatMessage {
         this.user = data.user;
         this.content = data.content;
         this.avatar = data.avatar ?? null;
-        this.file_path = data.file_path ?? null;
         this.checked = data.checked ?? null;
+        this.file_path = data.file_path ?? null;
+        this.file_list = data.file_list ?? null;
     }
 
     get dateSimple(): string {
@@ -47,7 +49,8 @@ export interface ChatMessageDTO {
     user: string;
     content: string;
     avatar?: string | null;
-    file_path?: string[] | null;
+    file_path?: string[] | [] | null;
+    file_list?: File[] | [] | null;
     checked?: boolean | null;
 }
 
@@ -62,6 +65,7 @@ export interface CurrMessage {
     id?: number;
     content: string;
     files?: string[];
+    file_list?: File[];
 }
 
 export type MessageActionType = 'send' | 'edit' | 'delete';
@@ -71,4 +75,5 @@ export interface MessageActionEvent {
     chatMessageId?: number;
     content: string;
     files?: string[];
+    file_list?: File[];
 }
