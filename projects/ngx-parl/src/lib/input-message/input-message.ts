@@ -113,7 +113,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
     }
 
-    private editFilePaths(): string[] {
+    editFilePaths(): string[] {
         const message = this.editMessage();
         if (!message) {
             return [];
@@ -124,7 +124,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return Array.isArray(file_path) ? file_path : [];
     }
 
-    private collectAttachmentSources(): string[] {
+    collectAttachmentSources(): string[] {
         return (this.previews() ?? []).map(p => p.src).filter(Boolean);
     }
 
@@ -148,27 +148,42 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     enterDown() {
         const element = this.inputTextElement.nativeElement;
         const text = this.draft().trim();
-        if (!this.canSend()) return this;
+
+        if (!this.canSend()) {
+            return this;
+        }
 
         this.sending.set(true);
 
         const files = this.collectAttachmentSources();
+        const fileList = this.files();
+
         const message = this.editMessage();
         const action: MessageActionType = message ? 'edit' : 'send';
 
         this.messageEvent.set({
             action,
-            chatMessageId: message ? (message as any).id : undefined,
+            chatMessageId: message ? message.id : undefined,
             content: text,
-            files: files.length ? files : undefined,
+            files: files.length ? files : [],
+            file_list: fileList.length ? fileList : [],
         });
 
         queueMicrotask(() => this.messageEvent.set(null));
 
         if (message) {
-            this.input_text.set({id: (message as any).id, content: text, files: files.length ? files : undefined});
+            this.input_text.set({
+                id: message.id,
+                content: text,
+                files: files.length ? files : [],
+                file_list: fileList.length ? fileList : [],
+            });
         } else {
-            this.input_text.set({content: text, files: files.length ? files : undefined});
+            this.input_text.set({
+                content: text,
+                files: files.length ? files : [],
+                file_list: fileList.length ? fileList : [],
+            });
         }
 
         this.draft.set('');
@@ -278,7 +293,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    private autoResizeByRows() {
+    autoResizeByRows() {
         const element = this.inputTextElement.nativeElement;
         const {rows, nextHeightPx} = this.measureByMirror();
 
@@ -304,7 +319,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    private measureByMirror(): { rows: number; nextHeightPx: number } {
+    measureByMirror(): { rows: number; nextHeightPx: number } {
         const inputEl = this.inputTextElement.nativeElement;
         const mirrorEl = this.mirrorElement.nativeElement;
         const computedStyle = getComputedStyle(inputEl);
@@ -334,7 +349,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return {rows, nextHeightPx};
     }
 
-    private initMirror() {
+    initMirror() {
         const mirror = this.mirrorElement.nativeElement;
         const input = this.inputTextElement.nativeElement;
         const computedStyle = getComputedStyle(input);
@@ -360,7 +375,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         mirror.style.paddingBottom = '0px';
     }
 
-    private updateOverflow(rows: number) {
+    updateOverflow(rows: number) {
         const element = this.inputTextElement.nativeElement;
         const computedStyle = getComputedStyle(element);
         const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
@@ -370,7 +385,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    private readFileAsDataURL(file: File): Promise<string> {
+    readFileAsDataURL(file: File): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = e => resolve((e.target?.result as string) || '');
@@ -379,7 +394,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         });
     }
 
-    private cssNum(v: string, fb = 0): number {
+    cssNum(v: string, fb = 0): number {
         const n = parseFloat(v);
         return Number.isFinite(n) ? n : fb;
     }

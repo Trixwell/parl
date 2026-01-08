@@ -2,7 +2,14 @@ import {Component, computed, effect, input, model} from '@angular/core';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
-import {ChatMessage, ChatMessageDTO, ChatMessageType, MessageActionEvent, MessageType} from '../core/entity/chat';
+import {
+    ChatMessage,
+    ChatMessageDTO,
+    ChatMessageType,
+    CurrMessage,
+    MessageActionEvent,
+    MessageType
+} from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
 import {
@@ -138,9 +145,8 @@ export class NgxParlComponent {
 
     sendMessage(
         event:
+            | CurrMessage
             | string
-            | { id: number; content: string; files?: string[]; }
-            | { content: string; files?: string[]; }
             | undefined
     ) {
         if (!event) {
@@ -149,7 +155,7 @@ export class NgxParlComponent {
 
         // edit message
         if (typeof event !== 'string' && 'id' in event) {
-            const {id, content, files} = event;
+            const {id, content, files, file_list} = event;
 
             this.messageList.update((currentList) => {
                 const updatedList = [...currentList];
@@ -176,9 +182,9 @@ export class NgxParlComponent {
                 action: 'edit',
                 chatMessageId: id,
                 content: (content ?? '').trim(),
-                files: Array.isArray(files) && files.length ? files : undefined,
+                files: Array.isArray(files) && files.length ? files : [],
+                file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
             });
-
 
             return this;
         }
@@ -206,7 +212,8 @@ export class NgxParlComponent {
                 user: lastOutgoing?.user ?? '',
                 content: text,
                 avatar: lastOutgoing?.avatar ?? null,
-                file_path: null,
+                file_path: [],
+                file_list: [],
                 checked: false,
             };
 
@@ -222,9 +229,10 @@ export class NgxParlComponent {
         }
 
         // new message + files
-        const {content, files} = event;
+        const {content, files, file_list} = event;
         const text = (content ?? '').trim();
         const hasFiles = Array.isArray(files) && files.length > 0;
+        const hasFileList = Array.isArray(file_list) && file_list.length > 0;
 
         if (!text && !hasFiles) {
             return this;
@@ -245,7 +253,8 @@ export class NgxParlComponent {
             user: lastOutgoing?.user ?? '',
             content: text,
             avatar: lastOutgoing?.avatar ?? null,
-            file_path: hasFiles ? files : null,
+            file_path: hasFiles ? files : [],
+            file_list: hasFileList ? file_list : [],
             checked: false,
         };
 
@@ -255,7 +264,8 @@ export class NgxParlComponent {
             action: 'send',
             chatMessageId: dto.id,
             content: text,
-            files: hasFiles ? files : undefined,
+            files: hasFiles ? files : [],
+            file_list: hasFileList ? file_list : [],
         });
 
         return this;
