@@ -33,6 +33,7 @@ export class ChatFlowComponent implements AfterViewInit {
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
 
+    public isScrolledToTop = model<boolean>(true);
     private viewInitialized = false;
 
     constructor() {
@@ -48,6 +49,7 @@ export class ChatFlowComponent implements AfterViewInit {
 
         effect(() => {
             this.scrollToBottomTrigger();
+
             if (this.viewInitialized) {
                 queueMicrotask(() => this.scrollToBottomSmooth());
             }
@@ -57,7 +59,20 @@ export class ChatFlowComponent implements AfterViewInit {
     ngAfterViewInit() {
         this.viewInitialized = true;
 
-        queueMicrotask(() => this.scrollToBottomSmooth());
+        const element = this.flowRef?.nativeElement;
+
+        if (element) {
+            element.addEventListener('scroll', () => {
+                this.updateScrollTopState();
+            });
+        }
+
+        queueMicrotask(() => {
+            this.updateScrollTopState();
+            this.scrollToBottomSmooth();
+        });
+
+        return this;
     }
 
     scrollToBottomSmooth() {
@@ -71,6 +86,18 @@ export class ChatFlowComponent implements AfterViewInit {
             top: element.scrollHeight,
             behavior: 'smooth',
         });
+
+        return this;
+    }
+
+    updateScrollTopState() {
+        const element = this.flowRef?.nativeElement;
+
+        if (!element) {
+            return this;
+        }
+
+        this.isScrolledToTop.set(element.scrollTop === 0);
 
         return this;
     }

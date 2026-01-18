@@ -25,7 +25,8 @@
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
                            (requestDeleteChange)="onRequestDelete($event)"
-                           [(scrollToBottomTrigger)]="scrollToBottomTrigger">
+                           [(scrollToBottomTrigger)]="scrollToBottomTrigger"
+                           [(isScrolledToTop)]="isScrolledToTop">
             </app-chat-flow>
 
             <app-input-message [editMessage]="selectedForEdit()"

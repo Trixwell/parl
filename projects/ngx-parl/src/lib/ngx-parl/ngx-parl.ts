@@ -56,6 +56,7 @@ export class NgxParlComponent {
     public closeHandler = input<(() => unknown) | null>(null);
 
     public scrollToBottomTrigger = model<number>(0);
+    public isScrolledToTop = model<boolean>(false);
 
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
@@ -214,7 +215,7 @@ export class NgxParlComponent {
                 avatar: lastOutgoing?.avatar ?? null,
                 file_path: [],
                 file_list: [],
-                checked: false,
+                checked: true,
             };
 
             this.messageList.update((list) => [...list, new ChatMessage(dto)]);
@@ -255,7 +256,7 @@ export class NgxParlComponent {
             avatar: lastOutgoing?.avatar ?? null,
             file_path: hasFiles ? files : [],
             file_list: hasFileList ? file_list : [],
-            checked: false,
+            checked: true,
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
