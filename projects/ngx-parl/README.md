@@ -68,16 +68,16 @@ assets/ngx-parl/...
 
 ## Signal Data
 
-|     Name      |        Type        |                            Description                            |
-|:-------------:|:------------------:|:-----------------------------------------------------------------:|
-|    header     |      boolean       |     Display the chat title with the name of the interlocutor      |
-|     theme     |       string       |     Choose a theme color   (```primary``` or ```secondary```)     |
-|   language    |       string       |       Set language (```uk``` or ```en```). Default ```en```       |
-|  messageList  |   ChatMessage[]    |              List of chat messages, user information              |
-| messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
-| messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
-
-Use the scrollToBottom() to control scrolling down.
+|      Name       |        Type        |                            Description                            |
+|:---------------:|:------------------:|:-----------------------------------------------------------------:|
+|     header      |      boolean       |     Display the chat title with the name of the interlocutor      |
+|      theme      |       string       |     Choose a theme color   (```primary``` or ```secondary```)     |
+|    language     |       string       |       Set language (```uk``` or ```en```). Default ```en```       |
+|   messageList   |   ChatMessage[]    |              List of chat messages, user information              |
+|  messageUpdate  |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
+|  messageAction  | MessageActionEvent |               Emits chat events: send, edit, delete               |
+| scrollToBottom  |       number       |                      Control scrolling down                       |
+| isScrolledToTop |      boolean       |                  Detect upward scroll direction                   |
 
 # Example Usage
 
@@ -122,6 +122,7 @@ export interface MessageActionEvent {
 <ngx-parl [header]="header()"
           [(messageList)]="messageList"
           [(messageUpdate)]="messageUpdate"
-          [(messageAction)]="messageAction">
+          [(messageAction)]="messageAction"
+          [(isScrolledToTop)]="isScrolledToTop">
 </ngx-parl>
 ```
