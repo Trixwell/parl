@@ -32,7 +32,6 @@ import {FlowTheme} from '../core/entity/theme';
     styleUrl: './ngx-parl.scss',
     providers: [],
 })
-
 export class NgxParlComponent {
     public ai_run_in_progress = false;
     private lastUpdateKey: string | null = null;
@@ -61,8 +60,7 @@ export class NgxParlComponent {
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
         effect(() => {
-            const lang = this.language();
-            this.transloco.setActiveLang(lang);
+            this.transloco.setActiveLang(this.language());
         });
 
         effect(() => {
@@ -85,7 +83,6 @@ export class NgxParlComponent {
 
             this.messageList.update((currentList) => {
                 const list = [...currentList];
-
                 const incomingIndex = list.findIndex(
                     (message) =>
                         message.id === updatedMessage.id &&
@@ -102,6 +99,15 @@ export class NgxParlComponent {
                 return list;
             });
         });
+    }
+
+    scrollToBottom(): this {
+        if (this.isScrolledToTop()) {
+            return this;
+        }
+
+        this.scrollToBottomTrigger.update(value => value + 1);
+        return this;
     }
 
     onCancelEdit(messageId: number | null) {
@@ -296,12 +302,6 @@ export class NgxParlComponent {
         if (handler) {
             handler();
         }
-
-        return this;
-    }
-
-    scrollToBottom() {
-        this.scrollToBottomTrigger.update(value => value + 1);
 
         return this;
     }
