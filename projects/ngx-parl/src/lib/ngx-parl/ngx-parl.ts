@@ -45,9 +45,6 @@ export class NgxParlComponent {
     public selectedForEdit = model<ChatMessage | null>(null);
     public messageAction = model<MessageActionEvent | null>(null);
 
-    public scrollToBottomTrigger = model<number>(0);
-    public isScrolledToTop = model<boolean>(false);
-
     public incomingUser = computed(() => {
         return (
             this.messageList().find((message) => message.type === MessageType.Incoming)?.user ?? ''
@@ -57,10 +54,11 @@ export class NgxParlComponent {
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
 
-    constructor(
-        private utils: UtilsService,
-        private transloco: TranslocoService
-    ) {
+    public scrollToBottomTrigger = model<number>(0);
+    public isScrolledToTop = model<boolean>(false);
+
+    constructor(private utils: UtilsService,
+                private transloco: TranslocoService) {
         effect(() => {
             this.transloco.setActiveLang(this.language());
         });
@@ -85,12 +83,14 @@ export class NgxParlComponent {
 
             this.messageList.update((currentList) => {
                 const list = [...currentList];
-                const index = list.findIndex(
-                    (m) => m.id === updatedMessage.id && m.type === MessageType.Incoming,
+                const incomingIndex = list.findIndex(
+                    (message) =>
+                        message.id === updatedMessage.id &&
+                        message.type === MessageType.Incoming,
                 );
 
-                if (index > -1) {
-                    list[index] = updatedMessage;
+                if (incomingIndex > -1) {
+                    list[incomingIndex] = updatedMessage;
                     return list;
                 }
 
@@ -305,7 +305,6 @@ export class NgxParlComponent {
 
         return this;
     }
-
 
     protected readonly FlowTheme = FlowTheme;
 }

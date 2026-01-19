@@ -25,7 +25,6 @@ import {NgOptimizedImage} from '@angular/common';
 
 export class ChatFlowComponent implements AfterViewInit {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
-    public scrollToBottomTrigger = model<number>(0);
 
     public messageListInput = model.required<ChatMessage[]>();
     public messageList = computed(() => this.messageListInput());
@@ -33,8 +32,12 @@ export class ChatFlowComponent implements AfterViewInit {
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
 
-    public isScrolledToTop = model<boolean>(true);
+    public scrollToBottomTrigger = model<number>(0);
+    public isScrolledToTop = model<boolean>(false);
+
     private viewInitialized = false;
+    private previousScrollHeight = 0;
+    private previousMessageCount = 0;
 
     constructor() {
         effect(() => {
@@ -48,11 +51,50 @@ export class ChatFlowComponent implements AfterViewInit {
         });
 
         effect(() => {
+            const messages = this.messageList();
+
+            if (!this.viewInitialized) {
+                this.previousMessageCount = messages.length;
+                return;
+            }
+
+            const element = this.flowRef?.nativeElement;
+
+            if (!element) {
+                return;
+            }
+
+            const isHistoryPrepend =
+                messages.length > this.previousMessageCount &&
+                this.isScrolledToTop();
+
+            if (!isHistoryPrepend) {
+                this.previousMessageCount = messages.length;
+                return;
+            }
+
+            const oldHeight = this.previousScrollHeight;
+
+            queueMicrotask(() => {
+                const newHeight = element.scrollHeight;
+                element.scrollTop = newHeight - oldHeight;
+            });
+
+            this.previousMessageCount = messages.length;
+        });
+
+        effect(() => {
             this.scrollToBottomTrigger();
 
-            if (this.viewInitialized) {
-                queueMicrotask(() => this.scrollToBottomSmooth());
+            if (!this.viewInitialized) {
+                return;
             }
+
+            if (this.isScrolledToTop()) {
+                return;
+            }
+
+            queueMicrotask(() => this.scrollToBottomSmooth());
         });
     }
 
@@ -63,19 +105,18 @@ export class ChatFlowComponent implements AfterViewInit {
 
         if (element) {
             element.addEventListener('scroll', () => {
+                this.previousScrollHeight = element.scrollHeight;
                 this.updateScrollTopState();
             });
+
+            queueMicrotask(() => {
+                this.previousScrollHeight = element.scrollHeight;
+                element.scrollTop = element.scrollHeight;
+            });
         }
-
-        queueMicrotask(() => {
-            this.updateScrollTopState();
-            this.scrollToBottomSmooth();
-        });
-
-        return this;
     }
 
-    scrollToBottomSmooth() {
+    scrollToBottomSmooth(): this {
         const element = this.flowRef?.nativeElement;
 
         if (!element) {
@@ -90,7 +131,7 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    updateScrollTopState() {
+    updateScrollTopState(): this {
         const element = this.flowRef?.nativeElement;
 
         if (!element) {
@@ -102,7 +143,7 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    startEdit(message: ChatMessage) {
+    startEdit(message: ChatMessage): this {
         this.messageList().forEach(currentMessage => {
             if (currentMessage.id !== message.id && currentMessage.edit) {
                 currentMessage.edit = false;
@@ -121,7 +162,7 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    onEditChange(id: number, isEdit: boolean) {
+    onEditChange(id: number, isEdit: boolean): this {
         const message = this.messageList().find(item => item.id === id);
 
         if (!message) {
@@ -141,7 +182,7 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    onRequestEdit(message: ChatMessage | null) {
+    onRequestEdit(message: ChatMessage | null): this {
         if (message) {
             return this.startEdit(message);
         }
@@ -151,7 +192,7 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    onRequestDelete(messageId: number | null) {
+    onRequestDelete(messageId: number | null): this {
         if (messageId == null) {
             return this;
         }
