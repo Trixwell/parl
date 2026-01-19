@@ -4,16 +4,19 @@
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
                 @if (message | toggleDisplayChatStartDay: messageList() : i) {
                     <span class="chat__start-day">
-                    {{ message.cr_time | chatStartDay:'d MMMM' }}
-                </span>
+                        {{ message.cr_time | chatStartDay:'d MMMM' }}
+                    </span>
                 }
 
-                <lib-chat-message [currentMessage]="message"
-                                  [edit]="message.edit ?? false"
-                                  (editChange)="onEditChange(message.id, $event)"
-                                  (requestEditChange)="onRequestEdit($event)"
-                                  (requestDeleteChange)="onRequestDelete($event)">
-                </lib-chat-message>
+                <div class="chat__message" [attr.data-message-id]="message.id">
+                    <lib-chat-message
+                        [currentMessage]="message"
+                        [edit]="message.edit ?? false"
+                        (editChange)="onEditChange(message.id, $event)"
+                        (requestEditChange)="onRequestEdit($event)"
+                        (requestDeleteChange)="onRequestDelete($event)">
+                    </lib-chat-message>
+                </div>
             }
         </div>
     } @else {
@@ -30,3 +33,4 @@
         </div>
     }
 </div>
+

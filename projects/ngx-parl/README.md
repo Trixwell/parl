@@ -76,8 +76,10 @@ assets/ngx-parl/...
 |   messageList   |   ChatMessage[]    |              List of chat messages, user information              |
 |  messageUpdate  |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
 |  messageAction  | MessageActionEvent |               Emits chat events: send, edit, delete               |
-| scrollToBottom  |       number       |                      Control scrolling down                       |
 | isScrolledToTop |      boolean       |                  Detect upward scroll direction                   |
+
+- use the scrollToBottom() to control scrolling down.
+
 
 # Example Usage
 
