@@ -55,7 +55,7 @@ export class NgxParlComponent {
     public closeHandler = input<(() => unknown) | null>(null);
 
     public scrollToBottomTrigger = model<number>(0);
-    public isScrolledToTop = model<boolean>(false);
+    public loadHistory = model<boolean>(false);
 
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
@@ -77,57 +77,35 @@ export class NgxParlComponent {
 
             this.lastUpdateKey = key;
 
-            if (updatedMessage.type !== MessageType.Incoming) {
-                return;
-            }
+            this.messageList.update(list => {
+                const index = list.findIndex(m => m.id === updatedMessage.id);
 
-            this.messageList.update((currentList) => {
-                const list = [...currentList];
-                const incomingIndex = list.findIndex(
-                    (message) =>
-                        message.id === updatedMessage.id &&
-                        message.type === MessageType.Incoming,
-                );
-
-                if (incomingIndex > -1) {
-                    list[incomingIndex] = updatedMessage;
-                    return list;
+                if (index > -1) {
+                    const updated = [...list];
+                    updated[index] = updatedMessage;
+                    return updated;
                 }
 
-                list.push(updatedMessage);
-
-                return list;
+                return [...list, updatedMessage];
             });
+
+            this.scrollToBottomTrigger.update(v => v + 1);
         });
-    }
-
-    scrollToBottom(): this {
-        if (this.isScrolledToTop()) {
-            return this;
-        }
-
-        this.scrollToBottomTrigger.update(value => value + 1);
-        return this;
     }
 
     onCancelEdit(messageId: number | null) {
         if (messageId != null) {
-            this.messageList.update((currentList) => {
-                const updatedList = [...currentList];
-                const index = updatedList.findIndex(
-                    (message) => message.id === messageId,
-                );
-
+            this.messageList.update(list => {
+                const updated = [...list];
+                const index = updated.findIndex(m => m.id === messageId);
                 if (index > -1) {
-                    updatedList[index].edit = false;
+                    updated[index].edit = false;
                 }
-
-                return updatedList;
+                return updated;
             });
         }
 
         this.selectedForEdit.set(null);
-
         return this;
     }
 
@@ -136,10 +114,7 @@ export class NgxParlComponent {
             return this;
         }
 
-        this.messageList.update((currentList) => {
-            const updatedList = currentList.filter((m) => m.id !== messageId);
-            return [...updatedList];
-        });
+        this.messageList.update(list => list.filter(m => m.id !== messageId));
 
         this.pushMessageAction({
             action: 'delete',
@@ -192,7 +167,7 @@ export class NgxParlComponent {
                 files: Array.isArray(files) && files.length ? files : [],
                 file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
             });
-
+            this.scrollToBottomTrigger.update(v => v + 1);
             return this;
         }
 
@@ -225,7 +200,7 @@ export class NgxParlComponent {
             };
 
             this.messageList.update((list) => [...list, new ChatMessage(dto)]);
-
+            this.scrollToBottomTrigger.update(v => v + 1);
             this.pushMessageAction({
                 action: 'send',
                 chatMessageId: dto.id,
@@ -266,7 +241,7 @@ export class NgxParlComponent {
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
-
+        this.scrollToBottomTrigger.update(v => v + 1);
         this.pushMessageAction({
             action: 'send',
             chatMessageId: dto.id,
@@ -280,9 +255,7 @@ export class NgxParlComponent {
 
     pushMessageAction(event: MessageActionEvent) {
         this.messageAction.set(event);
-
         setTimeout(() => this.messageAction.set(null), 0);
-
         return this;
     }
 
@@ -292,7 +265,6 @@ export class NgxParlComponent {
         if (handler) {
             handler();
         }
-
         return this;
     }
 

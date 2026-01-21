@@ -1,14 +1,15 @@
 <div class="chat">
     @if (messageList()) {
-        <div class="chat__flow" #chatFlowRef>
+        <div #chatFlowRef
+             class="chat__flow"
+             infiniteScroll
+             [scrollWindow]="false"
+             [infiniteScrollUpDistance]="1"
+             [infiniteScrollThrottle]="150"
+             (scrolledUp)="onScrollUp()"
+        >
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
-                @if (message | toggleDisplayChatStartDay: messageList() : i) {
-                    <span class="chat__start-day">
-                        {{ message.cr_time | chatStartDay:'d MMMM' }}
-                    </span>
-                }
-
-                <div class="chat__message" [attr.data-message-id]="message.id">
+                <div class="chat__message">
                     <lib-chat-message
                         [currentMessage]="message"
                         [edit]="message.edit ?? false"

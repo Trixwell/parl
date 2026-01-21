@@ -31,6 +31,7 @@
     "@angular/router": "^20.3.0",
     "@ngneat/transloco": "^6.0.4",
     "material-icons": "^1.13.14",
+    "ngx-infinite-scroll": "^20.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "typeface-roboto": "^1.1.13",

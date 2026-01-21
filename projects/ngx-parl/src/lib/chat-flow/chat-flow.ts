@@ -2,21 +2,19 @@ import {AfterViewInit, Component, computed, effect, ElementRef, model, ViewChild
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
-import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
-import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
+import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 
 @Component({
     selector: 'app-chat-flow',
     imports: [
         FormsModule,
         ChatMessageComponent,
-        ChatStartDayPipe,
-        ToggleDisplayChatStartDayPipe,
         ChatMessageComponent,
         TranslocoPipe,
-        NgOptimizedImage
+        NgOptimizedImage,
+        InfiniteScrollDirective
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
@@ -26,30 +24,23 @@ import {NgOptimizedImage} from '@angular/common';
 export class ChatFlowComponent implements AfterViewInit {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
+    public scrollToBottomTrigger = model<number>(0);
+    public loadHistory = model<boolean>(false);
+
     public messageListInput = model.required<ChatMessage[]>();
     public messageList = computed(() => this.messageListInput());
 
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
 
-    public scrollToBottomTrigger = model<number>(0);
-    public isScrolledToTop = model<boolean>(false);
-
     private viewInitialized = false;
     private previousScrollHeight = 0;
     private previousMessageCount = 0;
+    private isUserAtBottom = true;
 
     constructor() {
-        effect(() => {
-            const length = this.messageList().length;
 
-            if (!this.viewInitialized || length === 0) {
-                return;
-            }
-
-            queueMicrotask(() => this.scrollToBottomSmooth());
-        });
-
+        /** ✅ Реакція на зміну списку */
         effect(() => {
             const messages = this.messageList();
 
@@ -58,31 +49,18 @@ export class ChatFlowComponent implements AfterViewInit {
                 return;
             }
 
-            const element = this.flowRef?.nativeElement;
+            const addedMessages = messages.length > this.previousMessageCount;
 
-            if (!element) {
-                return;
+            if (addedMessages && !this.isUserAtBottom) {
+                this.restoreScrollAfterHistoryPrepend();
             }
 
-            const isHistoryPrepend =
-                messages.length > this.previousMessageCount &&
-                this.isScrolledToTop();
-
-            if (!isHistoryPrepend) {
-                this.previousMessageCount = messages.length;
-                return;
+            if (addedMessages && this.isUserAtBottom) {
+                queueMicrotask(() => this.scrollToBottom());
             }
-
-            const oldHeight = this.previousScrollHeight;
-
-            queueMicrotask(() => {
-                const newHeight = element.scrollHeight;
-                element.scrollTop = newHeight - oldHeight;
-            });
 
             this.previousMessageCount = messages.length;
         });
-
         effect(() => {
             this.scrollToBottomTrigger();
 
@@ -90,11 +68,7 @@ export class ChatFlowComponent implements AfterViewInit {
                 return;
             }
 
-            if (this.isScrolledToTop()) {
-                return;
-            }
-
-            queueMicrotask(() => this.scrollToBottomSmooth());
+            queueMicrotask(() => this.scrollToBottom());
         });
     }
 
@@ -102,18 +76,41 @@ export class ChatFlowComponent implements AfterViewInit {
         this.viewInitialized = true;
 
         const element = this.flowRef?.nativeElement;
-
-        if (element) {
-            element.addEventListener('scroll', () => {
-                this.previousScrollHeight = element.scrollHeight;
-                this.updateScrollTopState();
-            });
-
-            queueMicrotask(() => {
-                this.previousScrollHeight = element.scrollHeight;
-                element.scrollTop = element.scrollHeight;
-            });
+        if (!element) {
+            return;
         }
+
+        this.isUserAtBottom = true;
+
+        element.addEventListener('scroll', () => {
+            this.previousScrollHeight = element.scrollHeight;
+
+            this.isUserAtBottom =
+                element.scrollTop + element.clientHeight >=
+                element.scrollHeight - 10;
+        });
+
+        queueMicrotask(() => this.scrollToBottom());
+    }
+
+    onScrollUp() {
+        this.loadHistory.set(true);
+
+        return this;
+    }
+
+    restoreScrollAfterHistoryPrepend() {
+        const element = this.flowRef?.nativeElement;
+        if (!element) {
+            return this;
+        }
+
+        queueMicrotask(() => {
+            const newHeight = element.scrollHeight;
+            element.scrollTop = newHeight - this.previousScrollHeight;
+        });
+
+        return this;
     }
 
     scrollToBottomSmooth(): this {
@@ -131,15 +128,13 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    updateScrollTopState(): this {
+    scrollToBottom() {
         const element = this.flowRef?.nativeElement;
-
         if (!element) {
             return this;
         }
 
-        this.isScrolledToTop.set(element.scrollTop === 0);
-
+        element.scrollTop = element.scrollHeight;
         return this;
     }
 
@@ -204,6 +199,7 @@ export class ChatFlowComponent implements AfterViewInit {
 
         return this;
     }
+
 
     trackByMessageId(_index: number, message: ChatMessage): string {
         // return message.id;
