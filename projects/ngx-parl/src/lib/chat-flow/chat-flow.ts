@@ -42,8 +42,6 @@ export class ChatFlowComponent implements AfterViewInit {
     private isUserAtBottom = true;
 
     constructor() {
-
-        /** ✅ Реакція на зміну списку */
         effect(() => {
             const messages = this.messageList();
 
