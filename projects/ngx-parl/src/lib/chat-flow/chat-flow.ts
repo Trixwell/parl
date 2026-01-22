@@ -13,7 +13,6 @@ import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
     imports: [
         FormsModule,
         ChatMessageComponent,
-        ChatMessageComponent,
         TranslocoPipe,
         NgOptimizedImage,
         InfiniteScrollDirective,
@@ -65,14 +64,13 @@ export class ChatFlowComponent implements AfterViewInit {
 
             this.previousMessageCount = messages.length;
         });
+
         effect(() => {
             this.scrollToBottomTrigger();
 
-            if (!this.viewInitialized) {
-                return;
+            if (this.viewInitialized) {
+                queueMicrotask(() => this.scrollToBottomSmooth());
             }
-
-            queueMicrotask(() => this.scrollToBottom());
         });
     }
 

@@ -5,7 +5,7 @@
              infiniteScroll
              [scrollWindow]="false"
              [infiniteScrollUpDistance]="1"
-             [infiniteScrollThrottle]="150"
+             [infiniteScrollThrottle]="5"
              (scrolledUp)="onScrollUp()"
         >
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
