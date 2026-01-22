@@ -167,7 +167,7 @@ export class NgxParlComponent {
                 files: Array.isArray(files) && files.length ? files : [],
                 file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
             });
-            this.scrollToBottomTrigger.update(v => v + 1);
+
             return this;
         }
 

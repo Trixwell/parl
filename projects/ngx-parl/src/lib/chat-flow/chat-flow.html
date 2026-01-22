@@ -4,7 +4,7 @@
              class="chat__flow"
              infiniteScroll
              [scrollWindow]="false"
-             [infiniteScrollUpDistance]="1"
+             [infiniteScrollUpDistance]="historyLoadThreshold()"
              [infiniteScrollThrottle]="100"
              (scrolledUp)="onScrollUp()"
         >

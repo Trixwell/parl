@@ -78,7 +78,18 @@ assets/ngx-parl/...
 | messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
 |  loadHistory  |      boolean       |                    Use scroll for load history                    |
 
-- Scrolling to the bottom is now managed internally via the `scrollToBottomTrigger` signal. To trigger scrolling programmatically from your component, update that signal (for example, by incrementing a numeric value) whenever you need the view to scroll to the latest message.
+## Scrolling to the Bottom
+
+Scrolling to the latest message is handled internally via the scrollToBottomTrigger signal.
+
+To trigger scrolling programmatically, update the scrollToBottomTrigger value (for example, increment it). Each update triggers a scroll to the bottom.
+
+- use the scrollToBottom() to control scrolling down.
+- loadHistory is used only for loading older messages and does not control scrolling.
+
+```
+this.scrollToBottomTrigger.update(value => value + 1);
+```
 
 # Example Usage
 

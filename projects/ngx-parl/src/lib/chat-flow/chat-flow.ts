@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, computed, effect, ElementRef, model, ViewChild,} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, ElementRef, model, signal, ViewChild,} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
@@ -43,6 +43,8 @@ export class ChatFlowComponent implements AfterViewInit {
     private previousScrollTop = 0;
     private isUserAtBottom = true;
 
+    public historyLoadThreshold = signal(1);
+
     constructor() {
         effect(() => {
             const messages = this.messageList();
@@ -52,13 +54,13 @@ export class ChatFlowComponent implements AfterViewInit {
                 return;
             }
 
-            const messagesAdded = messages.length > this.previousMessageCount;
+            const hasMoreMessages = messages.length > this.previousMessageCount;
 
-            if (messagesAdded && !this.isUserAtBottom) {
+            if (hasMoreMessages && !this.isUserAtBottom) {
                 this.restoreScrollAfterHistoryPrepend();
             }
 
-            if (messagesAdded && this.isUserAtBottom) {
+            if (hasMoreMessages && this.isUserAtBottom) {
                 queueMicrotask(() => this.scrollToBottom());
             }
 
