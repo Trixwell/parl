@@ -5,6 +5,8 @@ import {ChatMessageComponent} from '../core/components/chat-message/chat-message
 import {TranslocoPipe} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
+import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
+import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
 
 @Component({
     selector: 'app-chat-flow',
@@ -14,7 +16,9 @@ import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
         ChatMessageComponent,
         TranslocoPipe,
         NgOptimizedImage,
-        InfiniteScrollDirective
+        InfiniteScrollDirective,
+        ToggleDisplayChatStartDayPipe,
+        ChatStartDayPipe
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',

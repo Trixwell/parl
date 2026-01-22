@@ -9,6 +9,12 @@
              (scrolledUp)="onScrollUp()"
         >
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
+                @if (message | toggleDisplayChatStartDay: messageList() : i) {
+                    <span class="chat__start-day">
+                        {{ message.cr_time | chatStartDay:'d MMMM' }}
+                    </span>
+                }
+
                 <div class="chat__message">
                     <lib-chat-message
                         [currentMessage]="message"
