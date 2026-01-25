@@ -1,4 +1,4 @@
-import {Component, computed, effect, input, model} from '@angular/core';
+import {Component, computed, effect, input, model, ViewChild} from '@angular/core';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
@@ -33,6 +33,8 @@ import {FlowTheme} from '../core/entity/theme';
     providers: [],
 })
 export class NgxParlComponent {
+    @ViewChild(ChatFlowComponent) chatFlow?: ChatFlowComponent;
+
     public ai_run_in_progress = false;
     private lastUpdateKey: string | null = null;
 
@@ -106,6 +108,7 @@ export class NgxParlComponent {
         }
 
         this.selectedForEdit.set(null);
+
         return this;
     }
 
@@ -256,6 +259,12 @@ export class NgxParlComponent {
     pushMessageAction(event: MessageActionEvent) {
         this.messageAction.set(event);
         setTimeout(() => this.messageAction.set(null), 0);
+        return this;
+    }
+
+    scrollToBottom(): this {
+        this.chatFlow?.scrollToBottom();
+
         return this;
     }
 
