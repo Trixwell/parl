@@ -52,10 +52,28 @@
         background: tokens.$neutral-50;
         border-bottom-left-radius: tokens.$radius-large;
         border-bottom-right-radius: tokens.$radius-large;
+        transition: background-color 160ms ease, box-shadow 160ms ease;
+        position: relative;
 
         &--header {
             border-top-left-radius: tokens.$radius-large;
             border-top-right-radius: tokens.$radius-large;
+        }
+
+        //&--dragover {
+        //    background: tokens.$primary-50;
+        //    box-shadow: 0 0 0 2px tokens.$neutral-200 inset;
+        //}
+
+        &--dragover::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: 0 0 0 2px tokens.$neutral-200 inset;
+            background: rgba(255, 255, 255, 0);
+            pointer-events: none;
+            z-index: tokens.$z-index-overlay;
         }
 
         & app-chat-flow {

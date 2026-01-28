@@ -1,7 +1,12 @@
 <section class="message"
          [class.message--focus]="focused()"
          [class.message--filled]="hasText()"
-         [class.message--sending]="sending()">
+         [class.message--sending]="sending()"
+         [class.message--dragover]="dragActive()"
+         (dragenter)="onDragEnter($event)"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)">
 
     @if (isEditMode()) {
         <div class="message__wrap">

@@ -43,6 +43,8 @@ export class ChatFlowComponent implements AfterViewInit {
     private previousScrollTop = 0;
     private isUserAtBottom = true;
 
+    public showScrollToBottom = signal(false);
+
     public historyLoadThreshold = signal(1);
 
     constructor() {
@@ -91,6 +93,7 @@ export class ChatFlowComponent implements AfterViewInit {
             this.isUserAtBottom =
                 element.scrollTop + element.clientHeight >=
                 element.scrollHeight - 10;
+            this.showScrollToBottom.set(!this.isUserAtBottom);
         });
 
         queueMicrotask(() => this.scrollToBottom());
@@ -133,6 +136,8 @@ export class ChatFlowComponent implements AfterViewInit {
             top: element.scrollHeight,
             behavior: 'smooth',
         });
+        this.isUserAtBottom = true;
+        this.showScrollToBottom.set(false);
 
         return this;
     }
@@ -144,6 +149,8 @@ export class ChatFlowComponent implements AfterViewInit {
         }
 
         element.scrollTop = element.scrollHeight;
+        this.isUserAtBottom = true;
+        this.showScrollToBottom.set(false);
         return this;
     }
 

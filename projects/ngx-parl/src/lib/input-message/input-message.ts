@@ -43,6 +43,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     public focused = signal<boolean>(false);
     public sending = signal<boolean>(false);
     public hasText = computed(() => this.draft().trim().length > 0);
+    public dragActive = signal<boolean>(false);
 
     public isEditMode = computed(() => !!this.editMessage());
     public canSend = computed(() =>
@@ -57,6 +58,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private lastHeightPx = 0;
     private lastRows = 1;
     private resizeRaf: number | null = null;
+    private dragDepth = 0;
 
     public messageEvent = model<MessageActionEvent | null>(null);
 
@@ -250,25 +252,55 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
             return this;
         }
+        this.addFiles(Array.from(selected));
+        inputEl.value = '';
 
-        const list = Array.from(selected).filter(f => (f.type || '').startsWith('image/'));
-        if (!list.length) {
-            inputEl.value = '';
+        return this;
+    }
 
+    onDragEnter(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth += 1;
+        this.dragActive.set(true);
+
+        return this;
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'copy';
+        }
+        this.dragActive.set(true);
+
+        return this;
+    }
+
+    onDragLeave(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth = Math.max(0, this.dragDepth - 1);
+        if (this.dragDepth === 0) {
+            this.dragActive.set(false);
+        }
+
+        return this;
+    }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth = 0;
+        this.dragActive.set(false);
+
+        const files = event.dataTransfer?.files;
+        if (!files?.length) {
             return this;
         }
 
-        this.files.set([...(this.files() ?? []), ...list]);
-
-        Promise.all(
-            list.map(async f => {
-                const src = await this.readFileAsDataURL(f);
-                const originalKind: OriginalKind = (f.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
-                return <PreviewItem>{src, originalKind, name: f.name, type: f.type || '', size: f.size};
-            })
-        )
-            .then(items => this.previews.set([...(this.previews() ?? []), ...items]))
-            .finally(() => (inputEl.value = ''));
+        this.addFiles(Array.from(files));
 
         return this;
     }
@@ -397,6 +429,26 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     cssNum(v: string, fb = 0): number {
         const n = parseFloat(v);
         return Number.isFinite(n) ? n : fb;
+    }
+
+    public addFiles(files: File[]) {
+        const list = files.filter(f => (f.type || '').startsWith('image/'));
+        if (!list.length) {
+            return this;
+        }
+
+        this.files.set([...(this.files() ?? []), ...list]);
+
+        Promise.all(
+            list.map(async f => {
+                const src = await this.readFileAsDataURL(f);
+                const originalKind: OriginalKind = (f.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
+                return <PreviewItem>{src, originalKind, name: f.name, type: f.type || '', size: f.size};
+            })
+        )
+            .then(items => this.previews.set([...(this.previews() ?? []), ...items]));
+
+        return this;
     }
 
     protected readonly FileType = FileType;
