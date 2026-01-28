@@ -66,6 +66,8 @@ export interface CurrMessage {
     content: string;
     files?: string[];
     file_list?: File[];
+    user_id?: number;
+    user?: string;
 }
 
 export type MessageActionType = 'send' | 'edit' | 'delete';
@@ -76,4 +78,6 @@ export interface MessageActionEvent {
     content: string;
     files?: string[];
     file_list?: File[];
+    user_id?: number;
+    user?: string;
 }

@@ -26,6 +26,18 @@
                 </div>
             }
         </div>
+
+        @if (showScrollToBottom()) {
+            <button class="chat__scroll-button"
+                    type="button"
+                    (click)="scrollToBottomSmooth()"
+                    aria-label="Scroll to bottom">
+                <img ngSrc="assets/ngx-parl/icons/bottom-scroll.svg"
+                     alt=""
+                     width="14"
+                     height="14"/>
+            </button>
+        }
     } @else {
         <div class="chat__flow__empty">
             <img ngSrc="assets/ngx-parl/icons/lucide_send.svg"

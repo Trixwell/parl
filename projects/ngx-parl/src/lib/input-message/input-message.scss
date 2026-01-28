@@ -20,6 +20,12 @@
     border-bottom-right-radius: tokens.$radius-large;
     transition: box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
 
+    //&--dragover {
+    //    background: tokens.$primary-50;
+    //    border-top-color: tokens.$primary-200;
+    //    box-shadow: 0 0 0 1px tokens.$neutral-100 inset;
+    //}
+
     &__wrap {
         display: flex;
         width: 100%;

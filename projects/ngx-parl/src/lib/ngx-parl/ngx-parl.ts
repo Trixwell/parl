@@ -34,8 +34,11 @@ import {FlowTheme} from '../core/entity/theme';
 })
 export class NgxParlComponent {
     @ViewChild(ChatFlowComponent) chatFlow?: ChatFlowComponent;
+    @ViewChild(InputMessageComponent) inputMessage?: InputMessageComponent;
 
     public ai_run_in_progress = false;
+    public dragActive = model<boolean>(false);
+    private dragDepth = 0;
     private lastUpdateKey: string | null = null;
 
     public theme = input<FlowTheme>(FlowTheme.PRIMARY);
@@ -283,6 +286,53 @@ export class NgxParlComponent {
         if (handler) {
             handler();
         }
+
+        return this;
+    }
+
+    onDragOver(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'copy';
+        }
+        this.dragActive.set(true);
+
+        return this;
+    }
+
+    onDragEnter(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth += 1;
+        this.dragActive.set(true);
+
+        return this;
+    }
+
+    onDragLeave(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth = Math.max(0, this.dragDepth - 1);
+        if (this.dragDepth === 0) {
+            this.dragActive.set(false);
+        }
+
+        return this;
+    }
+
+    onDrop(event: DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dragDepth = 0;
+        this.dragActive.set(false);
+
+        const files = event.dataTransfer?.files;
+        if (!files?.length) {
+            return this;
+        }
+
+        this.inputMessage?.addFiles(Array.from(files));
 
         return this;
     }

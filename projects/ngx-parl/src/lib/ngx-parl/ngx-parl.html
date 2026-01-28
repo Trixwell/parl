@@ -21,7 +21,13 @@
             </header>
         }
 
-        <mat-dialog-content class="modal-chat__content" [class.modal-chat__content--header]="header() === false">
+        <mat-dialog-content class="modal-chat__content"
+                            [class.modal-chat__content--header]="header() === false"
+                            [class.modal-chat__content--dragover]="dragActive()"
+                            (dragenter)="onDragEnter($event)"
+                            (dragover)="onDragOver($event)"
+                            (dragleave)="onDragLeave($event)"
+                            (drop)="onDrop($event)">
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
                            (requestDeleteChange)="onRequestDelete($event)"
