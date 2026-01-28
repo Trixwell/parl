@@ -50,11 +50,7 @@ export class NgxParlComponent {
     public selectedForEdit = model<ChatMessage | null>(null);
     public messageAction = model<MessageActionEvent | null>(null);
 
-    public incomingUser = computed(() => {
-        return (
-            this.messageList().find((message) => message.type === MessageType.Incoming)?.user ?? ''
-        );
-    });
+    public incomingUser = input<string>('');
 
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);

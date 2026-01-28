@@ -77,6 +77,7 @@ assets/ngx-parl/...
 | messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
 | messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
 |  loadHistory  |      boolean       |                    Use scroll for load history                    |
+| incomingUser  |       string       |                     User writing in messenger                     |
 
 
 ## Scrolling to the Bottom
