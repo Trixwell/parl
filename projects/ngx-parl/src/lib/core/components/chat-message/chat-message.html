@@ -30,9 +30,6 @@
             <div class="message__meta">
                 <time class="message__time">
                     {{ currentMessage().cr_time | date:'HH:mm' }}
-                    @if (currentMessage().type === messageType.Outgoing) {
-                        {{ currentMessage().user }}
-                    }
                 </time>
                 @if (currentMessage().type === messageType.Outgoing) {
                     @if (currentMessage().checked) {
@@ -48,6 +45,11 @@
             </div>
         </div>
     </div>
+</div>
+<div class="message__user">
+    @if (currentMessage().type === messageType.Outgoing) {
+        <span class="message__user-name">{{ currentMessage().user }}</span>
+    }
 </div>
 
 <mat-menu #messageMenu="matMenu" xPosition="before" yPosition="below" class="message__menu">
