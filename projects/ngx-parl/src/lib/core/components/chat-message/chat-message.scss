@@ -134,6 +134,20 @@
     }
 }
 
+.message__user {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 80%;
+    margin-left: auto;
+    margin-top: tokens.$margin-1;
+    padding-right: 38px + tokens.$margin-2;
+}
+
+.message__user-name {
+    font: tokens.$font-caption-m-400;
+    color: tokens.$neutral-400;
+}
+
 @keyframes pop {
     from {
         transform: translateY(2px);
