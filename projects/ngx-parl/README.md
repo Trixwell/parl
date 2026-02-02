@@ -125,8 +125,10 @@ export interface MessageActionEvent {
     action: MessageActionType;
     chatMessageId?: number;
     content: string;
-    files?: string[];
+    file_path?: string[];
     file_list?: File[];
+    user_id?: number;
+    user?: string;
 }
 ```
 
