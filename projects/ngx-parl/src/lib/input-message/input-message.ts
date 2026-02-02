@@ -173,15 +173,16 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
         queueMicrotask(() => this.messageEvent.set(null));
 
-        const payload: CurrMessage = {
+        const payload: CurrMessage = message ? {
+            id: message.id,
+            content: text,
+            file_path: files.length ? files : [],
+            file_list: fileList.length ? fileList : [],
+        } : {
             content: text,
             file_path: files.length ? files : [],
             file_list: fileList.length ? fileList : [],
         };
-
-        if (message) {
-            payload.id = message.id;
-        }
 
         this.input_text.set(payload);
 

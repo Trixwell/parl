@@ -152,9 +152,8 @@ export class NgxParlComponent {
                     if (index > -1) {
                         updatedList[index].content = (content ?? '').trim();
 
-                        if (Array.isArray(file_path)) {
-                            updatedList[index].file_path = file_path.length ? file_path : null;
-                        }
+                        updatedList[index].file_path =
+                            Array.isArray(file_path) && file_path.length ? file_path : null;
 
                         updatedList[index].edit = false;
                     }
