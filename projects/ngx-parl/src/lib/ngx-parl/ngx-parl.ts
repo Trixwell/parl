@@ -139,9 +139,9 @@ export class NgxParlComponent {
 
         // edit message
         if (this.isCurrMessage(event) && event.id !== undefined) {
-            const hasFiles = Array.isArray(event.files) && event.files.length > 0;
+            const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
             if (!hasFiles) {
-                const {id, content, files, file_list, user_id, user,} = event;
+                const {id, content, file_path, file_list, user_id, user,} = event;
 
                 this.messageList.update((currentList) => {
                     const updatedList = [...currentList];
@@ -152,8 +152,8 @@ export class NgxParlComponent {
                     if (index > -1) {
                         updatedList[index].content = (content ?? '').trim();
 
-                        if (Array.isArray(files)) {
-                            updatedList[index].file_path = files.length ? files : null;
+                        if (Array.isArray(file_path)) {
+                            updatedList[index].file_path = file_path.length ? file_path : null;
                         }
 
                         updatedList[index].edit = false;
@@ -168,7 +168,7 @@ export class NgxParlComponent {
                     action: 'edit',
                     chatMessageId: id,
                     content: (content ?? '').trim(),
-                    files: Array.isArray(files) && files.length ? files : [],
+                    file_path: Array.isArray(file_path) && file_path.length ? file_path : [],
                     file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
                     user_id: user_id,
                     user: user,
@@ -180,10 +180,10 @@ export class NgxParlComponent {
 
         // new message
         if (this.isCurrMessage(event)) {
-            const hasFiles = Array.isArray(event.files) && event.files.length > 0;
+            const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
 
             if (!hasFiles) {
-                const {id, content, files, file_list, user_id, user} = event;
+                const {id, content, file_path, file_list, user_id, user} = event;
 
                 const messages = this.messageList();
                 const lastId = messages.at(-1)?.id ?? 0;
@@ -224,9 +224,9 @@ export class NgxParlComponent {
             return this;
         }
 
-        const {content, files, file_list, user_id, user} = event;
+        const {content, file_path, file_list, user_id, user} = event;
         const text = (content ?? '').trim();
-        const hasFiles = Array.isArray(files) && files.length > 0;
+        const hasFiles = Array.isArray(file_path) && file_path.length > 0;
         const hasFileList = Array.isArray(file_list) && file_list.length > 0;
 
         if (!text && !hasFiles) {
@@ -248,7 +248,7 @@ export class NgxParlComponent {
             user: lastOutgoing?.user ?? '',
             content: text,
             avatar: lastOutgoing?.avatar ?? null,
-            file_path: hasFiles ? files : [],
+            file_path: hasFiles ? file_path : [],
             file_list: hasFileList ? file_list : [],
             checked: true,
         };
@@ -259,7 +259,7 @@ export class NgxParlComponent {
             action: 'send',
             chatMessageId: dto.id,
             content: text,
-            files: hasFiles ? files : [],
+            file_path: hasFiles ? file_path : [],
             file_list: hasFileList ? file_list : [],
             user_id: user_id,
             user: user,
