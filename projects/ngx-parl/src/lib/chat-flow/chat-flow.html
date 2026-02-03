@@ -18,7 +18,7 @@
                 <div class="chat__message" [attr.data-message-id]="message.id">
                     <lib-chat-message
                         [currentMessage]="message"
-                        [edit]="message.edit ?? false"
+                        [edit]="message.edit"
                         (editChange)="onEditChange(message.id, $event)"
                         (requestEditChange)="onRequestEdit($event)"
                         (requestDeleteChange)="onRequestDelete($event)">

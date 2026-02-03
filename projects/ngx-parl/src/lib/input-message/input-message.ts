@@ -167,26 +167,24 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             action,
             chatMessageId: message ? message.id : undefined,
             content: text,
-            files: files.length ? files : [],
+            file_path: files.length ? files : [],
             file_list: fileList.length ? fileList : [],
         });
 
         queueMicrotask(() => this.messageEvent.set(null));
 
-        if (message) {
-            this.input_text.set({
-                id: message.id,
-                content: text,
-                files: files.length ? files : [],
-                file_list: fileList.length ? fileList : [],
-            });
-        } else {
-            this.input_text.set({
-                content: text,
-                files: files.length ? files : [],
-                file_list: fileList.length ? fileList : [],
-            });
-        }
+        const payload: CurrMessage = message ? {
+            id: message.id,
+            content: text,
+            file_path: files.length ? files : [],
+            file_list: fileList.length ? fileList : [],
+        } : {
+            content: text,
+            file_path: files.length ? files : [],
+            file_list: fileList.length ? fileList : [],
+        };
+
+        this.input_text.set(payload);
 
         this.draft.set('');
         element.innerHTML = '';
