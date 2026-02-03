@@ -139,42 +139,41 @@ export class NgxParlComponent {
 
         // edit message
         if (this.isCurrMessage(event) && event.id !== undefined) {
-            const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
-            if (!hasFiles) {
-                const {id, content, file_path, file_list, user_id, user,} = event;
+            const {id, content, file_path, file_list, user_id, user,} = event;
 
-                this.messageList.update((currentList) => {
-                    const updatedList = [...currentList];
-                    const index = updatedList.findIndex(
-                        (message) => message.id === id,
-                    );
+            this.messageList.update((currentList) => {
+                const updatedList = [...currentList];
+                const index = updatedList.findIndex(
+                    (message) => message.id === id,
+                );
 
-                    if (index > -1) {
-                        updatedList[index].content = (content ?? '').trim();
+                if (index > -1) {
+                    updatedList[index].content = (content ?? '').trim();
 
-                        updatedList[index].file_path =
-                            Array.isArray(file_path) && file_path.length ? file_path : null;
+                    updatedList[index].file_path =
+                        Array.isArray(file_path) && file_path.length ? file_path : null;
+                    updatedList[index].file_list =
+                        Array.isArray(file_list) && file_list.length ? file_list : null;
 
-                        updatedList[index].edit = false;
-                    }
+                    updatedList[index].edit = false;
+                }
 
-                    return updatedList;
-                });
+                return updatedList;
+            });
 
-                this.selectedForEdit.set(null);
+            this.selectedForEdit.set(null);
 
-                this.pushMessageAction({
-                    action: 'edit',
-                    chatMessageId: id,
-                    content: (content ?? '').trim(),
-                    file_path: Array.isArray(file_path) && file_path.length ? file_path : [],
-                    file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
-                    user_id: user_id,
-                    user: user,
-                });
+            this.pushMessageAction({
+                action: 'edit',
+                chatMessageId: id,
+                content: (content ?? '').trim(),
+                file_path: Array.isArray(file_path) && file_path.length ? file_path : [],
+                file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
+                user_id: user_id,
+                user: user,
+            });
 
-                return this;
-            }
+            return this;
         }
 
         // new message
@@ -182,7 +181,7 @@ export class NgxParlComponent {
             const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
 
             if (!hasFiles) {
-                const {id, content, file_path, file_list, user_id, user} = event;
+                const {content, user_id, user} = event;
 
                 const messages = this.messageList();
                 const lastId = messages.at(-1)?.id ?? 0;
