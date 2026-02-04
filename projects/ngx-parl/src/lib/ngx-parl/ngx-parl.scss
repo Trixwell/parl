@@ -85,6 +85,45 @@
         }
     }
 
+    &__drag-overlay {
+        position: absolute;
+        inset: tokens.$space-4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: tokens.$radius-large;
+        border: tokens.$border-2 dashed tokens.$primary-400;
+        background: rgba(255, 255, 255, 0.92);
+        z-index: tokens.$z-index-overlay;
+        pointer-events: none;
+    }
+
+    &__drag-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: tokens.$space-2;
+        padding: tokens.$space-5 tokens.$space-6;
+        border-radius: tokens.$radius-large;
+        background: tokens.$neutral-50;
+        box-shadow: tokens.$shadow-light;
+        text-align: center;
+    }
+
+    &__drag-icon {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    &__drag-title {
+        font: tokens.$font-h4-600;
+        color: tokens.$primary-600;
+    }
+
+    &__drag-subtitle {
+        font: tokens.$font-body-s-400;
+        color: tokens.$neutral-600;
+    }
+
     &__input {
         flex: tokens.$space-0 tokens.$space-0 auto;
         border-bottom-left-radius: tokens.$radius-large;

@@ -20,6 +20,7 @@
         min-width: 0;
         font: tokens.$font-body-m-400;
         border-radius: tokens.$radius-large;
+        position: relative;
     }
 
     &__bubble {
@@ -67,6 +68,30 @@
         &:has(:nth-child(3)) {
             grid-template-columns: repeat(3, minmax(0, 140px));
         }
+    }
+
+    &__image-button {
+        display: block;
+        border: none;
+        padding: tokens.$space-0;
+        background: transparent;
+        border-radius: tokens.$radius-medium-extra;
+        overflow: hidden;
+        cursor: pointer;
+        &:focus-visible {
+            outline: tokens.$border-2 solid tokens.$primary-500;
+            outline-offset: tokens.$space-1;
+        }
+    }
+
+    &__menu-trigger {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
     }
 
     &__image {
@@ -130,6 +155,10 @@
 
         .message__time {
             color: tokens.$neutral-200;
+        }
+
+        .message__menu-trigger {
+            right: auto;
         }
     }
 }

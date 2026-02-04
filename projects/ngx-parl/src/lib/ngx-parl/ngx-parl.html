@@ -28,6 +28,23 @@
                             (dragover)="onDragOver($event)"
                             (dragleave)="onDragLeave($event)"
                             (drop)="onDrop($event)">
+            @if (dragActive()) {
+                <div class="modal-chat__drag-overlay">
+                    <div class="modal-chat__drag-card">
+                        <img src="assets/ngx-parl/icons/attach-filled.svg"
+                             class="modal-chat__drag-icon"
+                             alt=""
+                             width="56"
+                             height="56"/>
+                        <div class="modal-chat__drag-title">
+                            {{ 'chat.drag_title' | transloco }}
+                        </div>
+                        <div class="modal-chat__drag-subtitle">
+                            {{ 'chat.drag_subtitle' | transloco }}
+                        </div>
+                    </div>
+                </div>
+            }
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
                            (requestDeleteChange)="onRequestDelete($event)"

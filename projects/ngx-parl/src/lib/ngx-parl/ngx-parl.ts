@@ -91,6 +91,7 @@ export class NgxParlComponent {
             });
 
             this.scrollToBottomTrigger.update(v => v + 1);
+            this.scrollToBottom();
         });
     }
 

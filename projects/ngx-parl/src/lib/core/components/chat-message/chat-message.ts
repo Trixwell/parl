@@ -3,6 +3,7 @@ import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
+import {PreviewFile} from '../preview-file/preview-file';
 
 @Component({
     selector: 'lib-chat-message',
@@ -14,6 +15,7 @@ import {TranslocoPipe} from '@ngneat/transloco';
         MatMenuItem,
         MatMenuTrigger,
         TranslocoPipe,
+        PreviewFile,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
@@ -23,13 +25,16 @@ import {TranslocoPipe} from '@ngneat/transloco';
 export class ChatMessageComponent {
     public currentMessage = input.required<ChatMessage>();
     public edit = model<boolean>(false);
+    public previewList = model<string[]>([]);
+    public previewIndex = model<number>(0);
+    public closePreviewHandler = () => this.closePreview();
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
 
     constructor() {}
 
-    private normalizeSourcePath(sourcePath: string): string {
+    public normalizeSourcePath(sourcePath: string): string {
         const cleanedPath = (sourcePath ?? '').trim();
         if (!cleanedPath) {
             return '';
@@ -47,7 +52,7 @@ export class ChatMessageComponent {
         return cleanedPath.replace(/^\.{1,2}\//, '/');
     }
 
-    attachments = computed(() => {
+    public attachments = computed(() => {
         const message = this.currentMessage();
         const filePath = message.file_path;
 
@@ -85,7 +90,7 @@ export class ChatMessageComponent {
         return [];
     });
 
-    avatarSrc = computed(() => {
+    public avatarSrc = computed(() => {
         const message = this.currentMessage();
         const fallback = message.type === 'incoming'
             ? 'assets/ngx-parl/icons/avatar_anonym.svg'
@@ -94,29 +99,54 @@ export class ChatMessageComponent {
         return message.avatar || fallback;
     });
 
-    openContextMenu(event: Event, trigger: any) {
+    public openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
         event.preventDefault();
         event.stopPropagation();
+
+        if (event instanceof MouseEvent) {
+            triggerElement.style.left = `${event.clientX}px`;
+            triggerElement.style.top = `${event.clientY}px`;
+        }
+
         trigger.openMenu();
 
         return this;
     }
 
-    editMessage(message: ChatMessage) {
+    public editMessage(message: ChatMessage) {
         this.edit.set(true);
         this.requestEdit.set(message);
 
         return this;
     }
 
-    deleteMessage(message: ChatMessage) {
+    public openPreview(index: number) {
+        const list = this.attachments();
+        if (!list.length) {
+            return this;
+        }
+
+        this.previewList.set(list);
+        this.previewIndex.set(Math.max(0, Math.min(index, list.length - 1)));
+
+        return this;
+    }
+
+    public closePreview() {
+        this.previewList.set([]);
+        this.previewIndex.set(0);
+
+        return this;
+    }
+
+    public deleteMessage(message: ChatMessage) {
         this.requestDelete.set(message.id);
         queueMicrotask(() => this.requestDelete.set(null));
 
         return this;
     }
 
-    canDelete(message: ChatMessage): boolean {
+    public canDelete(message: ChatMessage): boolean {
         return message.type === this.messageType.Outgoing;
     }
 

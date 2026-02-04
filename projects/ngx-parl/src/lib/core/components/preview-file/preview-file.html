@@ -1,1 +1,49 @@
-<p>preview-file works!</p>
+<div class="preview" (click)="requestClose()">
+    <div class="preview__dialog"
+         role="dialog"
+         aria-modal="true"
+         [attr.aria-label]="title() || ('chat.photo_preview' | transloco)"
+         (click)="$event.stopPropagation()">
+        <div class="preview__header">
+            <h3 class="preview__title">
+                {{ title() || ('chat.photo_preview' | transloco) }}
+            </h3>
+            <button type="button"
+                    class="preview__close"
+                    [attr.aria-label]="'chat.close' | transloco"
+                    (click)="requestClose()">
+                <img src="assets/ngx-parl/icons/close.svg"
+                     alt="close"
+                     width="20"
+                     height="20"/>
+            </button>
+        </div>
+        <div class="preview__body">
+            @if (srcList().length > 1) {
+                <button type="button"
+                        class="preview__nav preview__nav--prev"
+                        aria-label="Previous"
+                        (click)="prev()">
+                </button>
+                <button type="button"
+                        class="preview__nav preview__nav--next"
+                        aria-label="Next"
+                        (click)="next()">
+                </button>
+            }
+            <img [src]="currentSrc()" alt="" class="preview__image" (click)="next()"/>
+        </div>
+        @if (srcList().length > 1) {
+            <div class="preview__thumbs">
+                @for (file of srcList(); track file; let i = $index) {
+                    <button type="button"
+                            class="preview__thumb"
+                            [class.preview__thumb--active]="i === activeIndex()"
+                            (click)="select(i)">
+                        <img [src]="file" alt=""/>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+</div>
