@@ -22,16 +22,22 @@
             @if (srcList().length > 1) {
                 <button type="button"
                         class="preview__nav preview__nav--prev"
-                        aria-label="Previous"
+                        [attr.aria-label]="'chat.previous' | transloco"
                         (click)="prev()">
                 </button>
                 <button type="button"
                         class="preview__nav preview__nav--next"
-                        aria-label="Next"
+                        [attr.aria-label]="'chat.next' | transloco"
                         (click)="next()">
                 </button>
             }
-            <img [src]="currentSrc()" alt="" class="preview__image" (click)="next()"/>
+            <img [src]="currentSrc()"
+                 [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco : { index: activeIndex() + 1, total: srcList().length }"
+                 class="preview__image"
+                 role="button"
+                 tabindex="0"
+                 [attr.aria-label]="'chat.next' | transloco"
+                 (click)="next()"/>
         </div>
         @if (srcList().length > 1) {
             <div class="preview__thumbs">
@@ -40,7 +46,8 @@
                             class="preview__thumb"
                             [class.preview__thumb--active]="i === activeIndex()"
                             (click)="select(i)">
-                        <img [src]="file" alt=""/>
+                        <img [src]="file"
+                             [attr.alt]="'chat.thumbnail_alt' | transloco : { index: i + 1, total: srcList().length }"/>
                     </button>
                 }
             </div>

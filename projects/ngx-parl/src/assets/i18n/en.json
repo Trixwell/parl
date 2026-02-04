@@ -15,6 +15,10 @@
         "chat_empty_title": "No messages",
         "chat_empty_subscription": "Your chat history will be displayed here. Write your first message to get started!",
         "photo_preview": "Photo preview",
+        "previous": "Previous",
+        "next": "Next",
+        "thumbnail_alt": "Thumbnail image {{index}} of {{total}}",
+        "photo_preview_image_x_of_y": "Preview image {{index}} of {{total}}",
         "drag_title": "Drop photos here",
         "drag_subtitle": "Release to send them quickly"
     }
