@@ -1,4 +1,15 @@
-import {Component, ElementRef, ViewChild, computed, effect, input, model, inject, OnDestroy} from '@angular/core';
+import {
+    Component,
+    ElementRef,
+    ViewChild,
+    computed,
+    effect,
+    input,
+    model,
+    inject,
+    OnDestroy,
+    AfterViewInit
+} from '@angular/core';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {FocusTrap, FocusTrapFactory} from '@angular/cdk/a11y';
 
@@ -11,7 +22,7 @@ import {FocusTrap, FocusTrapFactory} from '@angular/cdk/a11y';
     styleUrl: './preview-file.scss',
     standalone: true,
 })
-export class PreviewFile implements OnDestroy {
+export class PreviewFile implements OnDestroy, AfterViewInit {
     public srcList = input<string[]>([]);
     public startIndex = input<number>(0);
     public title = input<string>('');
@@ -84,7 +95,6 @@ export class PreviewFile implements OnDestroy {
 
     ngAfterViewInit() {
         this.viewReady.set(true);
-        return this;
     }
 
     ngOnDestroy() {

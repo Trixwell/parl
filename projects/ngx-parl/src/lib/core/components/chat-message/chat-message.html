@@ -76,7 +76,7 @@
     </lib-preview-file>
 }
 
-<mat-menu #messageMenu="matMenu" yPosition="below" class="message__menu">
+<mat-menu #messageMenu="matMenu" yPosition="below" xPosition="before" class="message__menu">
     @if (currentMessage().type === messageType.Outgoing) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
