@@ -85,6 +85,7 @@
         border-radius: tokens.$radius-round;
         border: tokens.$border-1 solid tokens.$neutral-200;
         background: tokens.$neutral-50;
+        opacity: 0.7;
         box-shadow: tokens.$shadow-light;
         cursor: pointer;
         display: inline-flex;
