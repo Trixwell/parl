@@ -5,6 +5,7 @@
          role="dialog"
          aria-modal="true"
          [attr.aria-label]="title() || ('chat.photo_preview' | transloco)"
+         (keydown)="onKeyDown($event)"
          (click)="$event.stopPropagation()">
         <div class="preview__header">
             <h3 class="preview__title">

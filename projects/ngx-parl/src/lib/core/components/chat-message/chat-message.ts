@@ -107,8 +107,8 @@ export class ChatMessageComponent {
         if (event instanceof MouseEvent) {
             triggerElement.style.setProperty('inset-inline-start', `${event.clientX}px`);
             triggerElement.style.setProperty('inset-block-start', `${event.clientY}px`);
-            triggerElement.style.left = '';
-            triggerElement.style.top = '';
+            triggerElement.style.removeProperty('left');
+            triggerElement.style.removeProperty('top');
         }
 
         trigger.openMenu();
