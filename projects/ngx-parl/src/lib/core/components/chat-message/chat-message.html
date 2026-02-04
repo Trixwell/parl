@@ -25,7 +25,7 @@
                 @for (file of attachments(); track file; let i = $index) {
                     <button type="button"
                             class="message__image-button"
-                            (click)="openPreview(i)"
+                            (click)="openPreview(i, $event)"
                             [attr.aria-label]="'chat.photo_preview' | transloco">
                         <img [src]="file"
                              alt="attachment"
@@ -68,11 +68,12 @@
     <lib-preview-file
         [srcList]="previewList()"
         [startIndex]="previewIndex()"
+        [openerElement]="previewOpener()"
         [closeHandler]="closePreviewHandler">
     </lib-preview-file>
 }
 
-<mat-menu #messageMenu="matMenu" xPosition="after" yPosition="below" [overlapTrigger]="true" class="message__menu">
+<mat-menu #messageMenu="matMenu" yPosition="below" class="message__menu">
     @if (currentMessage().type === messageType.Outgoing) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"

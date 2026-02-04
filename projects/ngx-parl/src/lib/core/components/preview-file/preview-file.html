@@ -1,5 +1,7 @@
 <div class="preview" (click)="requestClose()">
     <div class="preview__dialog"
+         #dialog
+         tabindex="-1"
          role="dialog"
          aria-modal="true"
          [attr.aria-label]="title() || ('chat.photo_preview' | transloco)"
@@ -11,11 +13,9 @@
             <button type="button"
                     class="preview__close"
                     [attr.aria-label]="'chat.close' | transloco"
+                    #closeButton
                     (click)="requestClose()">
-                <img src="assets/ngx-parl/icons/close.svg"
-                     alt="close"
-                     width="22"
-                     height="22"/>
+                <span class="preview__close-icon" aria-hidden="true"></span>
             </button>
         </div>
         <div class="preview__body">

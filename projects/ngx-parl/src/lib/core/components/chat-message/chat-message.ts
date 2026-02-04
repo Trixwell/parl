@@ -27,6 +27,7 @@ export class ChatMessageComponent {
     public edit = model<boolean>(false);
     public previewList = model<string[]>([]);
     public previewIndex = model<number>(0);
+    public previewOpener = model<HTMLElement | null>(null);
     public closePreviewHandler = () => this.closePreview();
 
     public requestEdit = model<ChatMessage | null>(null);
@@ -34,7 +35,7 @@ export class ChatMessageComponent {
 
     constructor() {}
 
-    public normalizeSourcePath(sourcePath: string): string {
+    normalizeSourcePath(sourcePath: string): string {
         const cleanedPath = (sourcePath ?? '').trim();
         if (!cleanedPath) {
             return '';
@@ -52,7 +53,7 @@ export class ChatMessageComponent {
         return cleanedPath.replace(/^\.{1,2}\//, '/');
     }
 
-    public attachments = computed(() => {
+    attachments = computed(() => {
         const message = this.currentMessage();
         const filePath = message.file_path;
 
@@ -90,7 +91,7 @@ export class ChatMessageComponent {
         return [];
     });
 
-    public avatarSrc = computed(() => {
+    avatarSrc = computed(() => {
         const message = this.currentMessage();
         const fallback = message.type === 'incoming'
             ? 'assets/ngx-parl/icons/avatar_anonym.svg'
@@ -99,13 +100,15 @@ export class ChatMessageComponent {
         return message.avatar || fallback;
     });
 
-    public openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
+    openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
         event.preventDefault();
         event.stopPropagation();
 
         if (event instanceof MouseEvent) {
-            triggerElement.style.left = `${event.clientX}px`;
-            triggerElement.style.top = `${event.clientY}px`;
+            triggerElement.style.setProperty('inset-inline-start', `${event.clientX}px`);
+            triggerElement.style.setProperty('inset-block-start', `${event.clientY}px`);
+            triggerElement.style.left = '';
+            triggerElement.style.top = '';
         }
 
         trigger.openMenu();
@@ -113,40 +116,43 @@ export class ChatMessageComponent {
         return this;
     }
 
-    public editMessage(message: ChatMessage) {
+    editMessage(message: ChatMessage) {
         this.edit.set(true);
         this.requestEdit.set(message);
 
         return this;
     }
 
-    public openPreview(index: number) {
+    openPreview(index: number, event: MouseEvent) {
         const list = this.attachments();
         if (!list.length) {
             return this;
         }
 
+        const opener = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+        this.previewOpener.set(opener);
         this.previewList.set(list);
         this.previewIndex.set(Math.max(0, Math.min(index, list.length - 1)));
 
         return this;
     }
 
-    public closePreview() {
+    closePreview() {
         this.previewList.set([]);
         this.previewIndex.set(0);
+        this.previewOpener.set(null);
 
         return this;
     }
 
-    public deleteMessage(message: ChatMessage) {
+    deleteMessage(message: ChatMessage) {
         this.requestDelete.set(message.id);
         queueMicrotask(() => this.requestDelete.set(null));
 
         return this;
     }
 
-    public canDelete(message: ChatMessage): boolean {
+    canDelete(message: ChatMessage): boolean {
         return message.type === this.messageType.Outgoing;
     }
 

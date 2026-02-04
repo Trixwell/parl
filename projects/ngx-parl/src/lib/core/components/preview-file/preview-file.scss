@@ -7,7 +7,7 @@
     align-items: center;
     justify-content: center;
     padding: tokens.$space-5;
-    background: rgba(tokens.$neutral-950, 0.4);
+    background: rgba(tokens.$neutral-950, 0.6);
     z-index: tokens.$z-index-overlay;
 
     &__dialog {
@@ -36,26 +36,42 @@
     }
 
     &__close {
-        width: tokens.$space-6;
-        height: tokens.$space-6;
+        width: tokens.$space-7;
+        height: tokens.$space-7;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border: none;
         background: none;
-        filter: invert(1%) sepia(1%) saturate(1%) hue-rotate(100deg) brightness(100%) contrast(30%);
+        color: tokens.$neutral-600;
         border-radius: tokens.$radius-round;
         cursor: pointer;
-        transition: background-color 160ms ease;
+        transition: background-color 160ms ease, color 160ms ease;
 
         &:hover {
-            filter: invert(20%);
+            color: tokens.$neutral-900;
+            background-color: rgba(tokens.$neutral-200, 0.8);
         }
 
         &:focus-visible {
             outline: tokens.$border-2 solid tokens.$primary-500;
             outline-offset: tokens.$space-1;
         }
+    }
+
+    &__close-icon {
+        width: tokens.$space-5;
+        height: tokens.$space-5;
+        display: block;
+        background-color: currentColor;
+        mask-image: url('../../../../assets/icons/close.svg');
+        mask-size: contain;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        -webkit-mask-image: url('../../../../assets/icons/close.svg');
+        -webkit-mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
     }
 
     &__body {
@@ -104,13 +120,13 @@
 
         &::before {
             content: '';
-            width: 8px;
-            height: 8px;
-            border: 2px solid tokens.$neutral-600;
+            width: tokens.$space-2;
+            height: tokens.$space-2;
+            border: tokens.$border-2 solid tokens.$neutral-600;
             border-top: none;
             border-right: none;
             transform: rotate(45deg);
-            margin-left: 2px;
+            margin-left: tokens.$space-1;
         }
 
         &--prev {
