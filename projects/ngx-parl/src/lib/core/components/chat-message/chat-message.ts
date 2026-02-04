@@ -3,6 +3,7 @@ import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
+import {PreviewFile} from '../preview-file/preview-file';
 
 @Component({
     selector: 'lib-chat-message',
@@ -14,6 +15,7 @@ import {TranslocoPipe} from '@ngneat/transloco';
         MatMenuItem,
         MatMenuTrigger,
         TranslocoPipe,
+        PreviewFile,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
@@ -23,13 +25,17 @@ import {TranslocoPipe} from '@ngneat/transloco';
 export class ChatMessageComponent {
     public currentMessage = input.required<ChatMessage>();
     public edit = model<boolean>(false);
+    public previewList = model<string[]>([]);
+    public previewIndex = model<number>(0);
+    public previewOpener = model<HTMLElement | null>(null);
+    public closePreviewHandler = () => this.closePreview();
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
 
     constructor() {}
 
-    private normalizeSourcePath(sourcePath: string): string {
+    normalizeSourcePath(sourcePath: string): string {
         const cleanedPath = (sourcePath ?? '').trim();
         if (!cleanedPath) {
             return '';
@@ -94,9 +100,17 @@ export class ChatMessageComponent {
         return message.avatar || fallback;
     });
 
-    openContextMenu(event: Event, trigger: any) {
+    openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
         event.preventDefault();
         event.stopPropagation();
+
+        if (event instanceof MouseEvent) {
+            triggerElement.style.setProperty('inset-inline-start', `${event.clientX}px`);
+            triggerElement.style.setProperty('inset-block-start', `${event.clientY}px`);
+            triggerElement.style.removeProperty('left');
+            triggerElement.style.removeProperty('top');
+        }
+
         trigger.openMenu();
 
         return this;
@@ -105,6 +119,28 @@ export class ChatMessageComponent {
     editMessage(message: ChatMessage) {
         this.edit.set(true);
         this.requestEdit.set(message);
+
+        return this;
+    }
+
+    openPreview(index: number, event: MouseEvent) {
+        const list = this.attachments();
+        if (!list.length) {
+            return this;
+        }
+
+        const opener = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+        this.previewOpener.set(opener);
+        this.previewList.set(list);
+        this.previewIndex.set(Math.max(0, Math.min(index, list.length - 1)));
+
+        return this;
+    }
+
+    closePreview() {
+        this.previewList.set([]);
+        this.previewIndex.set(0);
+        this.previewOpener.set(null);
 
         return this;
     }

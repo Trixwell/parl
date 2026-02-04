@@ -127,7 +127,13 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     collectAttachmentSources(): string[] {
-        return (this.previews() ?? []).map(p => p.src).filter(Boolean);
+        const newAttachments = (this.previews() ?? []).map(p => p.src).filter(Boolean);
+        if (!this.isEditMode()) {
+            return newAttachments;
+        }
+
+        const originalAttachments = this.editFilePaths().filter(Boolean);
+        return Array.from(new Set([...originalAttachments, ...newAttachments]));
     }
 
     cancelEditMessage() {

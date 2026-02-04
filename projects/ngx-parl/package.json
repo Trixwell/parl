@@ -1,6 +1,6 @@
 {
     "name": "@trixwell/ngx-parl",
-    "version": "3.0.1",
+    "version": "4.0.0",
     "license": "LGPL-3.0",
     "description": "Highly customizable Angular Material chat component",
     "keywords": [
