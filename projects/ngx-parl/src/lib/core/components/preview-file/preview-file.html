@@ -34,10 +34,9 @@
             <img [src]="currentSrc()"
                  [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco : { index: activeIndex() + 1, total: srcList().length }"
                  class="preview__image"
-                 role="button"
-                 tabindex="0"
-                 [attr.aria-label]="'chat.next' | transloco"
-                 (click)="next()"/>
+                 (click)="next()"
+                 (keydown.enter)="$event.preventDefault(); next()"
+                 (keydown.space)="$event.preventDefault(); next()"/>
         </div>
         @if (srcList().length > 1) {
             <div class="preview__thumbs">
