@@ -53,7 +53,7 @@ export class NgxParlComponent {
     public incomingUser = input<string>('');
     public transportType = input<string>('');
     public transportTypeIcon = input<string>('');
-    public transportTypeIconSrc = computed(() => this.normalizeSourcePath(this.transportTypeIcon()));
+    public transportTypeIconSrc = computed(() => this.utils.normalizeSourcePath(this.transportTypeIcon()));
 
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
@@ -291,24 +291,6 @@ export class NgxParlComponent {
 
     isCurrMessage(event: unknown): event is CurrMessage {
         return typeof event === 'object' && event !== null && 'content' in event;
-    }
-
-    normalizeSourcePath(sourcePath: string): string {
-        const cleanedPath = (sourcePath ?? '').trim();
-        if (!cleanedPath) {
-            return '';
-        }
-
-        if (cleanedPath.startsWith('data:') || cleanedPath.startsWith('blob:') || /^https?:\/\//i.test(cleanedPath)) {
-            return cleanedPath;
-        }
-
-        const assetsIndex = cleanedPath.indexOf('assets/');
-        if (assetsIndex >= 0) {
-            return '/' + cleanedPath.slice(assetsIndex);
-        }
-
-        return cleanedPath.replace(/^\.{1,2}\//, '/');
     }
 
     pushMessageAction(event: MessageActionEvent) {

@@ -33,4 +33,22 @@ export class UtilsService {
 
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
     }
+
+    normalizeSourcePath(sourcePath: string): string {
+        const cleanedPath = (sourcePath ?? '').trim();
+        if (!cleanedPath) {
+            return '';
+        }
+
+        if (cleanedPath.startsWith('data:') || cleanedPath.startsWith('blob:') || /^https?:\/\//i.test(cleanedPath)) {
+            return cleanedPath;
+        }
+
+        const assetsIndex = cleanedPath.indexOf('assets/');
+        if (assetsIndex >= 0) {
+            return '/' + cleanedPath.slice(assetsIndex);
+        }
+
+        return cleanedPath.replace(/^\.{1,2}\//, '/');
+    }
 }
