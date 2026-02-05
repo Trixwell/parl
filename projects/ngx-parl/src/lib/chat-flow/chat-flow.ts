@@ -38,6 +38,9 @@ export class ChatFlowComponent implements AfterViewInit {
 
     private viewInitialized = false;
     private previousMessageCount = 0;
+    private previousFirstMessageId: number | null = null;
+    private previousLastMessageId: number | null = null;
+    private pendingHistoryRestore = false;
 
     private previousScrollHeight = 0;
     private previousScrollTop = 0;
@@ -50,23 +53,47 @@ export class ChatFlowComponent implements AfterViewInit {
     constructor() {
         effect(() => {
             const messages = this.messageList();
+            const firstMessageId = messages[0]?.id ?? null;
+            const lastMessageId = messages.at(-1)?.id ?? null;
 
             if (!this.viewInitialized) {
                 this.previousMessageCount = messages.length;
+                this.previousFirstMessageId = firstMessageId;
+                this.previousLastMessageId = lastMessageId;
                 return;
             }
 
             const hasMoreMessages = messages.length > this.previousMessageCount;
+            const hasPrependedMessages =
+                hasMoreMessages &&
+                this.previousFirstMessageId !== null &&
+                firstMessageId !== this.previousFirstMessageId;
+            const hasAppendedMessages =
+                hasMoreMessages &&
+                this.previousLastMessageId !== null &&
+                lastMessageId !== this.previousLastMessageId;
 
-            if (hasMoreMessages && !this.isUserAtBottom) {
+            const shouldRestoreHistory =
+                !this.isUserAtBottom &&
+                hasMoreMessages &&
+                (hasPrependedMessages || (this.pendingHistoryRestore && !hasAppendedMessages));
+
+            if (shouldRestoreHistory) {
                 this.restoreScrollAfterHistoryPrepend();
+                this.pendingHistoryRestore = false;
             }
 
             if (hasMoreMessages && this.isUserAtBottom) {
                 queueMicrotask(() => this.scrollToBottom());
             }
 
+            if (hasMoreMessages && hasAppendedMessages && !hasPrependedMessages) {
+                this.pendingHistoryRestore = false;
+            }
+
             this.previousMessageCount = messages.length;
+            this.previousFirstMessageId = firstMessageId;
+            this.previousLastMessageId = lastMessageId;
         });
 
         effect(() => {
@@ -100,6 +127,7 @@ export class ChatFlowComponent implements AfterViewInit {
     }
 
     onScrollUp(): this {
+        this.pendingHistoryRestore = true;
         this.loadHistory.set(true);
 
         setTimeout(() => this.loadHistory.set(false), 0);
@@ -119,8 +147,10 @@ export class ChatFlowComponent implements AfterViewInit {
         queueMicrotask(() => {
             const newScrollHeight = element.scrollHeight;
             const heightDiff = newScrollHeight - savedScrollHeight;
-
+            const previousBehavior = element.style.scrollBehavior;
+            element.style.scrollBehavior = 'auto';
             element.scrollTop = savedScrollTop + heightDiff;
+            element.style.scrollBehavior = previousBehavior;
         });
 
         return this;
