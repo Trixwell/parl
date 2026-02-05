@@ -3,6 +3,8 @@ export class ChatMessage {
     public chat_id: number;
     public cr_time: string;
     public type: ChatMessageType;
+    public transport_type: string | null;
+    public transport_type_icon: string | null;
     public user: string;
     public content: string;
     public avatar: string | null;
@@ -17,6 +19,8 @@ export class ChatMessage {
         this.chat_id = data.chat_id;
         this.cr_time = data.cr_time;
         this.type = data.type;
+        this.transport_type = data.transport_type ?? null;
+        this.transport_type_icon = data.transport_type_icon ?? null;
         this.user = data.user;
         this.content = data.content;
         this.avatar = data.avatar ?? null;
@@ -46,6 +50,8 @@ export interface ChatMessageDTO {
     chat_id: number;
     cr_time: string; // ISO or 'YYYY-MM-DD HH:mm:ss'
     type: ChatMessageType;
+    transport_type?: string | null;
+    transport_type_icon?: string | null;
     user: string;
     content: string;
     avatar?: string | null;
@@ -68,6 +74,8 @@ export interface CurrMessage {
     file_list?: File[];
     user_id?: number;
     user?: string;
+    transport_type?: string | null;
+    transport_type_icon?: string | null;
 }
 
 export type MessageActionType = 'send' | 'edit' | 'delete';
@@ -80,4 +88,6 @@ export interface MessageActionEvent {
     file_list?: File[];
     user_id?: number;
     user?: string;
+    transport_type?: string | null;
+    transport_type_icon?: string | null;
 }

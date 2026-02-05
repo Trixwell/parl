@@ -4,6 +4,7 @@ import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {PreviewFile} from '../preview-file/preview-file';
+import {UtilsService} from '../../service/utils/utils';
 
 @Component({
     selector: 'lib-chat-message',
@@ -33,32 +34,14 @@ export class ChatMessageComponent {
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
 
-    constructor() {}
-
-    normalizeSourcePath(sourcePath: string): string {
-        const cleanedPath = (sourcePath ?? '').trim();
-        if (!cleanedPath) {
-            return '';
-        }
-
-        if (cleanedPath.startsWith('data:') || cleanedPath.startsWith('blob:') || /^https?:\/\//i.test(cleanedPath)) {
-            return cleanedPath;
-        }
-
-        const assetsIndex = cleanedPath.indexOf('assets/');
-        if (assetsIndex >= 0) {
-            return '/' + cleanedPath.slice(assetsIndex);
-        }
-
-        return cleanedPath.replace(/^\.{1,2}\//, '/');
-    }
+    constructor(private utils: UtilsService) {}
 
     attachments = computed(() => {
         const message = this.currentMessage();
         const filePath = message.file_path;
 
         if (Array.isArray(filePath)) {
-            return filePath.map(p => this.normalizeSourcePath(p)).filter(Boolean);
+            return filePath.map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
         }
 
         const rawFilePath = (filePath as unknown as string) ?? '';
@@ -71,7 +54,7 @@ export class ChatMessageComponent {
                 const parsed = JSON.parse(rawFilePath);
                 if (Array.isArray(parsed)) {
                     return parsed
-                        .map(item => (typeof item === 'string' ? this.normalizeSourcePath(item) : ''))
+                        .map(item => (typeof item === 'string' ? this.utils.normalizeSourcePath(item) : ''))
                         .filter(Boolean);
                 }
             } catch {}
@@ -82,10 +65,10 @@ export class ChatMessageComponent {
         }
 
         if (rawFilePath.includes('|')) {
-            return rawFilePath.split('|').map(p => this.normalizeSourcePath(p)).filter(Boolean);
+            return rawFilePath.split('|').map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
         }
         if (rawFilePath.includes(',')) {
-            return rawFilePath.split(',').map(p => this.normalizeSourcePath(p)).filter(Boolean);
+            return rawFilePath.split(',').map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
         }
 
         return [];

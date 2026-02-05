@@ -24,7 +24,6 @@
         flex-direction: column;
         gap: tokens.$space-3;
         padding: tokens.$margin-3 tokens.$margin-4;
-        scroll-behavior: smooth;
         overscroll-behavior: contain;
 
         &__empty {
