@@ -68,17 +68,18 @@ assets/ngx-parl/...
 
 ## Signal Data
 
-|     Name      |        Type        |                            Description                            |
-|:-------------:|:------------------:|:-----------------------------------------------------------------:|
-|    header     |      boolean       |     Display the chat title with the name of the interlocutor      |
-|     theme     |       string       |     Choose a theme color   (```primary``` or ```secondary```)     |
-|   language    |       string       |       Set language (```uk``` or ```en```). Default ```en```       |
-|  messageList  |   ChatMessage[]    |              List of chat messages, user information              |
-| messageUpdate |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
-| messageAction | MessageActionEvent |               Emits chat events: send, edit, delete               |
-|  loadHistory  |      boolean       |                    Use scroll for load history                    |
-| incomingUser  |       string       |                     User writing in messenger                     |
-
+|       Name        |        Type        |                            Description                            |
+|:-----------------:|:------------------:|:-----------------------------------------------------------------:|
+|      header       |      boolean       |     Display the chat title with the name of the interlocutor      |
+|       theme       |       string       |     Choose a theme color   (```primary``` or ```secondary```)     |
+|     language      |       string       |       Set language (```uk``` or ```en```). Default ```en```       |
+|    messageList    |   ChatMessage[]    |              List of chat messages, user information              |
+|   messageUpdate   |    ChatMessage     | Incoming message from external source (signal/subject/observable) |
+|   messageAction   | MessageActionEvent |               Emits chat events: send, edit, delete               |
+|    loadHistory    |      boolean       |                    Use scroll for load history                    |
+|   incomingUser    |       string       |                     User writing in messenger                     |
+|   transportType   |       string       |               Transport type label (Telegram, etc.)               |
+| transportTypeIcon |       string       |         Path to transport icon (e.g. assets/ngx-parl/...)         |
 
 ## Scrolling to the Bottom
 
@@ -111,6 +112,8 @@ export interface ChatMessageDTO {
     chat_id: number;
     cr_time: string; // ISO or 'YYYY-MM-DD HH:mm:ss'
     type: ChatMessageType;
+    transport_type?: string | null;
+    transport_type_icon?: string | null;
     user: string;
     content: string;
     avatar?: string | null;
@@ -139,6 +142,8 @@ export interface MessageActionEvent {
           [(messageList)]="messageList"
           [(messageUpdate)]="messageUpdate"
           [(messageAction)]="messageAction"
+          [transportType]="transportType()"
+          [transportTypeIcon]="transportTypeIcon()"
           [(isScrolledToTop)]="isScrolledToTop">
 </ngx-parl>
 ```

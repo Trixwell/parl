@@ -6,7 +6,17 @@
 
                 <div class="modal-chat__title">
                     <h1 class="modal-chat__heading" id="modal-chat__heading">
-                        {{ 'chat.title' | transloco }} {{ incomingUser() }}
+                        @if (transportTypeIconSrc()) {
+                            <img [ngSrc]="transportTypeIconSrc()"
+                                 class="modal-chat__heading-icon"
+                                 width="20"
+                                 height="20"
+                                 [attr.alt]="transportType() || 'transport icon'"
+                                 priority/>
+                        }
+                        <span class="modal-chat__heading-text">
+                            {{ transportType() }} {{ incomingUser() }}
+                        </span>
                     </h1>
                 </div>
 

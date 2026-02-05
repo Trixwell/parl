@@ -37,7 +37,23 @@
         #modal-chat__heading {
             color: tokens.$neutral-50;
             font: tokens.$font-h5-600;
+            display: inline-flex;
+            align-items: center;
+            gap: tokens.$margin-2;
         }
+    }
+
+    &__heading-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: tokens.$radius-round;
+        flex: 0 0 auto;
+    }
+
+    &__heading-text {
+        display: inline-flex;
+        align-items: center;
+        gap: tokens.$margin-1;
     }
 
     &__actions {

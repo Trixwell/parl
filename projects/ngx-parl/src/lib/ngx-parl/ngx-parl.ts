@@ -51,6 +51,9 @@ export class NgxParlComponent {
     public messageAction = model<MessageActionEvent | null>(null);
 
     public incomingUser = input<string>('');
+    public transportType = input<string>('');
+    public transportTypeIcon = input<string>('');
+    public transportTypeIconSrc = computed(() => this.normalizeSourcePath(this.transportTypeIcon()));
 
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
@@ -139,7 +142,7 @@ export class NgxParlComponent {
 
         // edit message
         if (this.isCurrMessage(event) && event.id !== undefined) {
-            const {id, content, file_path, file_list, user_id, user,} = event;
+            const {id, content, file_path, file_list, user_id, user, transport_type, transport_type_icon} = event;
 
             this.messageList.update((currentList) => {
                 const updatedList = [...currentList];
@@ -154,6 +157,12 @@ export class NgxParlComponent {
                         Array.isArray(file_path) && file_path.length ? file_path : null;
                     updatedList[index].file_list =
                         Array.isArray(file_list) && file_list.length ? file_list : null;
+                    if (transport_type !== undefined) {
+                        updatedList[index].transport_type = transport_type ?? null;
+                    }
+                    if (transport_type_icon !== undefined) {
+                        updatedList[index].transport_type_icon = transport_type_icon ?? null;
+                    }
 
                     updatedList[index].edit = false;
                 }
@@ -171,6 +180,8 @@ export class NgxParlComponent {
                 file_list: Array.isArray(file_list) && file_list.length ? file_list : [],
                 user_id: user_id,
                 user: user,
+                transport_type: transport_type ?? null,
+                transport_type_icon: transport_type_icon ?? null,
             });
 
             return this;
@@ -181,7 +192,7 @@ export class NgxParlComponent {
             const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
 
             if (!hasFiles) {
-                const {content, user_id, user} = event;
+                const {content, user_id, user, transport_type, transport_type_icon} = event;
 
                 const messages = this.messageList();
                 const lastId = messages.at(-1)?.id ?? 0;
@@ -189,12 +200,16 @@ export class NgxParlComponent {
                 const lastOutgoing = [...messages]
                     .reverse()
                     .find((message) => message.type === MessageType.Outgoing,);
+                const fallbackTransport = lastOutgoing?.transport_type ?? this.transportType() ?? null;
+                const fallbackTransportIcon = lastOutgoing?.transport_type_icon ?? this.transportTypeIcon() ?? null;
 
                 const dto: ChatMessageDTO = {
                     id: lastId + 1,
                     chat_id: lastOutgoing?.chat_id ?? 1,
                     cr_time: this.utils.getLocalISODate(),
                     type: MessageType.Outgoing as ChatMessageType,
+                    transport_type: transport_type ?? fallbackTransport,
+                    transport_type_icon: transport_type_icon ?? fallbackTransportIcon,
                     user: lastOutgoing?.user ?? '',
                     content: content,
                     avatar: lastOutgoing?.avatar ?? null,
@@ -211,6 +226,8 @@ export class NgxParlComponent {
                     content: content,
                     user_id: user_id,
                     user: user,
+                    transport_type: dto.transport_type ?? null,
+                    transport_type_icon: dto.transport_type_icon ?? null,
                 });
 
                 return this;
@@ -222,7 +239,7 @@ export class NgxParlComponent {
             return this;
         }
 
-        const {content, file_path, file_list, user_id, user} = event;
+        const {content, file_path, file_list, user_id, user, transport_type, transport_type_icon} = event;
         const text = (content ?? '').trim();
         const hasFiles = Array.isArray(file_path) && file_path.length > 0;
         const hasFileList = Array.isArray(file_list) && file_list.length > 0;
@@ -237,12 +254,16 @@ export class NgxParlComponent {
         const lastOutgoing = [...messages]
             .reverse()
             .find((message) => message.type === MessageType.Outgoing,);
+        const fallbackTransport = lastOutgoing?.transport_type ?? this.transportType() ?? null;
+        const fallbackTransportIcon = lastOutgoing?.transport_type_icon ?? this.transportTypeIcon() ?? null;
 
         const dto: ChatMessageDTO = {
             id: lastId + 1,
             chat_id: lastOutgoing?.chat_id ?? 1,
             cr_time: this.utils.getLocalISODate(),
             type: MessageType.Outgoing as ChatMessageType,
+            transport_type: transport_type ?? fallbackTransport,
+            transport_type_icon: transport_type_icon ?? fallbackTransportIcon,
             user: lastOutgoing?.user ?? '',
             content: text,
             avatar: lastOutgoing?.avatar ?? null,
@@ -261,6 +282,8 @@ export class NgxParlComponent {
             file_list: hasFileList ? file_list : [],
             user_id: user_id,
             user: user,
+            transport_type: dto.transport_type ?? null,
+            transport_type_icon: dto.transport_type_icon ?? null,
         });
 
         return this;
@@ -268,6 +291,24 @@ export class NgxParlComponent {
 
     isCurrMessage(event: unknown): event is CurrMessage {
         return typeof event === 'object' && event !== null && 'content' in event;
+    }
+
+    normalizeSourcePath(sourcePath: string): string {
+        const cleanedPath = (sourcePath ?? '').trim();
+        if (!cleanedPath) {
+            return '';
+        }
+
+        if (cleanedPath.startsWith('data:') || cleanedPath.startsWith('blob:') || /^https?:\/\//i.test(cleanedPath)) {
+            return cleanedPath;
+        }
+
+        const assetsIndex = cleanedPath.indexOf('assets/');
+        if (assetsIndex >= 0) {
+            return '/' + cleanedPath.slice(assetsIndex);
+        }
+
+        return cleanedPath.replace(/^\.{1,2}\//, '/');
     }
 
     pushMessageAction(event: MessageActionEvent) {
