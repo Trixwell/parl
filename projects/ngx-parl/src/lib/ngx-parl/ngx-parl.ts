@@ -1,4 +1,4 @@
-import {Component, computed, effect, input, model, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, ViewChild} from '@angular/core';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
@@ -32,7 +32,7 @@ import {FlowTheme} from '../core/entity/theme';
     styleUrl: './ngx-parl.scss',
     providers: [],
 })
-export class NgxParlComponent {
+export class NgxParlComponent implements AfterViewInit, OnDestroy {
     @ViewChild(ChatFlowComponent) chatFlow?: ChatFlowComponent;
     @ViewChild(InputMessageComponent) inputMessage?: InputMessageComponent;
 
@@ -60,6 +60,7 @@ export class NgxParlComponent {
 
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
+    private focusTimers: number[] = [];
 
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService) {
@@ -95,6 +96,27 @@ export class NgxParlComponent {
 
             this.scrollToBottom();
         });
+    }
+
+    ngAfterViewInit() {
+        this.queueInitialFocus();
+    }
+
+    ngOnDestroy() {
+        this.focusTimers.forEach(timerId => clearTimeout(timerId));
+        this.focusTimers = [];
+    }
+
+    private queueInitialFocus() {
+        const queue = (delayMs: number) => {
+            const timerId = window.setTimeout(() => {
+                this.inputMessage?.focusInput();
+            }, delayMs);
+            this.focusTimers.push(timerId);
+        };
+
+        queue(0);
+        queue(200);
     }
 
     onCancelEdit(messageId: number | null) {
