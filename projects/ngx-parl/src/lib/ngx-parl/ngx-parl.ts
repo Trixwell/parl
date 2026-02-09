@@ -1,7 +1,7 @@
-import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, ViewChild} from '@angular/core';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
-import {MatDialogContent, MatDialogTitle} from '@angular/material/dialog';
+import {MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
 import {
     ChatMessage,
     ChatMessageDTO,
@@ -19,6 +19,7 @@ import {
 } from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
 import {FlowTheme} from '../core/entity/theme';
+import {Subscription} from 'rxjs';
 
 @Component({
     selector: 'ngx-parl',
@@ -61,9 +62,11 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
     private focusTimers: number[] = [];
+    private afterOpenedSubscription?: Subscription;
 
     constructor(private utils: UtilsService,
-                private transloco: TranslocoService) {
+                private transloco: TranslocoService,
+                @Optional() private dialogRef?: MatDialogRef<NgxParlComponent>) {
         effect(() => {
             this.transloco.setActiveLang(this.language());
         });
@@ -99,24 +102,46 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit() {
-        this.queueInitialFocus();
+        if (this.dialogRef) {
+            this.afterOpenedSubscription = this.dialogRef.afterOpened().subscribe(() => {
+                this.queueInitialFocus();
+            });
+        } else {
+            this.queueInitialFocus();
+        }
     }
 
     ngOnDestroy() {
         this.focusTimers.forEach(timerId => clearTimeout(timerId));
         this.focusTimers = [];
+        this.afterOpenedSubscription?.unsubscribe();
     }
 
     private queueInitialFocus() {
-        const queue = (delayMs: number) => {
-            const timerId = window.setTimeout(() => {
-                this.inputMessage?.focusInput();
-            }, delayMs);
-            this.focusTimers.push(timerId);
+        const focusInputIfAppropriate = (allowStealingFocus: boolean) => {
+            if (!this.inputMessage) {
+                return;
+            }
+            if (!allowStealingFocus) {
+                const activeElement = document.activeElement;
+                if (activeElement && activeElement !== document.body) {
+                    return;
+                }
+            }
+
+            this.inputMessage.focusInput();
         };
 
-        queue(0);
-        queue(200);
+        const immediateTimerId = window.setTimeout(() => {
+            focusInputIfAppropriate(true);
+        }, 0);
+        this.focusTimers.push(immediateTimerId);
+
+        const delayedTimerId = window.setTimeout(() => {
+            focusInputIfAppropriate(false);
+        }, 200);
+
+        this.focusTimers.push(delayedTimerId);
     }
 
     onCancelEdit(messageId: number | null) {

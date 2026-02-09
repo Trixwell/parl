@@ -105,6 +105,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.lastRows = rows;
             this.lastHeightPx = nextHeightPx;
             this.updateOverflow(rows);
+
             this.focusInput();
         });
     }
