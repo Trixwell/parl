@@ -105,6 +105,8 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.lastRows = rows;
             this.lastHeightPx = nextHeightPx;
             this.updateOverflow(rows);
+
+            this.focusInput();
         });
     }
 
@@ -149,6 +151,19 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.autoResizeByRows();
             element.focus();
         }
+
+        return this;
+    }
+
+    focusInput() {
+        const element = this.inputTextElement?.nativeElement;
+        if (!element) {
+            return this;
+        }
+        queueMicrotask(() => {
+            element.focus();
+            this.focused.set(true);
+        });
 
         return this;
     }

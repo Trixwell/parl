@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 
 import { InputMessageComponent } from './input-message';
 
@@ -20,4 +20,18 @@ describe('InputMessage', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('focuses the input on init', fakeAsync(() => {
+    const localFixture = TestBed.createComponent(InputMessageComponent);
+    const focusSpy = spyOn(HTMLElement.prototype, 'focus');
+    spyOn(window, 'requestAnimationFrame').and.callFake((callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    });
+
+    localFixture.detectChanges();
+    flushMicrotasks();
+
+    expect(focusSpy).toHaveBeenCalled();
+  }));
 });
