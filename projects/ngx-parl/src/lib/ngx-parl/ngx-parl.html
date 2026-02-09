@@ -11,8 +11,7 @@
                                  class="modal-chat__heading-icon"
                                  width="20"
                                  height="20"
-                                 [attr.alt]="transportType() || 'transport icon'"
-                                 priority/>
+                                 [attr.alt]="transportType() || 'transport icon'"/>
                         }
                         <span class="modal-chat__heading-text">
                             {{ transportType() }} {{ incomingUser() }}
@@ -22,10 +21,10 @@
 
                 <div class="modal-chat__actions">
                     <img ngSrc="assets/ngx-parl/icons/hide.svg" class="modal-chat__icon modal-chat__icon--hide"
-                         width="24" height="24" alt="hide" priority
+                         width="24" height="24" alt="hide"
                          (click)="onHideClick()"/>
                     <img ngSrc="assets/ngx-parl/icons/close.svg" class="modal-chat__icon modal-chat__icon--close"
-                         width="24" height="24" alt="close" priority
+                         width="24" height="24" alt="close"
                          (click)="onCloseClick()"/>
                 </div>
             </header>
@@ -48,8 +47,7 @@
                              class="modal-chat__drag-icon"
                              alt=""
                              width="56"
-                             height="56"
-                             priority/>
+                             height="56"/>
 
                         <div class="modal-chat__drag-title">
                             {{ 'chat.drag_title' | transloco }}

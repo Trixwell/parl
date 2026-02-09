@@ -243,8 +243,8 @@ export class ChatFlowComponent implements AfterViewInit {
         return this;
     }
 
-    trackByMessageId(_index: number, message: ChatMessage): string {
-        return `${message.chat_id}-${message.type}-${message.id}`;
+    trackByMessageId(index: number, message: ChatMessage): string {
+        return `${message.chat_id}-${message.type}-${message.id}-${index}`;
     }
 
     protected readonly Math = Math;

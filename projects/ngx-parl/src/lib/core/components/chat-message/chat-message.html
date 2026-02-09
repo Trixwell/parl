@@ -50,11 +50,11 @@
                     @if (currentMessage().checked) {
                         <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                              class="message__icon"
-                             width="18" height="18" alt="hide" priority/>
+                             width="18" height="18" alt="hide"/>
                     } @else {
                         <img ngSrc="assets/ngx-parl/icons/no-check.svg"
                              class="message__icon"
-                             width="18" height="18" alt="hide" priority/>
+                             width="18" height="18" alt="hide"/>
                     }
                 }
             </div>
@@ -81,7 +81,7 @@
         <button mat-menu-item (click)="editMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                  class="message__icon--menu"
-                 width="20" height="20" alt="hide" priority/>
+                 width="20" height="20" alt="hide"/>
             <span>{{ 'chat.edit' | transloco }}</span>
         </button>
     }
@@ -89,7 +89,7 @@
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/trash.svg"
                  class="message__icon--menu"
-                 width="20" height="20" alt="hide" priority/>
+                 width="20" height="20" alt="hide"/>
             <span>{{ 'chat.remove' | transloco }}</span>
         </button>
     }

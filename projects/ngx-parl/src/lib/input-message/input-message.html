@@ -14,7 +14,7 @@
                 <button class="message__button message__button--attach">
                     <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                          class="message__icon message__icon--edit"
-                         width="18" height="18" alt="hide" priority/>
+                         width="18" height="18" alt="hide"/>
                 </button>
 
                 <div class="message__edit-hint">
@@ -27,7 +27,7 @@
                     (click)="cancelEditMessage()">
                 <img ngSrc="assets/ngx-parl/icons/close.svg"
                      class="message__icon message__icon--close"
-                     width="18" height="18" alt="hide" priority/>
+                     width="18" height="18" alt="hide"/>
             </button>
         </div>
     }
@@ -40,7 +40,7 @@
                     (click)="fileDialog.click()">
                 <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
                      class="message__icon message__icon--attach"
-                     width="18" height="18" alt="hide" priority/>
+                     width="18" height="18" alt="hide"/>
             </button>
 
             <input #fileDialog
@@ -78,7 +78,7 @@
                 [disabled]="!canSend()">
             <img ngSrc="assets/ngx-parl/icons/send.svg"
                  class="message__icon message__icon--send"
-                 width="18" height="18" alt="hide" priority/>
+                 width="18" height="18" alt="hide"/>
 
         </button>
     </div>
@@ -93,7 +93,7 @@
                             (click)="removeFile($index, $event)">
                         <img ngSrc="assets/ngx-parl/icons/remove.svg"
                              class="message__icon message__icon--file"
-                             width="18" height="18" alt="hide" priority/>
+                             width="18" height="18" alt="hide"/>
                     </button>
 
                     <div class="message__file-media" (click)="openPreview(item, $index)">
