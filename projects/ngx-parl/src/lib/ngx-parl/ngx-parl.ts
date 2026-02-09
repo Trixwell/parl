@@ -107,7 +107,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         this.focusTimers = [];
     }
 
-    private queueInitialFocus() {
+    queueInitialFocus() {
         const queue = (delayMs: number) => {
             const timerId = window.setTimeout(() => {
                 this.inputMessage?.focusInput();
