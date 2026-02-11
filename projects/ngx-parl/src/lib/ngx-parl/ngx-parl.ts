@@ -166,12 +166,15 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             return this;
         }
 
+        const message = this.messageList().find(m => m.id === messageId);
+        const content = (message as { content?: string })?.content ?? '';
+
         this.messageList.update(list => list.filter(m => m.id !== messageId));
 
         this.pushMessageAction({
             action: 'delete',
             chatMessageId: messageId,
-            content: '',
+            content,
         });
 
         return this;
@@ -263,6 +266,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                     file_path: [],
                     file_list: [],
                     checked: true,
+                    pending: true,
                 };
 
                 this.messageList.update((list) => [...list, new ChatMessage(dto)]);
@@ -317,6 +321,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             file_path: hasFiles ? file_path : [],
             file_list: hasFileList ? file_list : [],
             checked: true,
+            pending: true,
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);

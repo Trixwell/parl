@@ -150,6 +150,16 @@
         }
     }
 
+    &__loading {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border: 2px solid tokens.$neutral-200;
+        border-top-color: tokens.$primary-500;
+        border-radius: 50%;
+        animation: message-loading-spin 0.8s linear infinite;
+    }
+
     &--incoming {
         margin-right: auto;
 
@@ -210,6 +220,12 @@
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+@keyframes message-loading-spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 

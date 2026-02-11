@@ -120,6 +120,7 @@ export interface ChatMessageDTO {
     file_path?: string[] | [] | null;
     file_list?: File[] | [] | null;
     checked?: boolean | null;
+    pending?: boolean;
 }
 
 export type ChatMessageType = 'incoming' | 'outgoing';

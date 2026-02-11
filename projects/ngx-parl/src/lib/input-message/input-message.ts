@@ -80,6 +80,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
                     this.autoResizeByRows();
                     element.focus();
                     this.focused.set(true);
+                    this.setCaretToEnd(element);
                 });
             }
         });
@@ -166,6 +167,17 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         });
 
         return this;
+    }
+
+    private setCaretToEnd(element: HTMLElement): void {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        if (!selection) return;
+
+        range.selectNodeContents(element);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     enterDown() {
