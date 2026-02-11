@@ -8,9 +8,6 @@
     </div>
 
     <div class="message__body"
-         [class.message__body--attachments-1]="attachments().length === 1"
-         [class.message__body--attachments-2]="attachments().length === 2"
-         [class.message__body--attachments-3]="attachments().length >= 3"
          (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
          (keydown.shift.F10)="$event.preventDefault(); menuTrigger.openMenu()">
         <button type="button"
