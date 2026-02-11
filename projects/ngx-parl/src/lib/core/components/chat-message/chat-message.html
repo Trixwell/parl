@@ -47,7 +47,9 @@
                     {{ currentMessage().cr_time | date:'HH:mm' }}
                 </time>
                 @if (currentMessage().type === messageType.Outgoing) {
-                    @if (currentMessage().checked) {
+                    @if (currentMessage().pending) {
+                        <span class="message__loading" aria-label="Sending"></span>
+                    } @else if (currentMessage().checked) {
                         <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                              class="message__icon"
                              width="18" height="18" alt="hide"/>

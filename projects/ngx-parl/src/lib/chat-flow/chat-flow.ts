@@ -1,4 +1,14 @@
-import {AfterViewInit, Component, computed, effect, ElementRef, model, signal, ViewChild,} from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    effect,
+    ElementRef,
+    model,
+    OnDestroy,
+    signal,
+    ViewChild,
+} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
@@ -24,7 +34,7 @@ import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
     standalone: true,
 })
 
-export class ChatFlowComponent implements AfterViewInit {
+export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
     public scrollToBottomTrigger = model<number>(0);
@@ -45,6 +55,7 @@ export class ChatFlowComponent implements AfterViewInit {
     private previousScrollHeight = 0;
     private previousScrollTop = 0;
     private isUserAtBottom = true;
+    private resizeObserver: ResizeObserver | null = null;
 
     public showScrollToBottom = signal(false);
 
@@ -64,6 +75,7 @@ export class ChatFlowComponent implements AfterViewInit {
             }
 
             const hasMoreMessages = messages.length > this.previousMessageCount;
+            const hasFewerMessages = messages.length < this.previousMessageCount;
             const hasPrependedMessages =
                 hasMoreMessages &&
                 this.previousFirstMessageId !== null &&
@@ -89,6 +101,11 @@ export class ChatFlowComponent implements AfterViewInit {
 
             if (hasMoreMessages && hasAppendedMessages && !hasPrependedMessages) {
                 this.pendingHistoryRestore = false;
+            }
+
+            if (hasFewerMessages) {
+                this.pendingHistoryRestore = true;
+                queueMicrotask(() => this.loadHistory.set(true));
             }
 
             this.previousMessageCount = messages.length;
@@ -124,6 +141,8 @@ export class ChatFlowComponent implements AfterViewInit {
         });
 
         queueMicrotask(() => this.scrollToBottom());
+
+        this.observeScrollContainerForEmptySpace(element);
     }
 
     onScrollUp(): this {
@@ -182,6 +201,30 @@ export class ChatFlowComponent implements AfterViewInit {
         this.isUserAtBottom = true;
         this.showScrollToBottom.set(false);
         return this;
+    }
+
+    private observeScrollContainerForEmptySpace(element: HTMLElement): void {
+        const checkAndLoadIfNeeded = () => {
+            if (
+                this.messageList().length > 0 &&
+                element.scrollHeight <= element.clientHeight + 10 &&
+                !this.loadHistory()
+            ) {
+                this.pendingHistoryRestore = true;
+                this.loadHistory.set(true);
+            }
+        };
+
+        this.resizeObserver = new ResizeObserver(() => {
+            requestAnimationFrame(checkAndLoadIfNeeded);
+        });
+
+        this.resizeObserver.observe(element);
+    }
+
+    ngOnDestroy(): void {
+        this.resizeObserver?.disconnect();
+        this.resizeObserver = null;
     }
 
     startEdit(message: ChatMessage): this {

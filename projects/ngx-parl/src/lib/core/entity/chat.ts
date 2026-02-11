@@ -13,6 +13,7 @@ export class ChatMessage {
 
     public checked: boolean | null;
     public edit = false;
+    public pending = false;
 
     constructor(data: ChatMessageDTO) {
         this.id = data.id;
@@ -25,6 +26,7 @@ export class ChatMessage {
         this.content = data.content;
         this.avatar = data.avatar ?? null;
         this.checked = data.checked ?? null;
+        this.pending = data.pending ?? false;
         this.file_path = data.file_path ?? null;
         this.file_list = data.file_list ?? null;
     }
@@ -58,6 +60,7 @@ export interface ChatMessageDTO {
     file_path?: string[] | [] | null;
     file_list?: File[] | [] | null;
     checked?: boolean | null;
+    pending?: boolean;
 }
 
 export type ChatMessageType = 'incoming' | 'outgoing';
