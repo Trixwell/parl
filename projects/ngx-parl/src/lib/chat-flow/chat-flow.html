@@ -39,14 +39,16 @@
             }
         </div>
 
-        <ion-alert mode="md"
-                   header="Видалити це повідомлення?"
-                   cssClass="chat__delete-alert"
-                   [isOpen]="deleteConfirmOpen()"
-                   [buttons]="deleteAlertButtons()"
-                   (didDismiss)="closeDeleteConfirm()"
-                   [backdropDismiss]="false">
-        </ion-alert>
+        @if (mobileMode()) {
+            <ion-alert mode="md"
+                       [header]="'chat.delete_message_title' | transloco"
+                       cssClass="chat__delete-alert"
+                       [isOpen]="deleteConfirmOpen()"
+                       [buttons]="deleteAlertButtons()"
+                       (didDismiss)="closeDeleteConfirm()"
+                       [backdropDismiss]="false">
+            </ion-alert>
+        }
 
         @if (showScrollToBottom()) {
             <button class="chat__scroll-button"

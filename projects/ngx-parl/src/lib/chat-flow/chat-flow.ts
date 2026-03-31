@@ -4,6 +4,7 @@ import {
     computed,
     effect,
     ElementRef,
+    inject,
     input,
     model,
     OnDestroy,
@@ -11,10 +12,11 @@ import {
     ViewEncapsulation,
     ViewChild,
 } from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
-import {TranslocoPipe} from '@ngneat/transloco';
+import {TranslocoPipe, TranslocoService} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
@@ -44,6 +46,11 @@ import type {AlertButton} from '@ionic/angular';
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
+    private transloco = inject(TranslocoService);
+    private translocoLang = toSignal(this.transloco.langChanges$, {
+        initialValue: this.transloco.getActiveLang(),
+    });
+
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
 
@@ -59,19 +66,22 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public deleteConfirmOpen = signal(false);
     public pendingDeleteMessageId = signal<number | null>(null);
-    public deleteAlertButtons = computed<AlertButton[]>(() => [
-        {
-            text: 'Не не не',
-            role: 'cancel',
-            handler: () => this.closeDeleteConfirm(),
-        },
-        {
-            text: 'Видалити',
-            role: 'destructive',
-            cssClass: 'chat__delete-alert-destructive',
-            handler: () => this.confirmDelete(),
-        },
-    ]);
+    public deleteAlertButtons = computed<AlertButton[]>(() => {
+        this.translocoLang();
+        return [
+            {
+                text: this.transloco.translate('chat.cancel'),
+                role: 'cancel',
+                handler: () => this.closeDeleteConfirm(),
+            },
+            {
+                text: this.transloco.translate('chat.remove'),
+                role: 'destructive',
+                cssClass: 'chat__delete-alert-destructive',
+                handler: () => this.confirmDelete(),
+            },
+        ];
+    });
 
     public quickActionsByMessageId = computed(() => {
         const messages = this.messageList();
@@ -327,6 +337,13 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         }
 
         this.selectedForEdit.set(null);
+
+        if (!this.mobileMode()) {
+            this.requestDelete.set(messageId);
+            queueMicrotask(() => this.requestDelete.set(null));
+            return this;
+        }
+
         this.pendingDeleteMessageId.set(messageId);
         this.deleteConfirmOpen.set(true);
 
