@@ -62,13 +62,32 @@
         }
     }
 
+    &__manager-header {
+        display: flex;
+        justify-content: center;
+        padding: tokens.$space-6 tokens.$space-4 tokens.$space-2;
+    }
+
+    &__manager-icon {
+        width: 132px;
+        height: 132px;
+        border-radius: tokens.$radius-round;
+        display: grid;
+        place-items: center;
+
+        img {
+            display: block;
+            border-radius: tokens.$radius-round;
+        }
+    }
+
     &__start-day {
         display: flex;
         justify-content: center;
         background: tokens.$neutral-100;
         color: tokens.$neutral-600;
         font: tokens.$font-caption-m-400;
-        width: 80px;
+        width: 92px;
         height: 22px;
         margin: tokens.$margin-0 auto;
         border-radius: tokens.$radius-round;
@@ -122,5 +141,78 @@
 
     ::-webkit-scrollbar-button {
         display: none;
+    }
+}
+
+.chat__delete-alert {
+    --background: #ffffff;
+    --backdrop-opacity: 0.32;
+    --max-width: 520px;
+}
+
+.chat__delete-alert .alert-wrapper {
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.chat__delete-alert .alert-head {
+    padding-top: 18px;
+}
+
+.chat__delete-alert .alert-title {
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.chat__delete-alert .alert-button-group {
+    padding: 8px 12px 12px;
+}
+
+.chat__delete-alert .alert-button {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.chat__delete-alert .alert-button-role-destructive,
+.chat__delete-alert .alert-button-role-destructive .alert-button-inner {
+    color: #dc2626 !important;
+}
+
+:host ::ng-deep {
+    .chat__delete-alert {
+        --background: #ffffff;
+        --backdrop-opacity: 0.32;
+        --max-width: 520px;
+    }
+
+    .chat__delete-alert .alert-wrapper {
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    ion-alert.chat__delete-alert::part(button).chat__delete-alert-destructive {
+        color: #dc2626!important;
+    }
+
+    .chat__delete-alert .alert-head {
+        padding-top: 18px;
+    }
+
+    .chat__delete-alert .alert-title {
+        color: #0f172a;
+        font-weight: 500;
+    }
+
+    .chat__delete-alert .alert-button-group {
+        padding: 8px 12px 12px;
+    }
+
+    .chat__delete-alert .alert-button {
+        color: #2563eb;
+        font-weight: 500;
+    }
+
+    .chat__delete-alert .alert-button-role-destructive {
+        color: #2563eb;
     }
 }

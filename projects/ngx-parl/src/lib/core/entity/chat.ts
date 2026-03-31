@@ -10,6 +10,7 @@ export class ChatMessage {
     public avatar: string | null;
     public file_path: string[] | null;
     public file_list: File[] | null;
+    public actions: ChatQuickButton[];
 
     public checked: boolean | null;
     public edit = false;
@@ -29,6 +30,7 @@ export class ChatMessage {
         this.pending = data.pending ?? false;
         this.file_path = data.file_path ?? null;
         this.file_list = data.file_list ?? null;
+        this.actions = Array.isArray(data.actions) ? data.actions : [];
     }
 
     get dateSimple(): string {
@@ -61,6 +63,13 @@ export interface ChatMessageDTO {
     file_list?: File[] | [] | null;
     checked?: boolean | null;
     pending?: boolean;
+    actions?: ChatQuickButton[] | null;
+}
+
+export interface ChatQuickButton {
+    id: number;
+    title: string;
+    value: string;
 }
 
 export type ChatMessageType = 'incoming' | 'outgoing';

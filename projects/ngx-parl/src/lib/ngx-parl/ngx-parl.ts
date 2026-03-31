@@ -20,6 +20,7 @@ import {
 import {UtilsService} from '../core/service/utils/utils';
 import {FlowTheme} from '../core/entity/theme';
 import {Subscription} from 'rxjs';
+import {ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
 
 @Component({
     selector: 'ngx-parl',
@@ -55,6 +56,11 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public transportType = input<string>('');
     public transportTypeIcon = input<string>('');
     public transportTypeIconSrc = computed(() => this.utils.normalizeSourcePath(this.transportTypeIcon()));
+
+    public mobileMode = input<boolean>(false);
+    public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
+    public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
+    public quickActionsAutoSend = input<boolean>(true);
 
     public hideHandler = input<(() => unknown) | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
@@ -98,6 +104,26 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             });
 
             this.scrollToBottom();
+        });
+
+        effect(() => {
+            const event = this.quickActionClick();
+            if (!event || !this.quickActionsAutoSend()) {
+                return;
+            }
+
+            const content = (event.value ?? '').trim();
+            if (!content) {
+                return;
+            }
+
+            setTimeout(() => {
+                try {
+                    this.sendMessage({content});
+                } catch (error) {
+                    console.error('Quick action send failed', error);
+                }
+            }, 0);
         });
     }
 
@@ -267,6 +293,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                     file_list: [],
                     checked: true,
                     pending: true,
+                    actions: [],
                 };
 
                 this.messageList.update((list) => [...list, new ChatMessage(dto)]);
@@ -322,6 +349,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             file_list: hasFileList ? file_list : [],
             checked: true,
             pending: true,
+            actions: [],
         };
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);

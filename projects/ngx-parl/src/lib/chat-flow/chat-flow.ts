@@ -4,9 +4,11 @@ import {
     computed,
     effect,
     ElementRef,
+    input,
     model,
     OnDestroy,
     signal,
+    ViewEncapsulation,
     ViewChild,
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -17,6 +19,9 @@ import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
+import {ParlQuickAction, ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
+import {IonAlert} from '@ionic/angular/standalone';
+import type {AlertButton} from '@ionic/angular';
 
 @Component({
     selector: 'app-chat-flow',
@@ -27,11 +32,13 @@ import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
         NgOptimizedImage,
         InfiniteScrollDirective,
         ToggleDisplayChatStartDayPipe,
-        ChatStartDayPipe
+        ChatStartDayPipe,
+        IonAlert,
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
     standalone: true,
+    encapsulation: ViewEncapsulation.None,
 })
 
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
@@ -45,6 +52,46 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
+
+    public mobileMode = input<boolean>(false);
+    public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
+    public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
+
+    public deleteConfirmOpen = signal(false);
+    public pendingDeleteMessageId = signal<number | null>(null);
+    public deleteAlertButtons = computed<AlertButton[]>(() => [
+        {
+            text: 'Не не не',
+            role: 'cancel',
+            handler: () => this.closeDeleteConfirm(),
+        },
+        {
+            text: 'Видалити',
+            role: 'destructive',
+            cssClass: 'chat__delete-alert-destructive',
+            handler: () => this.confirmDelete(),
+        },
+    ]);
+
+    public quickActionsByMessageId = computed(() => {
+        const messages = this.messageList();
+        const resolver = this.quickActionsResolver();
+        const isMobile = this.mobileMode();
+
+        const map: Map<number, ParlQuickAction[]> = new Map<number, ParlQuickAction[]>();
+        if (!resolver || !isMobile) {
+            return map;
+        }
+
+        for (const message of messages) {
+            const actions = resolver({message, isMobile});
+            if (Array.isArray(actions) && actions.length) {
+                map.set(message.id, actions);
+            }
+        }
+
+        return map;
+    });
 
     private viewInitialized = false;
     private previousMessageCount = 0;
@@ -280,9 +327,27 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         }
 
         this.selectedForEdit.set(null);
+        this.pendingDeleteMessageId.set(messageId);
+        this.deleteConfirmOpen.set(true);
+
+        return this;
+    }
+
+    closeDeleteConfirm(): this {
+        this.deleteConfirmOpen.set(false);
+        this.pendingDeleteMessageId.set(null);
+        return this;
+    }
+
+    confirmDelete(): this {
+        const messageId = this.pendingDeleteMessageId();
+        if (messageId == null) {
+            return this.closeDeleteConfirm();
+        }
+
+        this.closeDeleteConfirm();
         this.requestDelete.set(messageId);
         queueMicrotask(() => this.requestDelete.set(null));
-
         return this;
     }
 
