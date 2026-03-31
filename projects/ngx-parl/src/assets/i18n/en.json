@@ -12,6 +12,8 @@
         "video": "Video",
         "edit" : "Edit",
         "remove" : "Delete",
+        "cancel": "Cancel",
+        "delete_message_title": "Delete this message?",
         "chat_empty_title": "No messages",
         "chat_empty_subscription": "Your chat history will be displayed here. Write your first message to get started!",
         "photo_preview": "Photo preview",

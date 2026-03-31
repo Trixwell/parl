@@ -5,6 +5,8 @@ import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {PreviewFile} from '../preview-file/preview-file';
 import {UtilsService} from '../../service/utils/utils';
+import {IonButton} from '@ionic/angular/standalone';
+import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-actions';
 
 @Component({
     selector: 'lib-chat-message',
@@ -17,6 +19,7 @@ import {UtilsService} from '../../service/utils/utils';
         MatMenuTrigger,
         TranslocoPipe,
         PreviewFile,
+        IonButton,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
@@ -33,6 +36,10 @@ export class ChatMessageComponent {
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
+
+    public mobileMode = input<boolean>(false);
+    public quickActions = input<ParlQuickAction[]>([]);
+    public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
     constructor(private utils: UtilsService) {}
 
@@ -83,7 +90,33 @@ export class ChatMessageComponent {
         return message.avatar || fallback;
     });
 
+    showAvatar = computed(() => {
+        const isMobile = this.mobileMode();
+        const isOutgoing = this.currentMessage().type === this.messageType.Outgoing;
+        return !(isMobile && isOutgoing);
+    });
+
+    showQuickActions = computed(() => {
+        const isOutgoing = this.currentMessage().type === this.messageType.Outgoing;
+        return isOutgoing && this.quickActions().length > 0;
+    });
+
+    showMessageBubble = computed(() => !this.showQuickActions());
+
+    showMessageBody = computed(() => this.showMessageBubble() || this.attachments().length > 0);
+
+    canOpenContextMenu = computed(() => {
+        const message = this.currentMessage();
+        const isOutgoing = message.type === this.messageType.Outgoing;
+        const isSent = message.pending !== true;
+        return isOutgoing && isSent;
+    });
+
     openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
+        if (!this.canOpenContextMenu()) {
+            return this;
+        }
+
         event.preventDefault();
         event.stopPropagation();
 
@@ -132,6 +165,19 @@ export class ChatMessageComponent {
         this.requestDelete.set(message.id);
         queueMicrotask(() => this.requestDelete.set(null));
 
+        return this;
+    }
+
+    onQuickAction(action: ParlQuickAction): this {
+        const messageId = this.currentMessage().id;
+
+        const value = (action.value ?? '').trim();
+        if (!value) {
+            return this;
+        }
+
+        this.quickActionClick.set({actionId: action.id, messageId, value});
+        setTimeout(() => this.quickActionClick.set(null), 0);
         return this;
     }
 

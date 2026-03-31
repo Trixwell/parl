@@ -1,70 +1,96 @@
 <div class="message"
      [ngClass]="{
        'message--outgoing': currentMessage().type === messageType.Outgoing,
-       'message--incoming': currentMessage().type === messageType.Incoming
+       'message--incoming': currentMessage().type === messageType.Incoming,
+       'message--mobile': mobileMode()
      }">
-    <div class="message__avatar">
-        <img [ngSrc]="avatarSrc()" width="36" height="36" alt="avatar"/>
-    </div>
+    @if (showAvatar()) {
+        <div class="message__avatar">
+            <img [ngSrc]="avatarSrc()" width="36" height="36" alt="avatar"/>
+        </div>
+    }
 
-    <div class="message__body"
-         (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
-         (keydown.shift.F10)="$event.preventDefault(); menuTrigger.openMenu()">
-        <button type="button"
-                class="message__menu-trigger"
-                aria-hidden="true"
-                tabindex="-1"
-                #menuTrigger="matMenuTrigger"
-                #menuTriggerEl
-                [matMenuTriggerFor]="messageMenu"
-        >
-        </button>
+    @if (showMessageBody()) {
+        <div class="message__body"
+             (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
+             (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)">
+            <button type="button"
+                    class="message__menu-trigger"
+                    aria-hidden="true"
+                    tabindex="-1"
+                    #menuTrigger="matMenuTrigger"
+                    #menuTriggerEl
+                    [matMenuTriggerFor]="messageMenu">
+            </button>
 
-        @if (attachments().length) {
-            <div class="message__attachments">
-                @for (file of attachments(); track file; let i = $index) {
-                    <button type="button"
-                            class="message__image-button"
-                            (click)="openPreview(i, $event)"
-                            [attr.aria-label]="'chat.photo_preview' | transloco">
-                        <img [src]="file"
-                             alt="attachment"
-                             class="message__image"
-                             loading="lazy"/>
-                    </button>
-                }
-            </div>
-        }
-
-        <div class="message__bubble" tabindex="0">
-            <div class="message__text">{{ currentMessage().content }}</div>
-
-            <div class="message__meta">
-                <time class="message__time">
-                    {{ currentMessage().cr_time | date:'HH:mm' }}
-                </time>
-                @if (currentMessage().type === messageType.Outgoing) {
-                    @if (currentMessage().pending) {
-                        <span class="message__loading" aria-label="Sending"></span>
-                    } @else if (currentMessage().checked) {
-                        <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
-                             class="message__icon"
-                             width="18" height="18" alt="hide"/>
-                    } @else {
-                        <img ngSrc="assets/ngx-parl/icons/no-check.svg"
-                             class="message__icon"
-                             width="18" height="18" alt="hide"/>
+            @if (attachments().length) {
+                <div class="message__attachments">
+                    @for (file of attachments(); track file; let i = $index) {
+                        <button type="button"
+                                class="message__image-button"
+                                (click)="openPreview(i, $event)"
+                                [attr.aria-label]="'chat.photo_preview' | transloco">
+                            <img [src]="file"
+                                 alt="attachment"
+                                 class="message__image"
+                                 loading="lazy"/>
+                        </button>
                     }
+                </div>
+            }
+
+            @if (showMessageBubble()) {
+                <div class="message__bubble" tabindex="0">
+                    <div class="message__text">{{ currentMessage().content }}</div>
+
+                    <div class="message__meta">
+                        <time class="message__time">
+                            {{ currentMessage().cr_time | date:'HH:mm' }}
+                        </time>
+                        @if (currentMessage().type === messageType.Outgoing) {
+                            @if (currentMessage().pending) {
+                                <span class="message__loading" aria-label="Sending"></span>
+                            } @else if (currentMessage().checked) {
+                                <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
+                                     class="message__icon"
+                                     width="18" height="18" alt="hide"/>
+                            } @else {
+                                <img ngSrc="assets/ngx-parl/icons/no-check.svg"
+                                     class="message__icon"
+                                     width="18" height="18" alt="hide"/>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+
+    @if (showQuickActions()) {
+        <div class="message__quick-actions-wrap" role="group" aria-label="Quick actions">
+            <div class="message__quick-actions">
+                @for (action of quickActions(); track action.id) {
+                    <ion-button
+                        class="message__quick-action-button"
+                        fill="outline"
+                        expand="block"
+                        [disabled]="action.disabled === true"
+                        (click)="onQuickAction(action)">
+                        {{ action.title }}
+                    </ion-button>
                 }
             </div>
         </div>
-    </div>
-</div>
-<div class="message__user">
-    @if (currentMessage().type === messageType.Outgoing) {
-        <span class="message__user-name">{{ currentMessage().user }}</span>
     }
 </div>
+@if (!showQuickActions()) {
+    <div class="message__user" [ngClass]="{'message__user--mobile': mobileMode()}">
+        @if (currentMessage().type === messageType.Outgoing) {
+            <span class="message__user-name">{{ currentMessage().user }}</span>
+        }
+    </div>
+}
 
 @if (previewList().length) {
     <lib-preview-file

@@ -8,6 +8,15 @@
              [infiniteScrollThrottle]="100"
              (scrolledUp)="onScrollUp()"
         >
+            <div class="chat__manager-header" aria-hidden="true">
+                <div class="chat__manager-icon">
+                    <img ngSrc="assets/ngx-parl/icons/avatar_manager.svg"
+                         alt="manager"
+                         width="72"
+                         height="72"/>
+                </div>
+            </div>
+
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
                 @if (message | toggleDisplayChatStartDay: messageList() : i) {
                     <span class="chat__start-day">
@@ -19,6 +28,9 @@
                     <lib-chat-message
                         [currentMessage]="message"
                         [edit]="message.edit"
+                        [mobileMode]="mobileMode()"
+                        [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
+                        [(quickActionClick)]="quickActionClick"
                         (editChange)="onEditChange(message.id, $event)"
                         (requestEditChange)="onRequestEdit($event)"
                         (requestDeleteChange)="onRequestDelete($event)">
@@ -26,6 +38,17 @@
                 </div>
             }
         </div>
+
+        @if (mobileMode()) {
+            <ion-alert mode="md"
+                       [header]="'chat.delete_message_title' | transloco"
+                       cssClass="chat__delete-alert"
+                       [isOpen]="deleteConfirmOpen()"
+                       [buttons]="deleteAlertButtons()"
+                       (didDismiss)="closeDeleteConfirm()"
+                       [backdropDismiss]="false">
+            </ion-alert>
+        }
 
         @if (showScrollToBottom()) {
             <button class="chat__scroll-button"

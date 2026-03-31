@@ -4,19 +4,26 @@ import {
     computed,
     effect,
     ElementRef,
+    inject,
+    input,
     model,
     OnDestroy,
     signal,
+    ViewEncapsulation,
     ViewChild,
 } from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
-import {TranslocoPipe} from '@ngneat/transloco';
+import {TranslocoPipe, TranslocoService} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
+import {ParlQuickAction, ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
+import {IonAlert} from '@ionic/angular/standalone';
+import type {AlertButton} from '@ionic/angular';
 
 @Component({
     selector: 'app-chat-flow',
@@ -27,15 +34,22 @@ import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
         NgOptimizedImage,
         InfiniteScrollDirective,
         ToggleDisplayChatStartDayPipe,
-        ChatStartDayPipe
+        ChatStartDayPipe,
+        IonAlert,
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
     standalone: true,
+    encapsulation: ViewEncapsulation.None,
 })
 
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
+
+    private transloco = inject(TranslocoService);
+    private translocoLang = toSignal(this.transloco.langChanges$, {
+        initialValue: this.transloco.getActiveLang(),
+    });
 
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
@@ -45,6 +59,49 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
+
+    public mobileMode = input<boolean>(false);
+    public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
+    public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
+
+    public deleteConfirmOpen = signal(false);
+    public pendingDeleteMessageId = signal<number | null>(null);
+    public deleteAlertButtons = computed<AlertButton[]>(() => {
+        this.translocoLang();
+        return [
+            {
+                text: this.transloco.translate('chat.cancel'),
+                role: 'cancel',
+                handler: () => this.closeDeleteConfirm(),
+            },
+            {
+                text: this.transloco.translate('chat.remove'),
+                role: 'destructive',
+                cssClass: 'chat__delete-alert-destructive',
+                handler: () => this.confirmDelete(),
+            },
+        ];
+    });
+
+    public quickActionsByMessageId = computed(() => {
+        const messages = this.messageList();
+        const resolver = this.quickActionsResolver();
+        const isMobile = this.mobileMode();
+
+        const map: Map<number, ParlQuickAction[]> = new Map<number, ParlQuickAction[]>();
+        if (!resolver || !isMobile) {
+            return map;
+        }
+
+        for (const message of messages) {
+            const actions = resolver({message, isMobile});
+            if (Array.isArray(actions) && actions.length) {
+                map.set(message.id, actions);
+            }
+        }
+
+        return map;
+    });
 
     private viewInitialized = false;
     private previousMessageCount = 0;
@@ -280,9 +337,34 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         }
 
         this.selectedForEdit.set(null);
+
+        if (!this.mobileMode()) {
+            this.requestDelete.set(messageId);
+            queueMicrotask(() => this.requestDelete.set(null));
+            return this;
+        }
+
+        this.pendingDeleteMessageId.set(messageId);
+        this.deleteConfirmOpen.set(true);
+
+        return this;
+    }
+
+    closeDeleteConfirm(): this {
+        this.deleteConfirmOpen.set(false);
+        this.pendingDeleteMessageId.set(null);
+        return this;
+    }
+
+    confirmDelete(): this {
+        const messageId = this.pendingDeleteMessageId();
+        if (messageId == null) {
+            return this.closeDeleteConfirm();
+        }
+
+        this.closeDeleteConfirm();
         this.requestDelete.set(messageId);
         queueMicrotask(() => this.requestDelete.set(null));
-
         return this;
     }
 

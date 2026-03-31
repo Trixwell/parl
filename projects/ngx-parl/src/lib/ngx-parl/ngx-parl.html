@@ -61,6 +61,9 @@
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
                            (requestDeleteChange)="onRequestDelete($event)"
+                           [mobileMode]="mobileMode()"
+                           [quickActionsResolver]="quickActionsResolver()"
+                           [(quickActionClick)]="quickActionClick"
                            [(scrollToBottomTrigger)]="scrollToBottomTrigger"
                            [(loadHistory)]="loadHistory">
             </app-chat-flow>

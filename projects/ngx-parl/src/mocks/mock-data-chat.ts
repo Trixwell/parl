@@ -4,14 +4,20 @@ export const CHAT_MESSAGE_MOCK: ChatMessage = new ChatMessage({
     id: 11,
     chat_id: 1,
     cr_time: '2025-11-17T17:46:00',
-    type: 'incoming',
+    type: 'outgoing',
     transport_type: 'Telegram',
     transport_type_icon: 'assets/ngx-parl/icons/telegram_logo.svg',
     user: 'Lola',
     content: 'lorem ipsum dolar',
     avatar: null,
     file_path: null,
-    checked: false
+    checked: false,
+    actions: [
+        {id: 1, title: 'Немає інтернету', value: 'Немає інтернету'},
+        {id: 2, title: 'Змінити тариф', value: 'Змінити тариф'},
+        {id: 3, title: 'Викликати майстра', value: 'Викликати майстра'},
+        {id: 4, title: 'Налаштування роутера', value: 'Налаштування роутера'},
+    ],
 })
 
 export const CHAT_MESSAGE_SECOND_MOCK: ChatMessage = new ChatMessage({
@@ -25,7 +31,8 @@ export const CHAT_MESSAGE_SECOND_MOCK: ChatMessage = new ChatMessage({
     content: 'test test',
     avatar: null,
     file_path: null,
-    checked: false
+    checked: false,
+    actions: [],
 })
 
 export const CHAT_MOCK: ChatMessage[] = [
@@ -40,7 +47,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вітаю',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: false,
+        actions: []
     }),
     new ChatMessage({
         id: 2,
@@ -53,7 +61,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Доброго дня. Я ваш віртуальний помічник.',
         avatar: null,
         file_path: null,
-        checked: false
+        checked: false,
+        actions: []
     }),
     new ChatMessage({
         id: 3,
@@ -66,7 +75,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'нема інтернету',
         avatar: null,
         file_path: null,
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 4,
@@ -79,7 +89,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
         file_path: null,
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 5,
@@ -92,7 +103,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test qq',
         avatar: null,
         file_path: null,
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 6,
@@ -105,7 +117,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test q',
         avatar: null,
         file_path: null,
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 7,
@@ -118,7 +131,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test q',
         avatar: null,
         file_path: ['../../assets/img/user_4.jpg, ../../assets/img/user_4.jpg'],
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 8,
@@ -131,7 +145,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
         file_path: null,
-        checked: true
+        checked: true,
+        actions: []
     }),
     new ChatMessage({
         id: 9,
@@ -144,7 +159,8 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'test qwe',
         avatar: null,
         file_path: ['../../assets/img/user_4.jpg'],
-        checked: false
+        checked: false,
+        actions: []
     }),
     new ChatMessage({
         id: 10,
@@ -157,6 +173,7 @@ export const CHAT_MOCK: ChatMessage[] = [
         content: 'Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Вибачте, я не зовсім зрозуміла ваше запитання. Будь ласка, уточніть, чим я можу вам допомогти? Будь ласка, уточніть, чим я можу вам допомогти?',
         avatar: null,
         file_path: ['../../assets/img/user_4.jpg'],
-        checked: false
+        checked: false,
+        actions: []
     }),
 ];
