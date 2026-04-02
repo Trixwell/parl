@@ -127,6 +127,26 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         });
     }
 
+    onQuickActionClick(event: ParlQuickActionClickEvent | null): this {
+        this.quickActionClick.set(event);
+
+        if (!event) {
+            return this;
+        }
+
+        const content = (event.value ?? '').trim();
+
+        if (this.quickActionsAutoSend() && content) {
+            try {
+                this.sendMessage({content});
+            } catch (error) {
+                console.error('Quick action send failed', error);
+            }
+        }
+
+        return this;
+    }
+
     ngAfterViewInit() {
         if (this.dialogRef) {
             this.afterOpenedSubscription = this.dialogRef.afterOpened().subscribe(() => {

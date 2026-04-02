@@ -63,7 +63,8 @@
                            (requestDeleteChange)="onRequestDelete($event)"
                            [mobileMode]="mobileMode()"
                            [quickActionsResolver]="quickActionsResolver()"
-                           [(quickActionClick)]="quickActionClick"
+                           [quickActionClick]="quickActionClick()"
+                           (quickActionClickChange)="onQuickActionClick($event)"
                            [(scrollToBottomTrigger)]="scrollToBottomTrigger"
                            [(loadHistory)]="loadHistory">
             </app-chat-flow>

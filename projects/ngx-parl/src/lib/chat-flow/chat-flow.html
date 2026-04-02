@@ -30,7 +30,8 @@
                         [edit]="message.edit"
                         [mobileMode]="mobileMode()"
                         [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
-                        [(quickActionClick)]="quickActionClick"
+                        [quickActionClick]="quickActionClick()"
+                        (quickActionClickChange)="quickActionClick.set($event)"
                         (editChange)="onEditChange(message.id, $event)"
                         (requestEditChange)="onRequestEdit($event)"
                         (requestDeleteChange)="onRequestDelete($event)">
@@ -39,16 +40,14 @@
             }
         </div>
 
-        @if (mobileMode()) {
-            <ion-alert mode="md"
-                       [header]="'chat.delete_message_title' | transloco"
-                       cssClass="chat__delete-alert"
-                       [isOpen]="deleteConfirmOpen()"
-                       [buttons]="deleteAlertButtons()"
-                       (didDismiss)="closeDeleteConfirm()"
-                       [backdropDismiss]="false">
-            </ion-alert>
-        }
+        <ion-alert mode="md"
+                   [header]="'chat.delete_message_title' | transloco"
+                   cssClass="chat__delete-alert"
+                   [isOpen]="deleteConfirmOpen()"
+                   [buttons]="deleteAlertButtons()"
+                   (didDismiss)="closeDeleteConfirm()"
+                   [backdropDismiss]="false">
+        </ion-alert>
 
         @if (showScrollToBottom()) {
             <button class="chat__scroll-button"

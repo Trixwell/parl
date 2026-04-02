@@ -68,22 +68,22 @@ assets/ngx-parl/...
 
 ## Signal Data
 
-|         Name         |           Type            |                            Description                            |
-|:--------------------:|:-------------------------:|:-----------------------------------------------------------------:|
-|        header        |          boolean          |     Display the chat title with the name of the interlocutor      |
-|        theme         |          string           |     Choose a theme color   (```primary``` or ```secondary```)     |
-|       language       |          string           |       Set language (```uk``` or ```en```). Default ```en```       |
-|     messageList      |       ChatMessage[]       |              List of chat messages, user information              |
-|    messageUpdate     |        ChatMessage        | Incoming message from external source (signal/subject/observable) |
-|    messageAction     |    MessageActionEvent     |               Emits chat events: send, edit, delete               |
-|     loadHistory      |          boolean          |                    Use scroll for load history                    |
-|     incomingUser     |          string           |                     User writing in messenger                     |
-|    transportType     |          string           |               Transport type label (Telegram, etc.)               |
-|  transportTypeIcon   |          string           |         Path to transport icon (e.g. assets/ngx-parl/...)         |
-|      mobileMode      |          boolean          |        Enables mobile UI behavior (layout + quick actions)        |
-| quickActionsResolver | ParlQuickActionsResolver  |     Maps `ChatMessage` -> quick action buttons (mobile only)      |
-| quickActionsAutoSend |          boolean          |       Auto-send quick action text on click. Default `true`        |
-|   quickActionClick   | ParlQuickActionClickEvent |        Emits when a quick action is clicked (two-way bind)        |
+|         Name         |           Type            |                                  Description                                   |
+|:--------------------:|:-------------------------:|:------------------------------------------------------------------------------:|
+|        header        |          boolean          |            Display the chat title with the name of the interlocutor            |
+|        theme         |          string           |           Choose a theme color   (```primary``` or ```secondary```)            |
+|       language       |          string           |             Set language (```uk``` or ```en```). Default ```en```              |
+|     messageList      |       ChatMessage[]       |                    List of chat messages, user information                     |
+|    messageUpdate     |        ChatMessage        |       Incoming message from external source (signal/subject/observable)        |
+|    messageAction     |    MessageActionEvent     |                     Emits chat events: send, edit, delete                      |
+|     loadHistory      |          boolean          |                          Use scroll for load history                           |
+|     incomingUser     |          string           |                           User writing in messenger                            |
+|    transportType     |          string           |                     Transport type label (Telegram, etc.)                      |
+|  transportTypeIcon   |          string           |               Path to transport icon (e.g. assets/ngx-parl/...)                |
+|      mobileMode      |          boolean          |     Mobile layout (e.g. hide outgoing avatar); does not gate quick actions     |
+| quickActionsResolver | ParlQuickActionsResolver  | Optional custom mapping; if omitted, `message.actions` is mapped automatically |
+| quickActionsAutoSend |          boolean          |              Auto-send quick action text on click. Default `true`              |
+|   quickActionClick   | ParlQuickActionClickEvent |              Emits when a quick action is clicked (two-way bind)               |
 
 ## Scrolling to the Bottom
 
@@ -147,10 +147,12 @@ export interface MessageActionEvent {
 }
 ```
 
-## Quick actions (mobile)
+## Quick actions
 
-If your `ChatMessage` contains `actions`, you can expose them as UI buttons (quick actions) using `[quickActionsResolver]`.
+If your `ChatMessage` contains `actions`, they are shown as quick action buttons for **outgoing** messages in both desktop and mobile layouts (`mobileMode` does not hide them).
 
+- If you omit `[quickActionsResolver]`, the library uses `defaultParlQuickActionsResolver`, which maps `message.actions` to buttons.
+- Provide a custom `[quickActionsResolver]` to filter, reorder, or replace actions; the context includes `isMobile` if you need different behavior per layout.
 - `ChatQuickButton.title` is the button text; `ChatQuickButton.value` is the text that will be sent.
 - Each action must include a stable `id`.
 - `quickActionsAutoSend` defaults to `true` (clicking a quick action triggers `sendMessage()`).
@@ -177,13 +179,15 @@ export interface ParlQuickActionClickEvent {
 }
 
 export type ParlQuickActionsResolver = (context: ParlQuickActionContext) => ParlQuickAction[];
+
+export function defaultParlQuickActionsResolver(context: ParlQuickActionContext): ParlQuickAction[];
 ```
 
 ### Example resolver
 
 ```
-public quickActionsResolver: ParlQuickActionsResolver = ({message, isMobile}) => {
-    if (!isMobile || message.type !== 'outgoing') {
+public quickActionsResolver: ParlQuickActionsResolver = ({ message }) => {
+    if (message.type !== 'outgoing') {
         return [];
     }
 
@@ -201,12 +205,13 @@ public quickActionsResolver: ParlQuickActionsResolver = ({message, isMobile}) =>
 Set `[mobileMode]="true"` to enable mobile UI behavior:
 
 - Outgoing message avatars are hidden to save space.
-- Quick actions are only resolved/rendered when `mobileMode` is enabled.
-- Quick actions are shown as a separate “buttons-only” outgoing message when your resolver returns actions for that message.
+- Quick actions use the default resolver from `message.actions` when `[quickActionsResolver]` is omitted, or your custom resolver when set (desktop and mobile).
+- Quick actions are shown as a separate “buttons-only” outgoing message when the resolver returns actions for that message.
 
-To enable quick actions on mobile:
+To use quick actions:
 
-- Provide `[quickActionsResolver]` that returns an array of actions for a given message.
+- Put `actions` on outgoing `ChatMessage` instances, and optionally omit `[quickActionsResolver]` to use the default mapping.
+- Or provide `[quickActionsResolver]` for full control.
 - Optionally bind `[(quickActionClick)]` to observe clicks (analytics/logging).
 - Keep `[quickActionsAutoSend]="true"` to send `action.value` on click (default).
 
@@ -217,9 +222,8 @@ To enable quick actions on mobile:
           [(messageList)]="messageList"
           [(messageUpdate)]="messageUpdate"
           [(messageAction)]="messageAction"
-          [quickActionsResolver]="quickActionsResolver"
           [quickActionsAutoSend]="true"
-          [mobileMode]="true"
+          [mobileMode]="false"
           [(quickActionClick)]="quickActionClick"
           [transportType]="transportType()"
           [transportTypeIcon]="transportTypeIcon()"
