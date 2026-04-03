@@ -10,9 +10,20 @@
     max-width: 80%;
     animation: pop 120ms ease-out;
 
-    &__avatar img {
-        display: block;
-        border-radius: tokens.$radius-round;
+    &__avatar {
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        align-self: flex-end;
+
+        img {
+            display: block;
+            width: 36px;
+            height: 36px;
+            border-radius: tokens.$radius-round;
+            object-fit: cover;
+        }
     }
 
     &__body {
@@ -49,19 +60,35 @@
     }
 
     &__quick-action-button {
-        --border-radius: 16px;
-        --border-width: 1px;
-        --border-style: solid;
-        --border-color: #2563EB;
-        --color: #2563EB;
-        --padding-top: tokens.$space-3;
-        --padding-bottom: tokens.$space-3;
-        --padding-start: tokens.$space-6;
-        --padding-end: tokens.$space-6;
+        display: inline-flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        border: 1px solid #2563EB;
+        color: #2563EB;
+        background: transparent;
+        padding: tokens.$space-3 tokens.$space-6;
         height: 48px;
         text-transform: none;
         font: 500 14px / 18px inter, sans-serif;
         margin: 0;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        &:hover:not(:disabled),
+        &:focus-visible:not(:disabled) {
+            background: rgba(37, 99, 235, 0.06);
+        }
+
+        &:focus-visible {
+            outline: tokens.$border-2 solid tokens.$primary-500;
+            outline-offset: tokens.$space-1;
+        }
     }
 
     &__text {

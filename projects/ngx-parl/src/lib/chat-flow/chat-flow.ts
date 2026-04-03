@@ -13,15 +13,21 @@ import {
     ViewChild,
 } from '@angular/core';
 import {toSignal} from '@angular/core/rxjs-interop';
+import {filter, map, startWith} from 'rxjs';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
-import {TranslocoPipe, TranslocoService} from '@ngneat/transloco';
+import {getValue, TranslocoPipe, TranslocoService} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
-import {ParlQuickAction, ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
+import {
+    ParlQuickAction,
+    ParlQuickActionClickEvent,
+    ParlQuickActionsResolver,
+    resolveParlQuickActions,
+} from '../core/entity/quick-actions';
 import {IonAlert} from '@ionic/angular/standalone';
 import type {AlertButton} from '@ionic/angular';
 
@@ -50,6 +56,14 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     private translocoLang = toSignal(this.transloco.langChanges$, {
         initialValue: this.transloco.getActiveLang(),
     });
+    private translocoTranslationTick = toSignal(
+        this.transloco.events$.pipe(
+            filter((e) => e.type === 'translationLoadSuccess'),
+            map(() => Date.now()),
+            startWith(0),
+        ),
+        {initialValue: 0},
+    );
 
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
@@ -68,14 +82,15 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     public pendingDeleteMessageId = signal<number | null>(null);
     public deleteAlertButtons = computed<AlertButton[]>(() => {
         this.translocoLang();
+        this.translocoTranslationTick();
         return [
             {
-                text: this.transloco.translate('chat.cancel'),
+                text: this.translateChatKey('chat.cancel', 'Cancel'),
                 role: 'cancel',
                 handler: () => this.closeDeleteConfirm(),
             },
             {
-                text: this.transloco.translate('chat.remove'),
+                text: this.translateChatKey('chat.remove', 'Delete'),
                 role: 'destructive',
                 cssClass: 'chat__delete-alert-destructive',
                 handler: () => this.confirmDelete(),
@@ -87,15 +102,11 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         const messages = this.messageList();
         const resolver = this.quickActionsResolver();
         const isMobile = this.mobileMode();
-
-        const map: Map<number, ParlQuickAction[]> = new Map<number, ParlQuickAction[]>();
-        if (!resolver || !isMobile) {
-            return map;
-        }
+        const map = new Map<number, ParlQuickAction[]>();
 
         for (const message of messages) {
-            const actions = resolver({message, isMobile});
-            if (Array.isArray(actions) && actions.length) {
+            const actions = resolveParlQuickActions({message, isMobile}, resolver);
+            if (actions.length > 0) {
                 map.set(message.id, actions);
             }
         }
@@ -337,13 +348,6 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         }
 
         this.selectedForEdit.set(null);
-
-        if (!this.mobileMode()) {
-            this.requestDelete.set(messageId);
-            queueMicrotask(() => this.requestDelete.set(null));
-            return this;
-        }
-
         this.pendingDeleteMessageId.set(messageId);
         this.deleteConfirmOpen.set(true);
 
@@ -366,6 +370,17 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         this.requestDelete.set(messageId);
         queueMicrotask(() => this.requestDelete.set(null));
         return this;
+    }
+
+    translateChatKey(key: string, fallbackEn: string): string {
+        const lang = this.transloco.getActiveLang();
+        const translation = this.transloco.getTranslation(lang);
+        const value = getValue(translation, key as never);
+        if (typeof value === 'string' && value.trim().length > 0) {
+            return value;
+        }
+
+        return fallbackEn;
     }
 
     trackByMessageId(index: number, message: ChatMessage): string {

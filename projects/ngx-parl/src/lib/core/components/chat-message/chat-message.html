@@ -1,7 +1,7 @@
 <div class="message"
      [ngClass]="{
-       'message--outgoing': currentMessage().type === messageType.Outgoing,
-       'message--incoming': currentMessage().type === messageType.Incoming,
+       'message--outgoing': isOutgoingMessage(),
+       'message--incoming': !isOutgoingMessage(),
        'message--mobile': mobileMode()
      }">
     @if (showAvatar()) {
@@ -47,7 +47,7 @@
                         <time class="message__time">
                             {{ currentMessage().cr_time | date:'HH:mm' }}
                         </time>
-                        @if (currentMessage().type === messageType.Outgoing) {
+                        @if (isOutgoingMessage()) {
                             @if (currentMessage().pending) {
                                 <span class="message__loading" aria-label="Sending"></span>
                             } @else if (currentMessage().checked) {
@@ -67,26 +67,25 @@
         </div>
     }
 
-    @if (showQuickActions()) {
-        <div class="message__quick-actions-wrap" role="group" aria-label="Quick actions">
+    @if (hasQuickActionButtons()) {
+        <div class="message__quick-actions-wrap" role="group" [attr.aria-label]="'chat.quick_actions' | transloco">
             <div class="message__quick-actions">
                 @for (action of quickActions(); track action.id) {
-                    <ion-button
+                    <button
                         class="message__quick-action-button"
-                        fill="outline"
-                        expand="block"
+                        type="button"
                         [disabled]="action.disabled === true"
                         (click)="onQuickAction(action)">
                         {{ action.title }}
-                    </ion-button>
+                    </button>
                 }
             </div>
         </div>
     }
 </div>
-@if (!showQuickActions()) {
+@if (!hasQuickActionButtons()) {
     <div class="message__user" [ngClass]="{'message__user--mobile': mobileMode()}">
-        @if (currentMessage().type === messageType.Outgoing) {
+        @if (isOutgoingMessage()) {
             <span class="message__user-name">{{ currentMessage().user }}</span>
         }
     </div>
@@ -102,15 +101,13 @@
 }
 
 <mat-menu #messageMenu="matMenu" yPosition="below" xPosition="before" class="message__menu">
-    @if (currentMessage().type === messageType.Outgoing) {
+    @if (isOutgoingMessage()) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                  class="message__icon--menu"
                  width="20" height="20" alt="hide"/>
             <span>{{ 'chat.edit' | transloco }}</span>
         </button>
-    }
-    @if (canDelete(currentMessage())) {
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/trash.svg"
                  class="message__icon--menu"

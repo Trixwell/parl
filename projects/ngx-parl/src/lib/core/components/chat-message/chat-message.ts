@@ -1,11 +1,10 @@
-import {Component, computed, input, model} from '@angular/core';
+import {Component, computed, inject, input, model, Signal} from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {PreviewFile} from '../preview-file/preview-file';
 import {UtilsService} from '../../service/utils/utils';
-import {IonButton} from '@ionic/angular/standalone';
 import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-actions';
 
 @Component({
@@ -19,7 +18,6 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
         MatMenuTrigger,
         TranslocoPipe,
         PreviewFile,
-        IonButton,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
@@ -27,12 +25,14 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
 })
 
 export class ChatMessageComponent {
+    private readonly utils = inject(UtilsService);
+
     public currentMessage = input.required<ChatMessage>();
     public edit = model<boolean>(false);
     public previewList = model<string[]>([]);
     public previewIndex = model<number>(0);
     public previewOpener = model<HTMLElement | null>(null);
-    public closePreviewHandler = () => this.closePreview();
+    public closePreviewHandler = (): this => this.closePreview();
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
@@ -41,9 +41,9 @@ export class ChatMessageComponent {
     public quickActions = input<ParlQuickAction[]>([]);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
-    constructor(private utils: UtilsService) {}
+    public readonly messageType = MessageType;
 
-    attachments = computed(() => {
+    public readonly attachments: Signal<string[]> = computed(() => {
         const message = this.currentMessage();
         const filePath = message.file_path;
 
@@ -64,7 +64,8 @@ export class ChatMessageComponent {
                         .map(item => (typeof item === 'string' ? this.utils.normalizeSourcePath(item) : ''))
                         .filter(Boolean);
                 }
-            } catch {}
+            } catch {
+            }
         }
 
         if (rawFilePath.startsWith('data:')) {
@@ -81,7 +82,7 @@ export class ChatMessageComponent {
         return [];
     });
 
-    avatarSrc = computed(() => {
+    public readonly avatarSrc: Signal<string> = computed(() => {
         const message = this.currentMessage();
         const fallback = message.type === 'incoming'
             ? 'assets/ngx-parl/icons/avatar_anonym.svg'
@@ -90,29 +91,40 @@ export class ChatMessageComponent {
         return message.avatar || fallback;
     });
 
-    showAvatar = computed(() => {
+    public readonly isOutgoingMessage: Signal<boolean> = computed(
+        () => this.currentMessage().type === this.messageType.Outgoing,
+    );
+
+    public readonly hasQuickActionButtons: Signal<boolean> = computed(
+        () => this.isOutgoingMessage() && this.quickActions().length > 0,
+    );
+
+    public readonly showMessageBubble: Signal<boolean> = computed(() => {
+        const msg = this.currentMessage();
+        if (msg.type !== this.messageType.Outgoing) {
+            return true;
+        }
+        if (!this.hasQuickActionButtons()) {
+            return true;
+        }
+        return !!(msg.content && String(msg.content).trim().length > 0);
+    });
+
+    public readonly showMessageBody: Signal<boolean> = computed(
+        () => this.showMessageBubble() || this.attachments().length > 0,
+    );
+
+    public readonly showAvatar: Signal<boolean> = computed(() => {
         const isMobile = this.mobileMode();
-        const isOutgoing = this.currentMessage().type === this.messageType.Outgoing;
-        return !(isMobile && isOutgoing);
+        return !(isMobile && this.isOutgoingMessage());
     });
 
-    showQuickActions = computed(() => {
-        const isOutgoing = this.currentMessage().type === this.messageType.Outgoing;
-        return isOutgoing && this.quickActions().length > 0;
-    });
-
-    showMessageBubble = computed(() => !this.showQuickActions());
-
-    showMessageBody = computed(() => this.showMessageBubble() || this.attachments().length > 0);
-
-    canOpenContextMenu = computed(() => {
+    public readonly canOpenContextMenu: Signal<boolean> = computed(() => {
         const message = this.currentMessage();
-        const isOutgoing = message.type === this.messageType.Outgoing;
-        const isSent = message.pending !== true;
-        return isOutgoing && isSent;
+        return message.type === this.messageType.Outgoing && message.pending !== true;
     });
 
-    openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement) {
+    openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement): this {
         if (!this.canOpenContextMenu()) {
             return this;
         }
@@ -132,14 +144,14 @@ export class ChatMessageComponent {
         return this;
     }
 
-    editMessage(message: ChatMessage) {
+    editMessage(message: ChatMessage): this {
         this.edit.set(true);
         this.requestEdit.set(message);
 
         return this;
     }
 
-    openPreview(index: number, event: MouseEvent) {
+    openPreview(index: number, event: MouseEvent): this {
         const list = this.attachments();
         if (!list.length) {
             return this;
@@ -153,7 +165,7 @@ export class ChatMessageComponent {
         return this;
     }
 
-    closePreview() {
+    closePreview(): this {
         this.previewList.set([]);
         this.previewIndex.set(0);
         this.previewOpener.set(null);
@@ -161,7 +173,7 @@ export class ChatMessageComponent {
         return this;
     }
 
-    deleteMessage(message: ChatMessage) {
+    deleteMessage(message: ChatMessage): this {
         this.requestDelete.set(message.id);
         queueMicrotask(() => this.requestDelete.set(null));
 
@@ -169,21 +181,17 @@ export class ChatMessageComponent {
     }
 
     onQuickAction(action: ParlQuickAction): this {
-        const messageId = this.currentMessage().id;
-
+        const title = (action.title ?? '').trim();
         const value = (action.value ?? '').trim();
-        if (!value) {
+        const content = value || title;
+        if (!content) {
             return this;
         }
 
-        this.quickActionClick.set({actionId: action.id, messageId, value});
-        setTimeout(() => this.quickActionClick.set(null), 0);
+        const messageId = this.currentMessage().id;
+        this.quickActionClick.set({actionId: action.id, messageId, value: content});
+        queueMicrotask(() => this.quickActionClick.set(null));
+
         return this;
     }
-
-    canDelete(message: ChatMessage): boolean {
-        return message.type === this.messageType.Outgoing;
-    }
-
-    public readonly messageType = MessageType;
 }
