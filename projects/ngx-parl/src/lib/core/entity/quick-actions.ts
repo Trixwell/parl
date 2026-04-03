@@ -52,13 +52,23 @@ export function resolveParlQuickActions(
     context: ParlQuickActionContext,
     resolver: ParlQuickActionsResolver | null | undefined,
 ): ParlQuickAction[] {
-    let actions = resolver ? resolver(context) : defaultParlQuickActionsResolver(context);
-    if ((!actions || actions.length === 0) && messageHasActionButtons(context.message)) {
-        actions = defaultParlQuickActionsResolver(context);
+    if (!resolver) {
+        const actions = defaultParlQuickActionsResolver(context);
+        return Array.isArray(actions) && actions.length > 0 ? actions : [];
     }
-    if (!Array.isArray(actions) || actions.length === 0) {
+
+    const resolved = resolver(context);
+    if (resolved == null) {
+        if (messageHasActionButtons(context.message)) {
+            const fallback = defaultParlQuickActionsResolver(context);
+            return Array.isArray(fallback) && fallback.length > 0 ? fallback : [];
+        }
         return [];
     }
-    return actions;
+    if (!Array.isArray(resolved)) {
+        return [];
+    }
+
+    return resolved;
 }
 

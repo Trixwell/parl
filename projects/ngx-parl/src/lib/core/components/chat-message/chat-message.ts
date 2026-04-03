@@ -183,7 +183,7 @@ export class ChatMessageComponent {
     onQuickAction(action: ParlQuickAction): this {
         const title = (action.title ?? '').trim();
         const value = (action.value ?? '').trim();
-        const content = title || value;
+        const content = value || title;
         if (!content) {
             return this;
         }
