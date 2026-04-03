@@ -58,14 +58,7 @@ export function resolveParlQuickActions(
     }
 
     const resolved = resolver(context);
-    if (resolved == null) {
-        if (messageHasActionButtons(context.message)) {
-            const fallback = defaultParlQuickActionsResolver(context);
-            return Array.isArray(fallback) && fallback.length > 0 ? fallback : [];
-        }
-        return [];
-    }
-    if (!Array.isArray(resolved)) {
+    if (resolved == null || !Array.isArray(resolved)) {
         return [];
     }
 

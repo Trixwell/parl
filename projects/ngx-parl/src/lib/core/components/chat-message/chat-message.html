@@ -68,7 +68,7 @@
     }
 
     @if (hasQuickActionButtons()) {
-        <div class="message__quick-actions-wrap" role="group" aria-label="Quick actions">
+        <div class="message__quick-actions-wrap" role="group" [attr.aria-label]="'chat.quick_actions' | transloco">
             <div class="message__quick-actions">
                 @for (action of quickActions(); track action.id) {
                     <button
