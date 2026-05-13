@@ -160,20 +160,24 @@
 }
 
 .chat__delete-alert .alert-title {
-    color: #0f172a;
-    font-weight: 500;
+    color: tokens.$neutral-900 !important;
+    font-weight: 400 !important;
 }
 
 .chat__delete-alert .alert-button-group {
     padding: 8px 12px 12px;
 }
 
-.chat__delete-alert .alert-button {
-    color: #2563eb;
-    font-weight: 500;
+.chat__delete-alert .alert-button-role-cancel,
+.chat__delete-alert .alert-button-role-cancel .alert-button-inner {
+    color: #2563eb !important;
+    font-weight: 500 !important;
 }
 
 .chat__delete-alert .alert-button-role-destructive,
-.chat__delete-alert .alert-button-role-destructive .alert-button-inner {
+.chat__delete-alert .alert-button-role-destructive .alert-button-inner,
+.chat__delete-alert .chat__delete-alert-destructive,
+.chat__delete-alert .chat__delete-alert-destructive .alert-button-inner {
     color: #dc2626 !important;
+    font-weight: 500 !important;
 }

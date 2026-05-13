@@ -57,6 +57,8 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public transportTypeIcon = input<string>('');
     public transportTypeIconSrc = computed(() => this.utils.normalizeSourcePath(this.transportTypeIcon()));
 
+    public logoChat = input<string>('');
+
     public mobileMode = input<boolean>(false);
     public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);

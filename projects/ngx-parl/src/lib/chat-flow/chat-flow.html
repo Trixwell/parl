@@ -10,7 +10,7 @@
         >
             <div class="chat__manager-header" aria-hidden="true">
                 <div class="chat__manager-icon">
-                    <img ngSrc="assets/ngx-parl/icons/avatar_manager.svg"
+                    <img [ngSrc]="logoChatSrc()"
                          alt="manager"
                          width="72"
                          height="72"/>
@@ -28,6 +28,7 @@
                     <lib-chat-message
                         [currentMessage]="message"
                         [edit]="message.edit"
+                        [logoChat]="logoChat()"
                         [mobileMode]="mobileMode()"
                         [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
                         [quickActionClick]="quickActionClick()"

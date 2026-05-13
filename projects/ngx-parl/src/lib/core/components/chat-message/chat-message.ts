@@ -38,6 +38,7 @@ export class ChatMessageComponent {
     public requestDelete = model<number | null>(null);
 
     public mobileMode = input<boolean>(false);
+    public logoChat = input<string>('');
     public quickActions = input<ParlQuickAction[]>([]);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
@@ -84,11 +85,18 @@ export class ChatMessageComponent {
 
     public readonly avatarSrc: Signal<string> = computed(() => {
         const message = this.currentMessage();
-        const fallback = message.type === 'incoming'
-            ? 'assets/ngx-parl/icons/avatar_anonym.svg'
-            : 'assets/ngx-parl/icons/avatar_manager.svg';
+        const anonymFallback = 'assets/ngx-parl/icons/avatar_anonym.svg';
+        const logoTrimmed = (this.logoChat() ?? '').trim();
+        const outgoingFallback =
+            logoTrimmed.length > 0 ? logoTrimmed : anonymFallback;
+        const fallback =
+            message.type === 'incoming' ? anonymFallback : outgoingFallback;
+        const raw =
+            message.avatar && String(message.avatar).trim().length > 0
+                ? message.avatar
+                : fallback;
 
-        return message.avatar || fallback;
+        return this.utils.normalizeSourcePath(raw);
     });
 
     public readonly isOutgoingMessage: Signal<boolean> = computed(

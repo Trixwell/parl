@@ -92,11 +92,10 @@
 }
 
 @if (previewList().length) {
-    <lib-preview-file
-        [srcList]="previewList()"
-        [startIndex]="previewIndex()"
-        [openerElement]="previewOpener()"
-        [closeHandler]="closePreviewHandler">
+    <lib-preview-file [srcList]="previewList()"
+                      [startIndex]="previewIndex()"
+                      [openerElement]="previewOpener()"
+                      [closeHandler]="closePreviewHandler">
     </lib-preview-file>
 }
 

@@ -22,6 +22,7 @@ import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
+import {UtilsService} from '../core/service/utils/utils';
 import {
     ParlQuickAction,
     ParlQuickActionClickEvent,
@@ -53,6 +54,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
     private transloco = inject(TranslocoService);
+    private utils = inject(UtilsService);
     private translocoLang = toSignal(this.transloco.langChanges$, {
         initialValue: this.transloco.getActiveLang(),
     });
@@ -75,6 +77,17 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     public requestDelete = model<number | null>(null);
 
     public mobileMode = input<boolean>(false);
+    public logoChat = input<string>('');
+    public logoChatSrc = computed(() => {
+        const trimmed = (this.logoChat() ?? '').trim();
+        const path =
+            trimmed.length > 0
+                ? trimmed
+                : 'assets/ngx-parl/icons/avatar_anonym.svg';
+
+        return this.utils.normalizeSourcePath(path);
+    });
+
     public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
