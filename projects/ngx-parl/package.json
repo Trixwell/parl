@@ -1,6 +1,6 @@
 {
     "name": "@trixwell/ngx-parl",
-    "version": "5.0.1",
+    "version": "6.0.0",
     "license": "LGPL-3.0",
     "description": "Highly customizable Angular Material chat component",
     "keywords": [
@@ -16,18 +16,25 @@
         "online-chat"
     ],
     "peerDependencies": {
-        "@angular/common": "^20.3.0",
-        "@angular/core": "^20.3.0",
+        "@angular/animations": "^21.2.12",
+        "@angular/cdk": "^21.2.10",
+        "@angular/common": "^21.2.12",
+        "@angular/core": "^21.2.12",
+        "@angular/forms": "^21.2.12",
+        "@angular/material": "^21.2.10",
         "@ionic/angular": "^8.8.2",
-        "@ionic/core": "^8.8.2"
+        "@ionic/core": "^8.8.2",
+        "@ngneat/transloco": "^6.0.0 || ^7.0.0",
+        "ngx-infinite-scroll": "^21.0.0",
+        "rxjs": "^7.8.0"
     },
     "dependencies": {
-        "tslib": "^2.3.0"
+        "tslib": "^2.8.1"
     },
     "sideEffects": false,
     "devDependencies": {
-        "@angular/animations": "^20.3.7",
-        "@angular/cdk": "^20.2.10",
-        "@angular/material": "^20.2.10"
+        "@angular/animations": "^21.2.12",
+        "@angular/cdk": "^21.2.10",
+        "@angular/material": "^21.2.10"
     }
 }

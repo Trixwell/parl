@@ -312,25 +312,58 @@
 }
 
 ::ng-deep {
-    .mat-mdc-menu-content {
-        background: tokens.$neutral-50;
-        width: 160px;
-        border-radius: tokens.$radius-medium;
-        gap: tokens.$space-1;
-        border: tokens.$border-1 solid tokens.$primary-100;
-        padding: tokens.$margin-2 tokens.$space-1;
-        box-shadow: tokens.$shadow-light;
-        overflow: hidden;
-        font: tokens.$font-body-s-400;
+    .message__menu.mat-mdc-menu-panel {
+        min-width: 160px !important;
+        max-width: 160px !important;
+        width: 160px !important;
+        background: tokens.$neutral-50 !important;
+        border-radius: tokens.$radius-medium !important;
+        border: tokens.$border-1 solid tokens.$neutral-200 !important;
+        box-shadow: tokens.$shadow-light !important;
+        overflow: hidden !important;
     }
 
-    .mat-mdc-menu-item-text {
+    .message__menu .mat-mdc-menu-content {
+        background: tokens.$neutral-50 !important;
+        width: 160px !important;
+        min-height: 88px !important;
+        border-radius: tokens.$radius-medium !important;
+        border: none !important;
+        padding: tokens.$space-1 0 !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        font: tokens.$font-body-s-400 !important;
+        color: tokens.$neutral-800 !important;
+        gap: 0 !important;
+    }
+
+    .message__menu .mat-mdc-menu-item {
+        min-height: 40px !important;
+        height: 40px !important;
+        background: tokens.$neutral-50 !important;
+        color: tokens.$neutral-800 !important;
         font: tokens.$font-body-s-400 !important;
         font-weight: 500 !important;
-        color: tokens.$neutral-800 !important;
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        gap: tokens.$margin-1;
+        padding-inline: tokens.$margin-3 !important;
+
+        &:hover,
+        &.mat-mdc-menu-item-highlighted {
+            background: tokens.$neutral-200 !important;
+            color: tokens.$neutral-900 !important;
+        }
+
+        .mat-mdc-menu-item-text {
+            font: tokens.$font-body-s-400 !important;
+            font-weight: 500 !important;
+            color: inherit !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: tokens.$margin-2 !important;
+        }
+    }
+
+    .message__menu .mat-mdc-menu-item .mdc-list-item__primary-text {
+        color: inherit !important;
     }
 }
