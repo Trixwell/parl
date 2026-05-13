@@ -90,7 +90,7 @@ export class ChatMessageComponent {
         const outgoingFallback =
             logoTrimmed.length > 0 ? logoTrimmed : anonymFallback;
         const fallback =
-            message.type === 'incoming' ? anonymFallback : outgoingFallback;
+            message.type === this.messageType.Incoming ? anonymFallback : outgoingFallback;
         const raw =
             message.avatar && String(message.avatar).trim().length > 0
                 ? message.avatar
