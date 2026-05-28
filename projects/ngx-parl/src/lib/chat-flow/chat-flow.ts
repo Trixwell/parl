@@ -2,6 +2,7 @@ import {
     AfterViewInit,
     Component,
     computed,
+    DestroyRef,
     effect,
     ElementRef,
     inject,
@@ -12,8 +13,8 @@ import {
     ViewEncapsulation,
     ViewChild,
 } from '@angular/core';
-import {toSignal} from '@angular/core/rxjs-interop';
-import {filter, map, startWith} from 'rxjs';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {filter, map} from 'rxjs';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
@@ -55,17 +56,9 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     private transloco = inject(TranslocoService);
     private utils = inject(UtilsService);
-    private translocoLang = toSignal(this.transloco.langChanges$, {
-        initialValue: this.transloco.getActiveLang(),
-    });
-    private translocoTranslationTick = toSignal(
-        this.transloco.events$.pipe(
-            filter((e) => e.type === 'translationLoadSuccess'),
-            map(() => Date.now()),
-            startWith(0),
-        ),
-        {initialValue: 0},
-    );
+    private destroyRef = inject(DestroyRef);
+    private translocoLang = signal(this.transloco.getActiveLang());
+    private translocoTranslationTick = signal(0);
 
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
@@ -143,6 +136,22 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     public historyLoadThreshold = signal(1);
 
     constructor() {
+        this.transloco.langChanges$
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(lang => {
+                queueMicrotask(() => this.translocoLang.set(lang));
+            });
+
+        this.transloco.events$
+            .pipe(
+                filter(event => event.type === 'translationLoadSuccess'),
+                map(() => Date.now()),
+                takeUntilDestroyed(this.destroyRef),
+            )
+            .subscribe(tick => {
+                queueMicrotask(() => this.translocoTranslationTick.set(tick));
+            });
+
         effect(() => {
             const messages = this.messageList();
             const firstMessageId = messages[0]?.id ?? null;

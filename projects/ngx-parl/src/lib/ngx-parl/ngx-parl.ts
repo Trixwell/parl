@@ -76,7 +76,8 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 private transloco: TranslocoService,
                 @Optional() private dialogRef?: MatDialogRef<NgxParlComponent>) {
         effect(() => {
-            this.transloco.setActiveLang(this.language());
+            const language = this.language();
+            queueMicrotask(() => this.transloco.setActiveLang(language));
         });
 
         effect(() => {
@@ -93,19 +94,21 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             this.lastUpdateKey = key;
 
-            this.messageList.update(list => {
-                const index = list.findIndex(m => m.id === updatedMessage.id);
+            queueMicrotask(() => {
+                this.messageList.update(list => {
+                    const index = list.findIndex(m => m.id === updatedMessage.id);
 
-                if (index > -1) {
-                    const updated = [...list];
-                    updated[index] = updatedMessage;
-                    return updated;
-                }
+                    if (index > -1) {
+                        const updated = [...list];
+                        updated[index] = updatedMessage;
+                        return updated;
+                    }
 
-                return [...list, updatedMessage];
+                    return [...list, updatedMessage];
+                });
+
+                this.scrollToBottom();
             });
-
-            this.scrollToBottom();
         });
 
         effect(() => {
