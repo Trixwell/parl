@@ -43,14 +43,17 @@
         </div>
 
         @if (deleteConfirmOpen()) {
-            <div class="chat__delete-confirm"
+            <div #deleteConfirmDialog
+                 class="chat__delete-confirm"
                  role="dialog"
                  aria-modal="true"
-                 [attr.aria-label]="'chat.delete_message_title' | transloco: {__: language()}: language()">
+                 tabindex="-1"
+                 aria-labelledby="chat-delete-confirm-title"
+                 (keydown.escape)="closeDeleteConfirm()">
                 <div class="chat__delete-confirm-backdrop"
                      (click)="closeDeleteConfirm()"></div>
                 <div class="chat__delete-confirm-card">
-                    <h2 class="chat__delete-confirm-title">
+                    <h2 id="chat-delete-confirm-title" class="chat__delete-confirm-title">
                         {{ 'chat.delete_message_title' | transloco: {__: language()}: language() }}
                     </h2>
                     <div class="chat__delete-confirm-actions">

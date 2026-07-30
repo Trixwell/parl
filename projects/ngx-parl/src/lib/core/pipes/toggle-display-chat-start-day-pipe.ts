@@ -6,7 +6,6 @@ import {TranslocoService} from '@ngneat/transloco';
 
 @Pipe({
     name: 'toggleDisplayChatStartDay',
-    pure: false,
 })
 export class ToggleDisplayChatStartDayPipe implements PipeTransform {
 

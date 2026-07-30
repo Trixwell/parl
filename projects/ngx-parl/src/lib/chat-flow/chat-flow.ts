@@ -49,6 +49,7 @@ import {
 
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
+    @ViewChild('deleteConfirmDialog') deleteConfirmDialog?: ElementRef<HTMLElement>;
 
     private utils = inject(UtilsService);
     private injector = inject(Injector);
@@ -136,7 +137,9 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
                 return;
             }
 
-            afterNextRender(() => this.setupScrollContainer(), {injector: this.injector});
+            if (!this.scrollContainerReady) {
+                afterNextRender(() => this.setupScrollContainer(), {injector: this.injector});
+            }
 
             const hasMoreMessages = messages.length > this.previousMessageCount;
             const hasFewerMessages = messages.length < this.previousMessageCount;
@@ -193,7 +196,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     private setupScrollContainer(): this {
         const element = this.flowRef?.nativeElement;
-        if (!element || this.scrollContainerReady) {
+        if (!this.hasMessages() || !element || this.scrollContainerReady) {
             return this;
         }
 
@@ -366,6 +369,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         this.selectedForEdit.set(null);
         this.pendingDeleteMessageId.set(messageId);
         this.deleteConfirmOpen.set(true);
+        afterNextRender(() => this.deleteConfirmDialog?.nativeElement.focus(), {injector: this.injector});
 
         return this;
     }

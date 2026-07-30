@@ -1,20 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NgxParl } from './ngx-parl';
+import { NgxParlComponent } from './ngx-parl';
 
-describe('NgxParl', () => {
-  let component: NgxParl;
-  let fixture: ComponentFixture<NgxParl>;
+describe('NgxParlComponent', () => {
+  let component: NgxParlComponent;
+  let fixture: ComponentFixture<NgxParlComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NgxParl]
+      imports: [NgxParlComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(NgxParl);
+    fixture = TestBed.createComponent(NgxParlComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

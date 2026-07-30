@@ -5,7 +5,6 @@ import {TranslocoService} from '@ngneat/transloco';
 
 @Pipe({
   name: 'chatStartDay',
-  pure: false,
 })
 export class ChatStartDayPipe implements PipeTransform {
     constructor(protected utils: UtilsService, private transloco: TranslocoService) {}
