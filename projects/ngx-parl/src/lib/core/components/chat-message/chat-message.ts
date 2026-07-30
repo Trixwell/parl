@@ -86,7 +86,7 @@ export class ChatMessageComponent {
     public readonly avatarSrc: Signal<string> = computed(() => {
         const message = this.currentMessage();
         const anonymFallback = 'assets/ngx-parl/icons/avatar_anonym.svg';
-        const managerFallback = 'assets/ngx-parl/icons/avatar_manager.svg';
+        const managerFallback = 'assets/ngx-parl/icons/avatar_anonym.svg';
         const logoTrimmed = (this.logoChat() ?? '').trim();
         const outgoingFallback =
             logoTrimmed.length > 0 ? logoTrimmed : managerFallback;

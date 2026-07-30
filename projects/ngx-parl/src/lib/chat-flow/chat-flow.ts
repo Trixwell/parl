@@ -76,7 +76,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         const path =
             trimmed.length > 0
                 ? trimmed
-                : 'assets/ngx-parl/icons/avatar_manager.svg';
+                : 'assets/ngx-parl/icons/avatar_anonym.svg';
 
         return this.utils.normalizeSourcePath(path);
     });
