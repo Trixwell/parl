@@ -29,7 +29,7 @@
                         <button type="button"
                                 class="message__image-button"
                                 (click)="openPreview(i, $event)"
-                                [attr.aria-label]="'chat.photo_preview' | transloco">
+                                [attr.aria-label]="'chat.photo_preview' | transloco: {__: language()}: language()">
                             <img [src]="file"
                                  alt="attachment"
                                  class="message__image"
@@ -68,7 +68,7 @@
     }
 
     @if (hasQuickActionButtons()) {
-        <div class="message__quick-actions-wrap" role="group" [attr.aria-label]="'chat.quick_actions' | transloco">
+        <div class="message__quick-actions-wrap" role="group" [attr.aria-label]="'chat.quick_actions' | transloco: {__: language()}: language()">
             <div class="message__quick-actions">
                 @for (action of quickActions(); track action.id) {
                     <button
@@ -94,6 +94,7 @@
 @if (previewList().length) {
     <lib-preview-file [srcList]="previewList()"
                       [startIndex]="previewIndex()"
+                      [language]="language()"
                       [openerElement]="previewOpener()"
                       [closeHandler]="closePreviewHandler">
     </lib-preview-file>
@@ -105,13 +106,13 @@
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                  class="message__icon--menu"
                  width="20" height="20" alt="hide"/>
-            <span>{{ 'chat.edit' | transloco }}</span>
+            <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
         </button>
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/trash.svg"
                  class="message__icon--menu"
                  width="20" height="20" alt="hide"/>
-            <span>{{ 'chat.remove' | transloco }}</span>
+            <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
         </button>
     }
 </mat-menu>

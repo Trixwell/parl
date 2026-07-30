@@ -36,7 +36,7 @@
         <div class="message__wrap--input">
             <button type="button"
                     class="message__button message__button--attach"
-                    [attr.aria-label]="'chat.attach' | transloco"
+                    [attr.aria-label]="'chat.attach' | transloco: {__: language()}: language()"
                     (click)="fileDialog.click()">
                 <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
                      class="message__icon message__icon--attach"
@@ -57,8 +57,8 @@
                  contenteditable="true"
                  aria-multiline="true"
                  [attr.data-placeholder]="isEditMode()
-                   ? ('chat.edit_placeholder' | transloco)
-                   : ('chat.placeholder' | transloco)"
+                   ? ('chat.edit_placeholder' | transloco: {__: language()}: language())
+                   : ('chat.placeholder' | transloco: {__: language()}: language())"
                  (blur)="onBlur()"
                  (focus)="onFocus()"
                  (input)="onInput()"
@@ -74,7 +74,7 @@
         <button class="message__button message__button--send"
                 type="button"
                 (click)="enterDown()"
-                [attr.aria-label]="'chat.send' | transloco"
+                [attr.aria-label]="'chat.send' | transloco: {__: language()}: language()"
                 [disabled]="!canSend()">
             <img ngSrc="assets/ngx-parl/icons/send.svg"
                  class="message__icon message__icon--send"
@@ -89,7 +89,7 @@
                 <div class="message__file" [attr.data-kind]="item.originalKind">
                     <button type="button"
                             class="message__file-remove"
-                            [attr.aria-label]="'chat.delete_file' | transloco"
+                            [attr.aria-label]="'chat.delete_file' | transloco: {__: language()}: language()"
                             (click)="removeFile($index, $event)">
                         <img ngSrc="assets/ngx-parl/icons/remove.svg"
                              class="message__icon message__icon--file"
@@ -101,7 +101,7 @@
 
                         @if (item.originalKind === FileType.GIF) {
                             <span class="message__file-badge message__file-badge--gif">
-                                {{ 'chat.gif' | transloco }}
+                                {{ 'chat.gif' | transloco: {__: language()}: language() }}
                             </span>
                         }
                     </div>
@@ -110,5 +110,3 @@
         </div>
     }
 </section>
-
-

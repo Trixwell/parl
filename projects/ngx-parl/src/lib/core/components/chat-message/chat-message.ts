@@ -38,6 +38,7 @@ export class ChatMessageComponent {
     public requestDelete = model<number | null>(null);
 
     public mobileMode = input<boolean>(false);
+    public language = input<'en' | 'uk'>('en');
     public logoChat = input<string>('');
     public quickActions = input<ParlQuickAction[]>([]);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);

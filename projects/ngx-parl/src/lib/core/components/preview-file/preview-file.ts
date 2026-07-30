@@ -26,6 +26,7 @@ export class PreviewFile implements OnDestroy, AfterViewInit {
     public srcList = input<string[]>([]);
     public startIndex = input<number>(0);
     public title = input<string>('');
+    public language = input<'en' | 'uk'>('en');
     public openerElement = input<HTMLElement | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
     public focusTrapFactory = inject(FocusTrapFactory);

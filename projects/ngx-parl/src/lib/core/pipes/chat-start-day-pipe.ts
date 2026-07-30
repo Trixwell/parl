@@ -4,17 +4,19 @@ import {UtilsService} from '../service/utils/utils';
 import {TranslocoService} from '@ngneat/transloco';
 
 @Pipe({
-  name: 'chatStartDay'
+  name: 'chatStartDay',
+  pure: false,
 })
 export class ChatStartDayPipe implements PipeTransform {
     constructor(protected utils: UtilsService, private transloco: TranslocoService) {}
 
-    transform(value: string, format: string = 'd MMMM'): string {
+    transform(value: string, format: string = 'd MMMM', language?: string): string {
         if (!value) {
             return '';
         }
 
-        const locale = this.utils.langToLocale(this.transloco.getActiveLang());
+        const activeLang = language || this.transloco.getActiveLang();
+        const locale = this.utils.langToLocale(activeLang);
         const datePipe = new DatePipe(locale);
 
         const valueDate = new Date(value);

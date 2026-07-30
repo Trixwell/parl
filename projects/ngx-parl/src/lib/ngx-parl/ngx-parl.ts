@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, ViewChild} from '@angular/core';
+import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
 import {MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
@@ -19,7 +20,7 @@ import {
 } from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
 import {FlowTheme} from '../core/entity/theme';
-import {Subscription} from 'rxjs';
+import {distinctUntilChanged, map, Subscription, switchMap} from 'rxjs';
 import {ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
 
 @Component({
@@ -75,10 +76,17 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService,
                 @Optional() private dialogRef?: MatDialogRef<NgxParlComponent>) {
-        effect(() => {
-            const language = this.language();
-            queueMicrotask(() => this.transloco.setActiveLang(language));
-        });
+        toObservable(this.language)
+            .pipe(
+                distinctUntilChanged(),
+                switchMap(language =>
+                    this.transloco.load(language).pipe(map(() => language)),
+                ),
+                takeUntilDestroyed(),
+            )
+            .subscribe(language => {
+                this.transloco.setActiveLang(language);
+            });
 
         effect(() => {
             const updatedMessage = this.messageUpdate();

@@ -1,11 +1,12 @@
 import {
     AfterViewInit,
+    afterNextRender,
     Component,
     computed,
-    DestroyRef,
     effect,
     ElementRef,
     inject,
+    Injector,
     input,
     model,
     OnDestroy,
@@ -13,12 +14,10 @@ import {
     ViewEncapsulation,
     ViewChild,
 } from '@angular/core';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {filter, map} from 'rxjs';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage} from '../core/entity/chat';
 import {ChatMessageComponent} from '../core/components/chat-message/chat-message';
-import {getValue, TranslocoPipe, TranslocoService} from '@ngneat/transloco';
+import {TranslocoPipe} from '@ngneat/transloco';
 import {NgOptimizedImage} from '@angular/common';
 import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
@@ -30,8 +29,6 @@ import {
     ParlQuickActionsResolver,
     resolveParlQuickActions,
 } from '../core/entity/quick-actions';
-import {IonAlert} from '@ionic/angular/standalone';
-import type {AlertButton} from '@ionic/angular';
 
 @Component({
     selector: 'app-chat-flow',
@@ -43,7 +40,6 @@ import type {AlertButton} from '@ionic/angular';
         InfiniteScrollDirective,
         ToggleDisplayChatStartDayPipe,
         ChatStartDayPipe,
-        IonAlert,
     ],
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
@@ -54,21 +50,20 @@ import type {AlertButton} from '@ionic/angular';
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
 
-    private transloco = inject(TranslocoService);
     private utils = inject(UtilsService);
-    private destroyRef = inject(DestroyRef);
-    private translocoLang = signal(this.transloco.getActiveLang());
-    private translocoTranslationTick = signal(0);
+    private injector = inject(Injector);
 
     public scrollToBottomTrigger = model<number>(0);
     public loadHistory = model<boolean>(false);
 
     public messageListInput = model.required<ChatMessage[]>();
     public messageList = computed(() => this.messageListInput());
+    public hasMessages = computed(() => this.messageList().length > 0);
 
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
 
+    public language = input<'en' | 'uk'>('en');
     public mobileMode = input<boolean>(false);
     public logoChat = input<string>('');
     public logoChatSrc = computed(() => {
@@ -86,23 +81,6 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public deleteConfirmOpen = signal(false);
     public pendingDeleteMessageId = signal<number | null>(null);
-    public deleteAlertButtons = computed<AlertButton[]>(() => {
-        this.translocoLang();
-        this.translocoTranslationTick();
-        return [
-            {
-                text: this.translateChatKey('chat.cancel', 'Cancel'),
-                role: 'cancel',
-                handler: () => this.closeDeleteConfirm(),
-            },
-            {
-                text: this.translateChatKey('chat.remove', 'Delete'),
-                role: 'destructive',
-                cssClass: 'chat__delete-alert-destructive',
-                handler: () => this.confirmDelete(),
-            },
-        ];
-    });
 
     public quickActionsByMessageId = computed(() => {
         const messages = this.messageList();
@@ -121,6 +99,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     });
 
     private viewInitialized = false;
+    private scrollContainerReady = false;
     private previousMessageCount = 0;
     private previousFirstMessageId: number | null = null;
     private previousLastMessageId: number | null = null;
@@ -130,28 +109,13 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     private previousScrollTop = 0;
     private isUserAtBottom = true;
     private resizeObserver: ResizeObserver | null = null;
+    private scrollListener: (() => void) | null = null;
 
     public showScrollToBottom = signal(false);
 
     public historyLoadThreshold = signal(1);
 
     constructor() {
-        this.transloco.langChanges$
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(lang => {
-                queueMicrotask(() => this.translocoLang.set(lang));
-            });
-
-        this.transloco.events$
-            .pipe(
-                filter(event => event.type === 'translationLoadSuccess'),
-                map(() => Date.now()),
-                takeUntilDestroyed(this.destroyRef),
-            )
-            .subscribe(tick => {
-                queueMicrotask(() => this.translocoTranslationTick.set(tick));
-            });
-
         effect(() => {
             const messages = this.messageList();
             const firstMessageId = messages[0]?.id ?? null;
@@ -163,6 +127,16 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
                 this.previousLastMessageId = lastMessageId;
                 return;
             }
+
+            if (messages.length === 0) {
+                this.teardownScrollContainer();
+                this.previousMessageCount = 0;
+                this.previousFirstMessageId = null;
+                this.previousLastMessageId = null;
+                return;
+            }
+
+            afterNextRender(() => this.setupScrollContainer(), {injector: this.injector});
 
             const hasMoreMessages = messages.length > this.previousMessageCount;
             const hasFewerMessages = messages.length < this.previousMessageCount;
@@ -206,7 +180,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         effect(() => {
             this.scrollToBottomTrigger();
 
-            if (this.viewInitialized) {
+            if (this.viewInitialized && this.hasMessages()) {
                 queueMicrotask(() => this.scrollToBottomSmooth());
             }
         });
@@ -214,13 +188,17 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit(): void {
         this.viewInitialized = true;
+        afterNextRender(() => this.setupScrollContainer(), {injector: this.injector});
+    }
 
+    private setupScrollContainer(): this {
         const element = this.flowRef?.nativeElement;
-        if (!element) {
-            return;
+        if (!element || this.scrollContainerReady) {
+            return this;
         }
 
-        element.addEventListener('scroll', () => {
+        this.scrollContainerReady = true;
+        this.scrollListener = () => {
             this.previousScrollHeight = element.scrollHeight;
             this.previousScrollTop = element.scrollTop;
 
@@ -228,11 +206,28 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
                 element.scrollTop + element.clientHeight >=
                 element.scrollHeight - 10;
             this.showScrollToBottom.set(!this.isUserAtBottom);
-        });
+        };
+        element.addEventListener('scroll', this.scrollListener);
 
         queueMicrotask(() => this.scrollToBottom());
-
         this.observeScrollContainerForEmptySpace(element);
+
+        return this;
+    }
+
+    private teardownScrollContainer(): this {
+        const element = this.flowRef?.nativeElement;
+        if (element && this.scrollListener) {
+            element.removeEventListener('scroll', this.scrollListener);
+        }
+
+        this.scrollListener = null;
+        this.resizeObserver?.disconnect();
+        this.resizeObserver = null;
+        this.scrollContainerReady = false;
+        this.showScrollToBottom.set(false);
+
+        return this;
     }
 
     onScrollUp(): this {
@@ -313,8 +308,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.resizeObserver?.disconnect();
-        this.resizeObserver = null;
+        this.teardownScrollContainer();
     }
 
     startEdit(message: ChatMessage): this {
@@ -392,17 +386,6 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         this.requestDelete.set(messageId);
         queueMicrotask(() => this.requestDelete.set(null));
         return this;
-    }
-
-    translateChatKey(key: string, fallbackEn: string): string {
-        const lang = this.transloco.getActiveLang();
-        const translation = this.transloco.getTranslation(lang);
-        const value = getValue(translation, key as never);
-        if (typeof value === 'string' && value.trim().length > 0) {
-            return value;
-        }
-
-        return fallbackEn;
     }
 
     trackByMessageId(index: number, message: ChatMessage): string {
