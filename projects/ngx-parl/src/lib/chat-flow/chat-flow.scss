@@ -144,40 +144,69 @@
     }
 }
 
-.chat__delete-alert {
-    --background: #ffffff;
-    --backdrop-opacity: 0.32;
-    --max-width: 520px;
+.chat__delete-confirm {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: tokens.$space-4;
 }
 
-.chat__delete-alert .alert-wrapper {
+.chat__delete-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.32);
+}
+
+.chat__delete-confirm-card {
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+    max-width: 100%;
+    background: #ffffff;
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 18px 12px 12px;
 }
 
-.chat__delete-alert .alert-head {
-    padding-top: 18px;
+.chat__delete-confirm-title {
+    margin: 0;
+    padding: 0 12px 8px;
+    color: tokens.$neutral-900;
+    font: tokens.$font-body-m-400;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
 }
 
-.chat__delete-alert .alert-title {
-    color: tokens.$neutral-900 !important;
-    font-weight: 400 !important;
+.chat__delete-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: tokens.$space-2;
+    padding: 8px 0 0;
 }
 
-.chat__delete-alert .alert-button-group {
-    padding: 8px 12px 12px;
-}
+.chat__delete-confirm-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 10px 14px;
+    font: tokens.$font-body-m-400;
+    font-weight: 500;
+    border-radius: tokens.$radius-small;
 
-.chat__delete-alert .alert-button-role-cancel,
-.chat__delete-alert .alert-button-role-cancel .alert-button-inner {
-    color: #2563eb !important;
-    font-weight: 500 !important;
-}
+    &--cancel {
+        color: #2563eb;
+    }
 
-.chat__delete-alert .alert-button-role-destructive,
-.chat__delete-alert .alert-button-role-destructive .alert-button-inner,
-.chat__delete-alert .chat__delete-alert-destructive,
-.chat__delete-alert .chat__delete-alert-destructive .alert-button-inner {
-    color: #dc2626 !important;
-    font-weight: 500 !important;
+    &--delete {
+        color: #dc2626;
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: tokens.$neutral-100;
+    }
 }

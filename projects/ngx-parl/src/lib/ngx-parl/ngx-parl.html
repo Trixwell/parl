@@ -41,7 +41,7 @@
                 <div class="modal-chat__drag-overlay"
                      role="status"
                      aria-live="polite"
-                     [attr.aria-label]="'chat.drag_title' | transloco">
+                     [attr.aria-label]="'chat.drag_title' | transloco: {__: language()}: language()">
                     <div class="modal-chat__drag-card">
                         <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
                              class="modal-chat__drag-icon"
@@ -50,10 +50,10 @@
                              height="56"/>
 
                         <div class="modal-chat__drag-title">
-                            {{ 'chat.drag_title' | transloco }}
+                            {{ 'chat.drag_title' | transloco: {__: language()}: language() }}
                         </div>
                         <div class="modal-chat__drag-subtitle">
-                            {{ 'chat.drag_subtitle' | transloco }}
+                            {{ 'chat.drag_subtitle' | transloco: {__: language()}: language() }}
                         </div>
                     </div>
                 </div>
@@ -61,6 +61,7 @@
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
                            (requestDeleteChange)="onRequestDelete($event)"
+                           [language]="language()"
                            [logoChat]="logoChat()"
                            [mobileMode]="mobileMode()"
                            [quickActionsResolver]="quickActionsResolver()"
@@ -71,6 +72,7 @@
             </app-chat-flow>
 
             <app-input-message [editMessage]="selectedForEdit()"
+                               [language]="language()"
                                (cancelEditChange)="onCancelEdit($event)"
                                (input_textChange)="sendMessage($event)">
                 @if (ai_run_in_progress) {

@@ -5,14 +5,15 @@ import {UtilsService} from '../service/utils/utils';
 import {TranslocoService} from '@ngneat/transloco';
 
 @Pipe({
-    name: 'toggleDisplayChatStartDay'
+    name: 'toggleDisplayChatStartDay',
 })
 export class ToggleDisplayChatStartDayPipe implements PipeTransform {
 
     constructor(protected utils: UtilsService, private transloco: TranslocoService) {}
 
-    transform(message: ChatMessage, messages: ChatMessage[], i: number): boolean {
-        const locale = this.utils.langToLocale(this.transloco.getActiveLang());
+    transform(message: ChatMessage, messages: ChatMessage[], i: number, language?: string): boolean {
+        const activeLang = language || this.transloco.getActiveLang();
+        const locale = this.utils.langToLocale(activeLang);
         const datePipe = new DatePipe(locale);
 
         const prev = i > 0 ? messages[i - 1] : undefined;

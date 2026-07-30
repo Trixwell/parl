@@ -28,6 +28,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     @ViewChild('mirror', {static: false}) mirrorElement!: ElementRef<HTMLDivElement>;
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
+    public language = input<'en' | 'uk'>('en');
 
     public hasOriginalAttachments = computed(() => {
         const filePaths = this.editFilePaths();

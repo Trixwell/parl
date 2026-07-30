@@ -4,16 +4,16 @@
          tabindex="-1"
          role="dialog"
          aria-modal="true"
-         [attr.aria-label]="title() || ('chat.photo_preview' | transloco)"
+         [attr.aria-label]="title() || ('chat.photo_preview' | transloco: {__: language()}: language())"
          (keydown)="onKeyDown($event)"
          (click)="$event.stopPropagation()">
         <div class="preview__header">
             <h3 class="preview__title">
-                {{ title() || ('chat.photo_preview' | transloco) }}
+                {{ title() || ('chat.photo_preview' | transloco: {__: language()}: language()) }}
             </h3>
             <button type="button"
                     class="preview__close"
-                    [attr.aria-label]="'chat.close' | transloco"
+                    [attr.aria-label]="'chat.close' | transloco: {__: language()}: language()"
                     #closeButton
                     (click)="requestClose()">
                 <span class="preview__close-icon" aria-hidden="true"></span>
@@ -23,17 +23,17 @@
             @if (srcList().length > 1) {
                 <button type="button"
                         class="preview__nav preview__nav--prev"
-                        [attr.aria-label]="'chat.previous' | transloco"
+                        [attr.aria-label]="'chat.previous' | transloco: {__: language()}: language()"
                         (click)="prev()">
                 </button>
                 <button type="button"
                         class="preview__nav preview__nav--next"
-                        [attr.aria-label]="'chat.next' | transloco"
+                        [attr.aria-label]="'chat.next' | transloco: {__: language()}: language()"
                         (click)="next()">
                 </button>
             }
             <img [src]="currentSrc()"
-                 [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco : { index: activeIndex() + 1, total: srcList().length }"
+                 [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco: { index: activeIndex() + 1, total: srcList().length, __: language() }: language()"
                  class="preview__image"
                  (click)="next()"
                  (keydown.enter)="$event.preventDefault(); next()"
@@ -47,7 +47,7 @@
                             [class.preview__thumb--active]="i === activeIndex()"
                             (click)="select(i)">
                         <img [src]="file"
-                             [attr.alt]="'chat.thumbnail_alt' | transloco : { index: i + 1, total: srcList().length }"/>
+                             [attr.alt]="'chat.thumbnail_alt' | transloco: { index: i + 1, total: srcList().length, __: language() }: language()"/>
                     </button>
                 }
             </div>
