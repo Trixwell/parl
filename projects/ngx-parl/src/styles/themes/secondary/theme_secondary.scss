@@ -6,9 +6,9 @@
     @include common.flow-theme-common(
         $header-bg: tokens.$violet-500,
         $header-color: tokens.$default-50,
-        $incoming-bg: tokens.$violet-500,
-        $incoming-color: tokens.$default-50,
-        $outgoing-bg: tokens.$default-100,
-        $outgoing-color: tokens.$default-800
+        $incoming-bg: tokens.$default-100,
+        $incoming-color: tokens.$default-800,
+        $outgoing-bg: tokens.$violet-700,
+        $outgoing-color: tokens.$default-50
     );
 }
