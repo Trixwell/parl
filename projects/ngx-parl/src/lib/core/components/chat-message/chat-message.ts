@@ -1,4 +1,4 @@
-import {Component, computed, inject, input, model, Signal} from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, model, signal, Signal} from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
@@ -26,6 +26,16 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
 
 export class ChatMessageComponent {
     private readonly utils = inject(UtilsService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly isCoarsePointer = signal(this.detectCoarsePointer());
+
+    private longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    private longPressOriginX = 0;
+    private longPressOriginY = 0;
+    private longPressOpened = false;
+    private longPressFromPointer = false;
+    private readonly longPressDurationMs = 480;
+    private readonly longPressMoveThresholdPx = 12;
 
     public currentMessage = input.required<ChatMessage>();
     public edit = model<boolean>(false);
@@ -36,6 +46,7 @@ export class ChatMessageComponent {
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
+    public requestMessageActions = model<ChatMessage | null>(null);
 
     public mobileMode = input<boolean>(false);
     public language = input<'en' | 'uk'>('en');
@@ -44,6 +55,8 @@ export class ChatMessageComponent {
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
     public readonly messageType = MessageType;
+    private readonly anonymAvatarPath = 'assets/ngx-parl/icons/avatar_anonym.svg';
+    public readonly avatarLoadFailed = signal(false);
 
     public readonly attachments: Signal<string[]> = computed(() => {
         const message = this.currentMessage();
@@ -86,19 +99,27 @@ export class ChatMessageComponent {
 
     public readonly avatarSrc: Signal<string> = computed(() => {
         const message = this.currentMessage();
-        const anonymFallback = 'assets/ngx-parl/icons/avatar_anonym.svg';
-        const managerFallback = 'assets/ngx-parl/icons/avatar_anonym.svg';
+        const anonymFallback = this.anonymAvatarPath;
         const logoTrimmed = (this.logoChat() ?? '').trim();
         const outgoingFallback =
-            logoTrimmed.length > 0 ? logoTrimmed : managerFallback;
+            logoTrimmed.length > 0 ? logoTrimmed : anonymFallback;
         const fallback =
             message.type === this.messageType.Incoming ? anonymFallback : outgoingFallback;
         const raw =
             message.avatar && String(message.avatar).trim().length > 0
                 ? message.avatar
                 : fallback;
+        const normalized = this.utils.normalizeSourcePath(raw);
 
-        return this.utils.normalizeSourcePath(raw);
+        return normalized || this.utils.normalizeSourcePath(anonymFallback);
+    });
+
+    public readonly displayedAvatarSrc: Signal<string> = computed(() => {
+        if (this.avatarLoadFailed()) {
+            return this.utils.normalizeSourcePath(this.anonymAvatarPath);
+        }
+
+        return this.avatarSrc();
     });
 
     public readonly isOutgoingMessage: Signal<boolean> = computed(
@@ -134,6 +155,27 @@ export class ChatMessageComponent {
         return message.type === this.messageType.Outgoing && message.pending !== true;
     });
 
+    public readonly useMobileMessageActions: Signal<boolean> = computed(
+        () => this.mobileMode() || this.isCoarsePointer(),
+    );
+
+    constructor() {
+        this.bindCoarsePointerListener();
+        this.destroyRef.onDestroy(() => this.clearLongPressTimer());
+        effect(() => {
+            this.avatarSrc();
+            this.avatarLoadFailed.set(false);
+        });
+    }
+
+    onAvatarError(): this {
+        if (!this.avatarLoadFailed()) {
+            this.avatarLoadFailed.set(true);
+        }
+
+        return this;
+    }
+
     openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement): this {
         if (!this.canOpenContextMenu()) {
             return this;
@@ -142,14 +184,114 @@ export class ChatMessageComponent {
         event.preventDefault();
         event.stopPropagation();
 
-        if (event instanceof MouseEvent) {
-            triggerElement.style.setProperty('inset-inline-start', `${event.clientX}px`);
-            triggerElement.style.setProperty('inset-block-start', `${event.clientY}px`);
+        if (this.useMobileMessageActions()) {
+            return this.openMobileActionSheet();
+        }
+
+        const point = this.getEventClientPoint(event);
+        if (point) {
+            triggerElement.style.setProperty('inset-inline-start', `${point.x}px`);
+            triggerElement.style.setProperty('inset-block-start', `${point.y}px`);
             triggerElement.style.removeProperty('left');
             triggerElement.style.removeProperty('top');
         }
 
         trigger.openMenu();
+
+        return this;
+    }
+
+    onMessagePointerDown(event: PointerEvent): this {
+        if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
+            return this;
+        }
+
+        if (event.pointerType === 'mouse') {
+            return this;
+        }
+
+        this.longPressFromPointer = true;
+
+        return this.beginLongPress(event.clientX, event.clientY);
+    }
+
+    onMessagePointerMove(event: PointerEvent): this {
+        return this.updateLongPressPosition(event.clientX, event.clientY);
+    }
+
+    onMessagePointerUp(): this {
+        this.clearLongPressTimer();
+        queueMicrotask(() => {
+            this.longPressFromPointer = false;
+        });
+
+        return this;
+    }
+
+    onMessageTouchStart(event: TouchEvent): this {
+        if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
+            return this;
+        }
+
+        if (this.longPressFromPointer) {
+            return this;
+        }
+
+        if (event.touches.length !== 1) {
+            this.clearLongPressTimer();
+
+            return this;
+        }
+
+        const touch = event.touches[0];
+
+        return this.beginLongPress(touch.clientX, touch.clientY);
+    }
+
+    onMessageTouchMove(event: TouchEvent): this {
+        if (this.longPressFromPointer) {
+            return this;
+        }
+
+        if (event.touches.length !== 1) {
+            this.clearLongPressTimer();
+
+            return this;
+        }
+
+        const touch = event.touches[0];
+
+        return this.updateLongPressPosition(touch.clientX, touch.clientY);
+    }
+
+    onMessageTouchEnd(): this {
+        if (!this.longPressFromPointer) {
+            this.clearLongPressTimer();
+        }
+
+        return this;
+    }
+
+    onMobileMenuButtonPointerDown(event: PointerEvent): this {
+        event.stopPropagation();
+        this.clearLongPressTimer();
+
+        return this;
+    }
+
+    openMobileActionSheet(event?: Event): this {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        if (!this.canOpenContextMenu()) {
+            return this;
+        }
+
+        this.clearLongPressTimer();
+        this.requestMessageActions.set(this.currentMessage());
+        queueMicrotask(() => this.requestMessageActions.set(null));
 
         return this;
     }
@@ -162,6 +304,14 @@ export class ChatMessageComponent {
     }
 
     openPreview(index: number, event: MouseEvent): this {
+        if (this.longPressOpened) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.longPressOpened = false;
+
+            return this;
+        }
+
         const list = this.attachments();
         if (!list.length) {
             return this;
@@ -201,6 +351,81 @@ export class ChatMessageComponent {
         const messageId = this.currentMessage().id;
         this.quickActionClick.set({actionId: action.id, messageId, value: content});
         queueMicrotask(() => this.quickActionClick.set(null));
+
+        return this;
+    }
+
+    private detectCoarsePointer(): boolean {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+            return false;
+        }
+
+        return window.matchMedia('(pointer: coarse)').matches;
+    }
+
+    private bindCoarsePointerListener(): this {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+            return this;
+        }
+
+        const mediaQuery = window.matchMedia('(pointer: coarse)');
+        const onChange = (event: MediaQueryListEvent) => {
+            this.isCoarsePointer.set(event.matches);
+        };
+
+        mediaQuery.addEventListener('change', onChange);
+        this.destroyRef.onDestroy(() => mediaQuery.removeEventListener('change', onChange));
+
+        return this;
+    }
+
+    private getEventClientPoint(event: Event): {x: number; y: number} | null {
+        if (event instanceof MouseEvent) {
+            return {x: event.clientX, y: event.clientY};
+        }
+
+        const touchEvent = event as TouchEvent;
+        const touch = touchEvent.touches?.[0] ?? touchEvent.changedTouches?.[0];
+        if (touch) {
+            return {x: touch.clientX, y: touch.clientY};
+        }
+
+        return null;
+    }
+
+    private clearLongPressTimer(): this {
+        if (this.longPressTimer !== null) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+
+        return this;
+    }
+
+    private beginLongPress(clientX: number, clientY: number): this {
+        this.clearLongPressTimer();
+        this.longPressOpened = false;
+        this.longPressOriginX = clientX;
+        this.longPressOriginY = clientY;
+        this.longPressTimer = setTimeout(() => {
+            this.longPressTimer = null;
+            this.longPressOpened = true;
+            this.openMobileActionSheet();
+        }, this.longPressDurationMs);
+
+        return this;
+    }
+
+    private updateLongPressPosition(clientX: number, clientY: number): this {
+        if (!this.longPressTimer) {
+            return this;
+        }
+
+        const deltaX = clientX - this.longPressOriginX;
+        const deltaY = clientY - this.longPressOriginY;
+        if (Math.hypot(deltaX, deltaY) > this.longPressMoveThresholdPx) {
+            this.clearLongPressTimer();
+        }
 
         return this;
     }

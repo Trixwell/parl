@@ -9,6 +9,7 @@
     padding: tokens.$space-5;
     background: rgba(tokens.$neutral-950, 0.6);
     z-index: tokens.$z-index-overlay;
+    touch-action: none;
 
     &__dialog {
         width: 400px;
@@ -81,6 +82,17 @@
         justify-content: center;
     }
 
+    &__viewport {
+        width: 100%;
+        overflow: hidden;
+        border-radius: tokens.$radius-medium-extra;
+        touch-action: none;
+        overscroll-behavior: contain;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
     &__image {
         display: block;
         width: 100%;
@@ -90,12 +102,23 @@
         border-radius: tokens.$radius-medium-extra;
         background: tokens.$neutral-50;
         cursor: pointer;
+        transform-origin: center center;
+        will-change: transform;
+        -webkit-user-drag: none;
+        user-select: none;
+        touch-action: none;
+        -webkit-touch-callout: none;
+
+        &--zoomed {
+            cursor: grab;
+        }
     }
 
     &__nav {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
+        z-index: 1;
         width: tokens.$space-7;
         height: tokens.$space-7;
         border-radius: tokens.$radius-round;

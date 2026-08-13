@@ -50,6 +50,7 @@ import {
 export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('chatFlowRef') flowRef?: ElementRef<HTMLElement>;
     @ViewChild('deleteConfirmDialog') deleteConfirmDialog?: ElementRef<HTMLElement>;
+    @ViewChild('messageActionsDialog') messageActionsDialog?: ElementRef<HTMLElement>;
 
     private utils = inject(UtilsService);
     private injector = inject(Injector);
@@ -63,6 +64,8 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public selectedForEdit = model.required<ChatMessage | null>();
     public requestDelete = model<number | null>(null);
+    public pendingActionsMessage = signal<ChatMessage | null>(null);
+    public messageActionsOpen = signal(false);
 
     public language = input<'en' | 'uk'>('en');
     public mobileMode = input<boolean>(false);
@@ -82,6 +85,8 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public deleteConfirmOpen = signal(false);
     public pendingDeleteMessageId = signal<number | null>(null);
+    public messageActionsInteractive = signal(true);
+    private messageActionsGuardTimer: ReturnType<typeof setTimeout> | null = null;
 
     public quickActionsByMessageId = computed(() => {
         const messages = this.messageList();
@@ -312,6 +317,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.teardownScrollContainer();
+        this.clearMessageActionsGuard();
     }
 
     startEdit(message: ChatMessage): this {
@@ -374,6 +380,61 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    onRequestMessageActions(message: ChatMessage | null): this {
+        if (!message) {
+            return this;
+        }
+
+        this.pendingActionsMessage.set(message);
+        this.messageActionsOpen.set(true);
+        this.messageActionsInteractive.set(false);
+        this.clearMessageActionsGuard();
+        this.messageActionsGuardTimer = setTimeout(() => {
+            this.messageActionsInteractive.set(true);
+            this.messageActionsGuardTimer = null;
+        }, 400);
+        afterNextRender(() => this.messageActionsDialog?.nativeElement.focus(), {injector: this.injector});
+
+        return this;
+    }
+
+    closeMessageActions(): this {
+        this.clearMessageActionsGuard();
+        this.messageActionsOpen.set(false);
+        this.pendingActionsMessage.set(null);
+        this.messageActionsInteractive.set(true);
+
+        return this;
+    }
+
+    onMessageActionsBackdropClick(): this {
+        if (!this.messageActionsInteractive()) {
+            return this;
+        }
+
+        return this.closeMessageActions();
+    }
+
+    onMessageActionsEdit(): this {
+        const message = this.pendingActionsMessage();
+        this.closeMessageActions();
+        if (message) {
+            return this.startEdit(message);
+        }
+
+        return this;
+    }
+
+    onMessageActionsDelete(): this {
+        const message = this.pendingActionsMessage();
+        this.closeMessageActions();
+        if (message) {
+            return this.onRequestDelete(message.id);
+        }
+
+        return this;
+    }
+
     closeDeleteConfirm(): this {
         this.deleteConfirmOpen.set(false);
         this.pendingDeleteMessageId.set(null);
@@ -394,6 +455,15 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     trackByMessageId(index: number, message: ChatMessage): string {
         return `${message.chat_id}-${message.type}-${message.id}-${index}`;
+    }
+
+    private clearMessageActionsGuard(): this {
+        if (this.messageActionsGuardTimer !== null) {
+            clearTimeout(this.messageActionsGuardTimer);
+            this.messageActionsGuardTimer = null;
+        }
+
+        return this;
     }
 
     protected readonly Math = Math;

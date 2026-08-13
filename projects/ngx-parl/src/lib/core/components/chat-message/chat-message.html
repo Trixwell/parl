@@ -2,18 +2,41 @@
      [ngClass]="{
        'message--outgoing': isOutgoingMessage(),
        'message--incoming': !isOutgoingMessage(),
-       'message--mobile': mobileMode()
+       'message--mobile': mobileMode(),
+       'message--touch-actions': useMobileMessageActions()
      }">
+    @if (canOpenContextMenu() && useMobileMessageActions()) {
+        <button type="button"
+                class="message__actions-button"
+                [attr.aria-label]="'chat.message_actions' | transloco: {__: language()}: language()"
+                (pointerdown)="onMobileMenuButtonPointerDown($event)"
+                (click)="openMobileActionSheet($event)">
+            <span class="message__actions-button-icon" aria-hidden="true"></span>
+        </button>
+    }
+
     @if (showAvatar()) {
         <div class="message__avatar">
-            <img [ngSrc]="avatarSrc()" width="36" height="36" alt="avatar" priority/>
+            <img [src]="displayedAvatarSrc()"
+                 width="36"
+                 height="36"
+                 alt="avatar"
+                 (error)="onAvatarError()"/>
         </div>
     }
 
     @if (showMessageBody()) {
         <div class="message__body"
              (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
-             (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)">
+             (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)"
+             (pointerdown)="onMessagePointerDown($event)"
+             (pointermove)="onMessagePointerMove($event)"
+             (pointerup)="onMessagePointerUp()"
+             (pointercancel)="onMessagePointerUp()"
+             (touchstart)="onMessageTouchStart($event)"
+             (touchmove)="onMessageTouchMove($event)"
+             (touchend)="onMessageTouchEnd()"
+             (touchcancel)="onMessageTouchEnd()">
             <button type="button"
                     class="message__menu-trigger"
                     aria-hidden="true"
