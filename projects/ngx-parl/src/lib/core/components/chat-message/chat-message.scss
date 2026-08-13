@@ -177,6 +177,44 @@
         pointer-events: none;
     }
 
+    &__actions-button {
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        align-self: center;
+        padding: tokens.$space-0;
+        border: none;
+        border-radius: tokens.$radius-round;
+        background: tokens.$neutral-100;
+        color: tokens.$neutral-600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+
+        &:hover,
+        &:focus-visible {
+            background: tokens.$neutral-200;
+            color: tokens.$neutral-800;
+        }
+
+        &:focus-visible {
+            outline: tokens.$border-2 solid tokens.$primary-500;
+            outline-offset: tokens.$space-1;
+        }
+    }
+
+    &__actions-button-icon {
+        display: block;
+        width: 4px;
+        height: 4px;
+        border-radius: tokens.$radius-round;
+        background: currentColor;
+        box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+    }
+
     &__image {
         display: block;
         width: 100%;
@@ -272,6 +310,15 @@
             .message__body {
                 border-bottom-right-radius: 0;
             }
+        }
+    }
+
+    &--touch-actions {
+        .message__body {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: pan-y;
         }
     }
 }

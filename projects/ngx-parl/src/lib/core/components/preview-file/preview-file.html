@@ -32,12 +32,23 @@
                         (click)="next()">
                 </button>
             }
-            <img [src]="currentSrc()"
-                 [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco: { index: activeIndex() + 1, total: srcList().length, __: language() }: language()"
-                 class="preview__image"
-                 (click)="next()"
-                 (keydown.enter)="$event.preventDefault(); next()"
-                 (keydown.space)="$event.preventDefault(); next()"/>
+            <div class="preview__viewport"
+                 #viewport
+                 (pointerdown)="onViewportPointerDown($event)"
+                 (pointermove)="onViewportPointerMove($event)"
+                 (pointerup)="onViewportPointerUp($event)"
+                 (pointercancel)="onViewportPointerUp($event)">
+                <img [src]="currentSrc()"
+                     #previewImage
+                     draggable="false"
+                     [attr.alt]="'chat.photo_preview_image_x_of_y' | transloco: { index: activeIndex() + 1, total: srcList().length, __: language() }: language()"
+                     class="preview__image"
+                     [class.preview__image--zoomed]="isZoomed()"
+                     [style.transform]="imageTransform()"
+                     (click)="onImageClick($event)"
+                     (keydown.enter)="$event.preventDefault(); next()"
+                     (keydown.space)="$event.preventDefault(); next()"/>
+            </div>
         </div>
         @if (srcList().length > 1) {
             <div class="preview__thumbs">

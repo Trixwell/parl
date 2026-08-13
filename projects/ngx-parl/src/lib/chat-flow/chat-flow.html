@@ -36,11 +36,46 @@
                         (quickActionClickChange)="quickActionClick.set($event)"
                         (editChange)="onEditChange(message.id, $event)"
                         (requestEditChange)="onRequestEdit($event)"
-                        (requestDeleteChange)="onRequestDelete($event)">
+                        (requestDeleteChange)="onRequestDelete($event)"
+                        (requestMessageActionsChange)="onRequestMessageActions($event)">
                     </lib-chat-message>
                 </div>
             }
         </div>
+
+        @if (messageActionsOpen()) {
+            <div #messageActionsDialog
+                 class="chat__message-actions"
+                 role="dialog"
+                 aria-modal="true"
+                 tabindex="-1"
+                 [attr.aria-label]="'chat.message_actions' | transloco: {__: language()}: language()"
+                 (keydown.escape)="closeMessageActions()">
+                <div class="chat__message-actions-backdrop"
+                     (click)="onMessageActionsBackdropClick()"></div>
+                <div class="chat__message-actions-panel">
+                    <button type="button"
+                            class="chat__message-actions-item"
+                            (click)="onMessageActionsEdit()">
+                        <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
+                             width="20" height="20" alt=""/>
+                        <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
+                    </button>
+                    <button type="button"
+                            class="chat__message-actions-item chat__message-actions-item--danger"
+                            (click)="onMessageActionsDelete()">
+                        <img ngSrc="assets/ngx-parl/icons/trash.svg"
+                             width="20" height="20" alt=""/>
+                        <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
+                    </button>
+                    <button type="button"
+                            class="chat__message-actions-item chat__message-actions-item--cancel"
+                            (click)="closeMessageActions()">
+                        <span>{{ 'chat.cancel' | transloco: {__: language()}: language() }}</span>
+                    </button>
+                </div>
+            </div>
+        }
 
         @if (deleteConfirmOpen()) {
             <div #deleteConfirmDialog

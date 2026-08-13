@@ -117,4 +117,63 @@ describe('ChatFlowComponent', () => {
         expect(component.deleteConfirmOpen()).toBe(false);
         expect(component.requestDelete()).toBeNull();
     });
+
+    it('opens message actions for a message', () => {
+        const message = createMessage(5);
+        component.onRequestMessageActions(message);
+
+        expect(component.messageActionsOpen()).toBe(true);
+        expect(component.pendingActionsMessage()).toBe(message);
+    });
+
+    it('ignores null message action requests', () => {
+        component.onRequestMessageActions(null);
+
+        expect(component.messageActionsOpen()).toBe(false);
+        expect(component.pendingActionsMessage()).toBeNull();
+    });
+
+    it('closes message actions and clears the pending message', () => {
+        component.onRequestMessageActions(createMessage(8));
+        component.closeMessageActions();
+
+        expect(component.messageActionsOpen()).toBe(false);
+        expect(component.pendingActionsMessage()).toBeNull();
+    });
+
+    it('edit from message actions starts edit and closes the sheet', () => {
+        const message = createMessage(9);
+        fixture.componentRef.setInput('messageListInput', [message]);
+        fixture.detectChanges();
+
+        component.onRequestMessageActions(message);
+        component.onMessageActionsEdit();
+
+        expect(component.messageActionsOpen()).toBe(false);
+        expect(component.pendingActionsMessage()).toBeNull();
+        expect(component.selectedForEdit()).toBe(message);
+        expect(message.edit).toBe(true);
+    });
+
+    it('delete from message actions opens delete confirm', () => {
+        const message = createMessage(10);
+        component.onRequestMessageActions(message);
+        component.onMessageActionsDelete();
+
+        expect(component.messageActionsOpen()).toBe(false);
+        expect(component.deleteConfirmOpen()).toBe(true);
+        expect(component.pendingDeleteMessageId()).toBe(10);
+    });
+
+    it('ignores the first backdrop click after opening actions so iOS ghost clicks do not close it', () => {
+        component.onRequestMessageActions(createMessage(12));
+
+        expect(component.messageActionsInteractive()).toBe(false);
+        component.onMessageActionsBackdropClick();
+        expect(component.messageActionsOpen()).toBe(true);
+
+        component.messageActionsInteractive.set(true);
+        component.onMessageActionsBackdropClick();
+        expect(component.messageActionsOpen()).toBe(false);
+    });
 });
