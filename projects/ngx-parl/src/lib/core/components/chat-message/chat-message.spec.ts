@@ -63,12 +63,12 @@ describe('ChatMessageComponent', () => {
         expect(component.canOpenContextMenu()).toBe(false);
     });
 
-    it('uses mobile actions when mobileMode is enabled', () => {
+    it('uses long-press for mobile actions and does not render an actions button', () => {
         fixture.componentRef.setInput('mobileMode', true);
         fixture.detectChanges();
 
         expect(component.useMobileMessageActions()).toBe(true);
-        expect(fixture.nativeElement.querySelector('.message__actions-button')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('.message__actions-button')).toBeNull();
     });
 
     it('opens the mobile action sheet for touch long-press', fakeAsync(() => {
@@ -107,19 +107,7 @@ describe('ChatMessageComponent', () => {
         expect(component.requestMessageActions()).toBeNull();
     }));
 
-    it('opens the mobile action sheet from the actions button', fakeAsync(() => {
-        fixture.componentRef.setInput('mobileMode', true);
-        fixture.detectChanges();
-
-        const click = new MouseEvent('click');
-        component.openMobileActionSheet(click);
-        expect(component.requestMessageActions()?.id).toBe(1);
-
-        flushMicrotasks();
-        expect(component.requestMessageActions()).toBeNull();
-    }));
-
-    it('does not show the mobile actions button for incoming messages', () => {
+    it('does not show an actions button for incoming messages', () => {
         fixture.componentRef.setInput('mobileMode', true);
         fixture.componentRef.setInput('currentMessage', createIncomingMessage());
         fixture.detectChanges();
@@ -151,6 +139,14 @@ describe('ChatMessageComponent', () => {
 
         expect(component.avatarLoadFailed()).toBe(true);
         expect(component.displayedAvatarSrc()).toContain('avatar_anonym.svg');
+    });
+
+    it('falls back to incomingAvatar for incoming messages without avatar', () => {
+        fixture.componentRef.setInput('incomingAvatar', 'https://cdn.example/peer.png');
+        fixture.componentRef.setInput('currentMessage', createIncomingMessage());
+        fixture.detectChanges();
+
+        expect(component.displayedAvatarSrc()).toBe('https://cdn.example/peer.png');
     });
 
     it('opens the mobile action sheet from a touch long-press', fakeAsync(() => {

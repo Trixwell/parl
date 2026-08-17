@@ -5,16 +5,6 @@
        'message--mobile': mobileMode(),
        'message--touch-actions': useMobileMessageActions()
      }">
-    @if (canOpenContextMenu() && useMobileMessageActions()) {
-        <button type="button"
-                class="message__actions-button"
-                [attr.aria-label]="'chat.message_actions' | transloco: {__: language()}: language()"
-                (pointerdown)="onMobileMenuButtonPointerDown($event)"
-                (click)="openMobileActionSheet($event)">
-            <span class="message__actions-button-icon" aria-hidden="true"></span>
-        </button>
-    }
-
     @if (showAvatar()) {
         <div class="message__avatar">
             <img [src]="displayedAvatarSrc()"
@@ -26,67 +16,91 @@
     }
 
     @if (showMessageBody()) {
-        <div class="message__body"
-             (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
-             (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)"
-             (pointerdown)="onMessagePointerDown($event)"
-             (pointermove)="onMessagePointerMove($event)"
-             (pointerup)="onMessagePointerUp()"
-             (pointercancel)="onMessagePointerUp()"
-             (touchstart)="onMessageTouchStart($event)"
-             (touchmove)="onMessageTouchMove($event)"
-             (touchend)="onMessageTouchEnd()"
-             (touchcancel)="onMessageTouchEnd()">
-            <button type="button"
-                    class="message__menu-trigger"
-                    aria-hidden="true"
-                    tabindex="-1"
-                    #menuTrigger="matMenuTrigger"
-                    #menuTriggerEl
-                    [matMenuTriggerFor]="messageMenu">
-            </button>
+        <div class="message__column">
+            <div class="message__body"
+                 (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
+                 (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)"
+                 (pointerdown)="onMessagePointerDown($event)"
+                 (pointermove)="onMessagePointerMove($event)"
+                 (pointerup)="onMessagePointerUp()"
+                 (pointercancel)="onMessagePointerUp()"
+                 (touchstart)="onMessageTouchStart($event)"
+                 (touchmove)="onMessageTouchMove($event)"
+                 (touchend)="onMessageTouchEnd()"
+                 (touchcancel)="onMessageTouchEnd()">
+                <button type="button"
+                        class="message__menu-trigger"
+                        aria-hidden="true"
+                        tabindex="-1"
+                        #menuTrigger="matMenuTrigger"
+                        #menuTriggerEl
+                        [matMenuTriggerFor]="messageMenu">
+                </button>
 
-            @if (attachments().length) {
-                <div class="message__attachments">
-                    @for (file of attachments(); track file; let i = $index) {
-                        <button type="button"
-                                class="message__image-button"
-                                (click)="openPreview(i, $event)"
-                                [attr.aria-label]="'chat.photo_preview' | transloco: {__: language()}: language()">
-                            <img [src]="file"
-                                 alt="attachment"
-                                 class="message__image"
-                                 loading="lazy"/>
-                        </button>
+                @if (attachments().length) {
+                    <div class="message__attachments">
+                        @for (file of attachments(); track file; let i = $index) {
+                            <button type="button"
+                                    class="message__image-button"
+                                    (click)="openPreview(i, $event)"
+                                    [attr.aria-label]="'chat.photo_preview' | transloco: {__: language()}: language()">
+                                <img [src]="file"
+                                     alt="attachment"
+                                     class="message__image"
+                                     loading="lazy"/>
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (showMessageBubble()) {
+                    <div class="message__bubble" tabindex="0">
+                        <div class="message__text">{{ currentMessage().content }}</div>
+
+                        @if (!mobileMode()) {
+                            <div class="message__meta">
+                                <time class="message__time">
+                                    {{ currentMessage().cr_time | date:'HH:mm' }}
+                                </time>
+                                @if (isOutgoingMessage()) {
+                                    @if (currentMessage().pending) {
+                                        <span class="message__loading" aria-label="Sending"></span>
+                                    } @else if (currentMessage().checked) {
+                                        <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
+                                             class="message__icon"
+                                             width="18" height="18" alt="hide"/>
+                                    } @else {
+                                        <img ngSrc="assets/ngx-parl/icons/no-check.svg"
+                                             class="message__icon"
+                                             width="18" height="18" alt="hide"/>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (mobileMode()) {
+                <div class="message__meta">
+                    <time class="message__time">
+                        {{ currentMessage().cr_time | date:'HH:mm' }}
+                    </time>
+                    @if (isOutgoingMessage()) {
+                        @if (currentMessage().pending) {
+                            <span class="message__loading" aria-label="Sending"></span>
+                        } @else if (currentMessage().checked) {
+                            <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
+                                 class="message__icon"
+                                 width="18" height="18" alt="hide"/>
+                        } @else {
+                            <img ngSrc="assets/ngx-parl/icons/no-check.svg"
+                                 class="message__icon"
+                                 width="18" height="18" alt="hide"/>
+                        }
                     }
                 </div>
             }
-
-            @if (showMessageBubble()) {
-                <div class="message__bubble" tabindex="0">
-                    <div class="message__text">{{ currentMessage().content }}</div>
-
-                    <div class="message__meta">
-                        <time class="message__time">
-                            {{ currentMessage().cr_time | date:'HH:mm' }}
-                        </time>
-                        @if (isOutgoingMessage()) {
-                            @if (currentMessage().pending) {
-                                <span class="message__loading" aria-label="Sending"></span>
-                            } @else if (currentMessage().checked) {
-                                <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
-                                     class="message__icon"
-                                     width="18" height="18" alt="hide"/>
-                            } @else {
-                                <img ngSrc="assets/ngx-parl/icons/no-check.svg"
-                                     class="message__icon"
-                                     width="18" height="18" alt="hide"/>
-                            }
-                        }
-                    </div>
-                </div>
-            }
-
         </div>
     }
 
@@ -106,8 +120,8 @@
         </div>
     }
 </div>
-@if (!hasQuickActionButtons()) {
-    <div class="message__user" [ngClass]="{'message__user--mobile': mobileMode()}">
+@if (!hasQuickActionButtons() && !mobileMode()) {
+    <div class="message__user">
         @if (isOutgoingMessage()) {
             <span class="message__user-name">{{ currentMessage().user }}</span>
         }
@@ -118,6 +132,7 @@
     <lib-preview-file [srcList]="previewList()"
                       [startIndex]="previewIndex()"
                       [language]="language()"
+                      [mobileMode]="mobileMode()"
                       [openerElement]="previewOpener()"
                       [closeHandler]="closePreviewHandler">
     </lib-preview-file>

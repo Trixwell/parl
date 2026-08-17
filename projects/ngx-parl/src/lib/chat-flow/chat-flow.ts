@@ -27,6 +27,7 @@ import {
     ParlQuickAction,
     ParlQuickActionClickEvent,
     ParlQuickActionsResolver,
+    ParlQuickActionsWhen,
     resolveParlQuickActions,
 } from '../core/entity/quick-actions';
 
@@ -69,7 +70,10 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
     public language = input<'en' | 'uk'>('en');
     public mobileMode = input<boolean>(false);
+    public hasMoreHistory = input<boolean>(true);
+    public quickActionsWhen = input<ParlQuickActionsWhen>(ParlQuickActionsWhen.ALWAYS);
     public logoChat = input<string>('');
+    public incomingAvatar = input<string>('');
     public logoChatSrc = computed(() => {
         const trimmed = (this.logoChat() ?? '').trim();
         const path =
@@ -92,9 +96,18 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         const messages = this.messageList();
         const resolver = this.quickActionsResolver();
         const isMobile = this.mobileMode();
+        const when = this.quickActionsWhen();
         const map = new Map<number, ParlQuickAction[]>();
 
+        if (when === ParlQuickActionsWhen.NEVER) {
+            return map;
+        }
+
         for (const message of messages) {
+            if (when === ParlQuickActionsWhen.MOBILE && !isMobile) {
+                continue;
+            }
+
             const actions = resolveParlQuickActions({message, isMobile}, resolver);
             if (actions.length > 0) {
                 map.set(message.id, actions);
@@ -175,7 +188,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
                 this.pendingHistoryRestore = false;
             }
 
-            if (hasFewerMessages) {
+            if (hasFewerMessages && this.hasMoreHistory()) {
                 this.pendingHistoryRestore = true;
                 queueMicrotask(() => this.loadHistory.set(true));
             }
@@ -239,6 +252,10 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     }
 
     onScrollUp(): this {
+        if (!this.hasMoreHistory()) {
+            return this;
+        }
+
         this.pendingHistoryRestore = true;
         this.loadHistory.set(true);
 
@@ -296,9 +313,14 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    isAtBottom(): boolean {
+        return this.isUserAtBottom;
+    }
+
     private observeScrollContainerForEmptySpace(element: HTMLElement): void {
         const checkAndLoadIfNeeded = () => {
             if (
+                this.hasMoreHistory() &&
                 this.messageList().length > 0 &&
                 element.scrollHeight <= element.clientHeight + 10 &&
                 !this.loadHistory()

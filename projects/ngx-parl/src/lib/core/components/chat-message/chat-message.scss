@@ -2,6 +2,7 @@
 @use '@angular/material' as mat;
 @use '../../../../styles/themes/primary/theme_primary';
 @use '../../../../styles/themes/secondary/theme_secondary';
+@use '../../../../styles/themes/secondary/tokens' as mobile;
 
 .message {
     display: flex;
@@ -32,6 +33,16 @@
         font: tokens.$font-body-m-400;
         border-radius: tokens.$radius-large;
         position: relative;
+    }
+
+    &__column {
+        display: contents;
+        min-width: 0;
+    }
+
+    &__text {
+        min-width: 0;
+        font-family: inter, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
     }
 
     &__bubble {
@@ -89,10 +100,6 @@
             outline: tokens.$border-2 solid tokens.$primary-500;
             outline-offset: tokens.$space-1;
         }
-    }
-
-    &__text {
-        min-width: 0;
     }
 
     &__meta {
@@ -175,44 +182,6 @@
         height: 1px;
         opacity: 0;
         pointer-events: none;
-    }
-
-    &__actions-button {
-        flex: 0 0 36px;
-        width: 36px;
-        height: 36px;
-        align-self: center;
-        padding: tokens.$space-0;
-        border: none;
-        border-radius: tokens.$radius-round;
-        background: tokens.$neutral-100;
-        color: tokens.$neutral-600;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-
-        &:hover,
-        &:focus-visible {
-            background: tokens.$neutral-200;
-            color: tokens.$neutral-800;
-        }
-
-        &:focus-visible {
-            outline: tokens.$border-2 solid tokens.$primary-500;
-            outline-offset: tokens.$space-1;
-        }
-    }
-
-    &__actions-button-icon {
-        display: block;
-        width: 4px;
-        height: 4px;
-        border-radius: tokens.$radius-round;
-        background: currentColor;
-        box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
     }
 
     &__image {
@@ -302,13 +271,134 @@
     }
 
     &--mobile {
-        .message__user {
-            padding-right: 5px!important;
+        align-items: flex-end;
+        width: 100%;
+        max-width: 100%;
+        gap: mobile.$space-4;
+        font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
+
+        .message__column {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            max-width: 100%;
+            gap: mobile.$space-2;
+        }
+
+        .message__avatar {
+            flex-basis: 32px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+
+            img {
+                width: 32px;
+                height: 32px;
+            }
+        }
+
+        .message__body {
+            width: fit-content;
+            max-width: 100%;
+            padding: mobile.$space-8 mobile.$space-12;
+            box-sizing: border-box;
+        }
+
+        .message__bubble {
+            display: block;
+        }
+
+        .message__text {
+            font: mobile.$font-body-s;
+            font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .message__meta {
+            padding: 0;
+            gap: mobile.$space-4;
+            min-height: 14px;
+        }
+
+        .message__time {
+            font: mobile.$font-caption-s;
+            color: var(--parl-mobile-muted, #{mobile.$default-300});
+            min-width: 0;
+        }
+
+        .message__icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .message__attachments {
+            margin-bottom: 0;
+            gap: mobile.$space-4;
+
+            &:has(+ .message__bubble) {
+                margin-bottom: mobile.$space-4;
+            }
+        }
+
+        .message__image {
+            border-radius: mobile.$radius-16;
+            height: auto;
+        }
+
+        &.message--incoming {
+            margin-right: auto;
+
+            .message__column {
+                align-items: flex-start;
+                max-width: calc(100% - 32px - #{mobile.$space-4});
+            }
+
+            .message__body {
+                background: var(--parl-mobile-incoming-bg, #{mobile.$default-50});
+                color: var(--parl-mobile-incoming-color, #{mobile.$default-900});
+                border: mobile.$border-1 solid var(--parl-mobile-incoming-border, #{mobile.$violet-100});
+                border-radius: mobile.$radius-16 mobile.$radius-16 mobile.$radius-16 0;
+            }
+
+            .message__bubble {
+                border-top-left-radius: 0;
+            }
+
+            .message__meta {
+                justify-content: flex-start;
+            }
         }
 
         &.message--outgoing {
+            margin-left: auto;
+
+            .message__column {
+                align-items: flex-end;
+                margin-left: auto;
+            }
+
             .message__body {
-                border-bottom-right-radius: 0;
+                background: var(--parl-mobile-outgoing-bg, #{mobile.$violet-700});
+                color: var(--parl-mobile-outgoing-color, #{mobile.$default-50});
+                border: none;
+                border-radius: mobile.$radius-16 mobile.$radius-16 0 mobile.$radius-16;
+            }
+
+            .message__bubble {
+                border-top-right-radius: 0;
+            }
+
+            .message__meta {
+                justify-content: flex-end;
+            }
+
+            .message__time {
+                color: var(--parl-mobile-muted, #{mobile.$default-300});
+            }
+
+            .message__icon {
+                filter: invert(48%) sepia(38%) saturate(1400%) hue-rotate(209deg) brightness(98%) contrast(92%);
             }
         }
     }

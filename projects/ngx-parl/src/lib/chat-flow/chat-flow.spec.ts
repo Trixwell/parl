@@ -1,5 +1,5 @@
 import {provideHttpClient} from '@angular/common/http';
-import {ComponentFixture, TestBed, fakeAsync, flushMicrotasks} from '@angular/core/testing';
+import {ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick} from '@angular/core/testing';
 
 import {ChatMessage} from '../core/entity/chat';
 import {provideNgxParl} from '../ngx-parl.providers';
@@ -176,4 +176,21 @@ describe('ChatFlowComponent', () => {
         component.onMessageActionsBackdropClick();
         expect(component.messageActionsOpen()).toBe(false);
     });
+
+    it('does not pulse loadHistory on scroll-up when hasMoreHistory is false', () => {
+        fixture.componentRef.setInput('hasMoreHistory', false);
+        fixture.detectChanges();
+
+        component.onScrollUp();
+
+        expect(component.loadHistory()).toBe(false);
+    });
+
+    it('pulses loadHistory on scroll-up when hasMoreHistory is true', fakeAsync(() => {
+        component.onScrollUp();
+
+        expect(component.loadHistory()).toBe(true);
+        tick();
+        expect(component.loadHistory()).toBe(false);
+    }));
 });

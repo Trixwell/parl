@@ -51,6 +51,7 @@ export class ChatMessageComponent {
     public mobileMode = input<boolean>(false);
     public language = input<'en' | 'uk'>('en');
     public logoChat = input<string>('');
+    public incomingAvatar = input<string>('');
     public quickActions = input<ParlQuickAction[]>([]);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
@@ -101,10 +102,13 @@ export class ChatMessageComponent {
         const message = this.currentMessage();
         const anonymFallback = this.anonymAvatarPath;
         const logoTrimmed = (this.logoChat() ?? '').trim();
+        const incomingTrimmed = (this.incomingAvatar() ?? '').trim();
         const outgoingFallback =
             logoTrimmed.length > 0 ? logoTrimmed : anonymFallback;
+        const incomingFallback =
+            incomingTrimmed.length > 0 ? incomingTrimmed : anonymFallback;
         const fallback =
-            message.type === this.messageType.Incoming ? anonymFallback : outgoingFallback;
+            message.type === this.messageType.Incoming ? incomingFallback : outgoingFallback;
         const raw =
             message.avatar && String(message.avatar).trim().length > 0
                 ? message.avatar
@@ -268,13 +272,6 @@ export class ChatMessageComponent {
         if (!this.longPressFromPointer) {
             this.clearLongPressTimer();
         }
-
-        return this;
-    }
-
-    onMobileMenuButtonPointerDown(event: PointerEvent): this {
-        event.stopPropagation();
-        this.clearLongPressTimer();
 
         return this;
     }

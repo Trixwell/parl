@@ -20,12 +20,20 @@ export class ChatStartDayPipe implements PipeTransform {
 
         const valueDate = new Date(value);
         const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
 
         const isToday = datePipe.transform(valueDate, 'shortDate') === datePipe.transform(today, 'shortDate');
+        if (isToday) {
+            return locale.startsWith('uk') ? 'Сьогодні' : 'Today';
+        }
 
-        return isToday
-            ? (locale.startsWith('uk') ? 'Сьогодні' : 'Today')
-            : (datePipe.transform(valueDate, format) ?? '');
+        const isYesterday = datePipe.transform(valueDate, 'shortDate') === datePipe.transform(yesterday, 'shortDate');
+        if (isYesterday) {
+            return locale.startsWith('uk') ? 'Вчора' : 'Yesterday';
+        }
+
+        return datePipe.transform(valueDate, format) ?? '';
     }
 
 }

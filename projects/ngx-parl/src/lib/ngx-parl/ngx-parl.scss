@@ -2,11 +2,85 @@
 @use '@angular/material' as mat;
 @use '../../styles/themes/primary/theme_primary';
 @use '../../styles/themes/secondary/theme_secondary';
+@use '../../styles/themes/secondary/tokens' as mobileTokens;
+
+:host {
+    display: block;
+}
+
+:host(.ngx-parl--fill) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+:host(.ngx-parl--keyboard-open) {
+    --ion-safe-area-bottom: 0px;
+}
+
+:host(.ngx-parl--mobile) {
+    text-align: start;
+
+    font-family: inter, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+
+    .modal-chat__content {
+        background: var(--parl-mobile-chat-bg, #{mobileTokens.$default-50});
+    }
+
+    app-input-message {
+        display: block;
+        width: 100%;
+        align-self: stretch;
+    }
+
+    ::ng-deep .chat {
+        background: var(--parl-mobile-chat-bg, #{mobileTokens.$default-50});
+    }
+}
 
 .modal-chat {
     width: 800px;
     height: 600px;
     border-radius: tokens.$radius-large;
+    box-sizing: border-box;
+    padding-bottom: var(--parl-keyboard-inset, 0px);
+    transition: padding-bottom 160ms ease;
+
+    &--fill {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: 0;
+        padding-bottom: calc(var(--parl-keyboard-inset, 0px) + var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+    }
+
+    &--fill &__body {
+        min-height: 0;
+        flex: 1 1 auto;
+    }
+
+    &--fill &__content {
+        min-height: 0;
+    }
+
+    &--fill &__header {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    &--fill &__content {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    &--fill &__content--header {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 
     &__body {
         display: flex;

@@ -1,8 +1,12 @@
 @use '../../styles/tokens' as tokens;
 @use '@angular/material' as mat;
+@use '../../styles/themes/secondary/tokens' as mobile;
 
 :host {
     display: block;
+    width: 100%;
+    flex-shrink: 0;
+    text-align: start;
 }
 
 .message {
@@ -35,6 +39,7 @@
             position: relative;
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: tokens.$margin-3;
             flex: 1;
             min-width: 0;
@@ -66,7 +71,9 @@
     }
 
     &__input {
-        flex: 1 1 auto;
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
         min-height: var(--lh);
         line-height: var(--lh);
         font: tokens.$font-body-m-400;
@@ -74,10 +81,11 @@
         border: none;
         background: transparent;
         color: tokens.$neutral-800;
-        box-sizing: content-box;
+        box-sizing: border-box;
         resize: none;
         white-space: pre-wrap;
         overflow-wrap: break-word;
+        text-align: start;
         caret-color: tokens.$primary-700;
         transition: height 160ms ease;
         padding: 0 tokens.$margin-1 0 0;
@@ -90,6 +98,18 @@
             pointer-events: none;
             display: inline-block;
             animation: subtle-rise .18s ease both;
+        }
+
+        &--native {
+            width: 100%;
+            appearance: none;
+            font-family: inter, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            text-align: start;
+
+            &::placeholder {
+                color: tokens.$neutral-400;
+                text-align: start;
+            }
         }
     }
 
@@ -279,13 +299,152 @@
             white-space: nowrap;
         }
     }
+
+    &--mobile {
+        --lh: 18px;
+        --max-rows: 5;
+        width: 100%;
+        align-self: stretch;
+        background: var(--parl-mobile-chat-bg, #{mobile.$default-50});
+        border-top: none;
+        border-radius: 0;
+        margin-top: 0;
+        padding: mobile.$space-12 mobile.$space-16;
+        gap: mobile.$space-8;
+        box-shadow: none;
+
+        .message__wrap {
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+            align-items: center;
+            min-height: 48px;
+            padding: mobile.$space-8 mobile.$space-16;
+            background: var(--parl-mobile-composer-bg, #{mobile.$default-50});
+            border: mobile.$border-1 solid var(--parl-mobile-composer-border, #{mobile.$violet-100});
+            border-radius: mobile.$radius-1000;
+            gap: mobile.$space-8;
+
+            &--input {
+                padding: 0;
+                gap: mobile.$space-8;
+                justify-content: flex-start;
+            }
+        }
+
+        .message__button {
+            flex: 0 0 auto;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                transform: none;
+            }
+
+            &--emoji {
+                touch-action: manipulation;
+                pointer-events: auto;
+            }
+
+            &--send:disabled {
+                opacity: 0.4;
+            }
+        }
+
+        .message__icon {
+            width: 20px;
+            height: 20px;
+
+            &:not(.message__icon--file):hover,
+            &--focus,
+            &--filled {
+                filter: none;
+            }
+
+            &--attach {
+                filter: invert(62%) sepia(0%) saturate(0%) hue-rotate(136deg) brightness(92%) contrast(86%);
+            }
+
+            &--send {
+                filter: invert(52%) sepia(44%) saturate(1200%) hue-rotate(209deg) brightness(98%) contrast(92%);
+            }
+        }
+
+        .message__input {
+            flex: 1 1 0;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: start;
+            font: mobile.$font-body-s;
+            font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
+            caret-color: var(--parl-mobile-caret, #{mobile.$violet-700});
+
+            &::placeholder {
+                color: var(--parl-mobile-placeholder, #{mobile.$default-300});
+                text-align: start;
+            }
+        }
+
+        .message__icon--emoji,
+        .message__icon--keyboard {
+            filter: invert(62%) sepia(0%) saturate(0%) hue-rotate(136deg) brightness(92%) contrast(86%);
+        }
+
+        .message__emoji {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex: 0 0 320px;
+            align-self: stretch;
+            width: 100%;
+            min-width: 0;
+            height: 320px;
+            margin: 0;
+            background: var(--parl-mobile-composer-bg, #{mobile.$default-50});
+            border: mobile.$border-1 solid var(--parl-mobile-composer-border, #{mobile.$violet-100});
+            border-radius: mobile.$radius-16;
+            overflow: hidden;
+
+            ::ng-deep em-emoji-picker {
+                display: flex !important;
+                flex: 1 1 auto;
+                box-sizing: border-box;
+                width: 100% !important;
+                min-width: 100% !important;
+                max-width: none !important;
+                height: 100% !important;
+                border: none;
+                box-shadow: none;
+                --shadow: 0 0 0 0 transparent;
+                --rgb-background: 254, 254, 254;
+                --rgb-input: 239, 239, 239;
+                --rgb-color: 48, 48, 48;
+                --rgb-accent: 89, 74, 225;
+                --border-radius: 16px;
+                --font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            }
+        }
+
+        &.message--emoji-open {
+            padding-bottom: 0;
+        }
+    }
 }
 
 .hidden {
     position: absolute;
+    overflow: hidden;
     opacity: 0;
     width: 0;
     height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
     pointer-events: none;
 }
 

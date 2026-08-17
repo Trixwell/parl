@@ -28,6 +28,7 @@ export class PreviewFile implements OnDestroy, AfterViewInit {
     public startIndex = input<number>(0);
     public title = input<string>('');
     public language = input<'en' | 'uk'>('en');
+    public mobileMode = input<boolean>(false);
     public openerElement = input<HTMLElement | null>(null);
     public closeHandler = input<(() => unknown) | null>(null);
     public focusTrapFactory = inject(FocusTrapFactory);
@@ -52,7 +53,12 @@ export class PreviewFile implements OnDestroy, AfterViewInit {
     );
 
     private readonly minScale = 1;
-    private readonly maxScale = 4;
+    private readonly desktopMaxScale = 4;
+    private readonly mobileMaxScale = 5;
+
+    private currentMaxScale(): number {
+        return this.mobileMode() ? this.mobileMaxScale : this.desktopMaxScale;
+    }
     private readonly doubleTapScale = 2.5;
     private readonly doubleTapMs = 280;
     private readonly doubleTapDistancePx = 24;
@@ -645,7 +651,7 @@ export class PreviewFile implements OnDestroy, AfterViewInit {
     }
 
     private applyZoom(nextScale: number, nextX: number, nextY: number): this {
-        const clampedScale = Math.min(this.maxScale, Math.max(this.minScale, nextScale));
+        const clampedScale = Math.min(this.currentMaxScale(), Math.max(this.minScale, nextScale));
         if (clampedScale <= 1.01) {
             this.scale.set(1);
             this.translateX.set(0);
