@@ -1,4 +1,6 @@
-<div class="modal-chat" [ngClass]="'flow-theme-' + theme()">
+<div class="modal-chat"
+     [class.modal-chat--fill]="isFillLayout()"
+     [ngClass]="'flow-theme-' + theme()">
     <div class="modal-chat__body">
         @if (header()) {
             <header class="modal-chat__header" mat-dialog-title>
@@ -63,7 +65,10 @@
                            (requestDeleteChange)="onRequestDelete($event)"
                            [language]="language()"
                            [logoChat]="logoChat()"
+                           [incomingAvatar]="incomingAvatar()"
                            [mobileMode]="mobileMode()"
+                           [hasMoreHistory]="hasMoreHistory()"
+                           [quickActionsWhen]="quickActionsWhen()"
                            [quickActionsResolver]="quickActionsResolver()"
                            [quickActionClick]="quickActionClick()"
                            (quickActionClickChange)="onQuickActionClick($event)"
@@ -73,6 +78,9 @@
 
             <app-input-message [editMessage]="selectedForEdit()"
                                [language]="language()"
+                               [autoFocus]="autoFocus()"
+                               [mobileMode]="mobileMode()"
+                               [(emojiPickerOpen)]="emojiPickerOpen"
                                (cancelEditChange)="onCancelEdit($event)"
                                (input_textChange)="sendMessage($event)">
                 @if (ai_run_in_progress) {

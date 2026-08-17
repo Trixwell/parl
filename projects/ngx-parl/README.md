@@ -2,53 +2,41 @@
 
 ## Overview
 
-![NgxParl Preview](https://raw.githubusercontent.com/Trixwell/parl/main/projects/ngx-parl/src/assets/img/chat_view.png)
+![chat_view.png](chat_view.png)
 
-NgxParl is an Angular chat component that renders a fully interactive, customizable messaging interface. It supports features such as real-time message updates from external sources, sending and editing messages, deleting messages, day separators, and smooth auto-scrolling. The component is backend-agnostic, works with any data source, and integrates seamlessly with Angular Material, making it easy to plug into different projects as an open-source chat UI.
+NgxParl is a backend-agnostic Angular 21 chat UI. It renders the messenger, composer, attachments, scroll, and mobile gestures. The host application owns HTTP, STOMP, sessions, and business rules.
+
+Library class: `NgxParlComponent`. Selector: `ngx-parl`.
 
 # GitHub Repository: [Trixwell/parl](https://github.com/Trixwell/parl)
 
 ## Installation
 
-To use [NgxParl](https://www.npmjs.com/package/@trixwell/ngx-parl), ensure you have Angular and Angular Material installed. Then, import the component into your module:
-
 ```
 npm install @trixwell/ngx-parl
 ```
 
-## Required peer dependencies:
+## Required peer dependencies
 
 ```
-npm install @angular/material
-npm install @ngneat/transloco
+npm install @angular/material @angular/cdk @ngneat/transloco ngx-infinite-scroll
 ```
 
-In your app.module.ts:
+`@ionic/angular` and `@ionic/core` are optional peers. Ionic is not imported by the library. For a full-page Ionic chat, use `[layout]="'fill'"`, disable `ion-content` scrolling, and pass `[keyboardInset]` from the host.
+
+## Providers
 
 ```
-import { NgxParl } from 'ngx-parl';
+import {provideNgxParl, NgxParlComponent} from '@trixwell/ngx-parl';
 
-@NgModule({
-declarations: [AppComponent],
-imports: [NgxParl],
-bootstrap: [AppComponent],
-})
-export class AppModule {}
-```
-
-Add the NgxParl providers to your application configuration:
-
-```
 export const appConfig: ApplicationConfig = {
-    providers: [provideNgxParl()] 
-}
+    providers: [provideHttpClient(), provideNgxParl()]
+};
 ```
 
-Enables i18n, translations and core chat configuration
+`provideNgxParl()` registers Transloco (`en` / `uk`) and locales. `provideHttpClient()` is required because the library injects `HttpClient`.
 
 ## Assets Setup
-
-To enable media files (icons, images, etc.) used by @trixwell/ngx-parl, you must add the library’s assets path to your project’s angular.json:
 
 ```
 "assets": [
@@ -60,176 +48,116 @@ To enable media files (icons, images, etc.) used by @trixwell/ngx-parl, you must
 ]
 ```
 
-This makes the assets available at:
+Assets are available at `assets/ngx-parl/...`.
 
-```
-assets/ngx-parl/...
-```
+## Public API
 
-## Signal Data
+Import from `@trixwell/ngx-parl`:
 
-|         Name         |           Type            |                                                    Description                                                     |
-|:--------------------:|:-------------------------:|:------------------------------------------------------------------------------------------------------------------:|
-|        header        |          boolean          |                              Display the chat title with the name of the interlocutor                              |
-|        theme         |          string           |                             Choose a theme color   (```primary``` or ```secondary```)                              |
-|       language       |          string           |                               Set language (```uk``` or ```en```). Default ```en```                                |
-|     messageList      |       ChatMessage[]       |                                      List of chat messages, user information                                       |
-|    messageUpdate     |        ChatMessage        |                         Incoming message from external source (signal/subject/observable)                          |
-|    messageAction     |    MessageActionEvent     |                                       Emits chat events: send, edit, delete                                        |
-|     loadHistory      |          boolean          |                                            Use scroll for load history                                             |
-|     incomingUser     |          string           |                                             User writing in messenger                                              |
-|    transportType     |          string           |                                       Transport type label (Telegram, etc.)                                        |
-|  transportTypeIcon   |          string           |                                 Path to transport icon (e.g. assets/ngx-parl/...)                                  |
-|       logoChat       |          string           | Optional. Chat header and outgoing default avatar; use `[logoChat]="logoChat()"`. Defaults to the anonymous avatar |
-|      mobileMode      |          boolean          |                             Enables mobile UI behavior (e.g. outgoing avatar, layout)                              |
-| quickActionsResolver | ParlQuickActionsResolver  |           Optional. Custom mapping; if omitted, `message.actions` uses `defaultParlQuickActionsResolver`           |
-| quickActionsAutoSend |          boolean          |                                Auto-send quick action text on click. Default `true`                                |
-|   quickActionClick   | ParlQuickActionClickEvent |                                Emits when a quick action is clicked (two-way bind)                                 |
+- `NgxParlComponent`, `provideNgxParl`
+- `ChatMessage`, `ChatMessageDTO`, `MessageActionEvent`, `MessageType`
+- `FlowTheme`, `ParlLayout`
+- `ParlQuickAction`, `ParlQuickActionsResolver`, `ParlQuickActionsWhen`, `defaultParlQuickActionsResolver`
 
-## Scrolling to the Bottom
+There are no `@Output()` events. Bind `model()` two-way (`[(messageList)]`, `[(messageAction)]`, `[(loadHistory)]`, …).
 
-Scrolling to the latest message is handled internally via the scrollToBottomTrigger signal.
+## Inputs and models
 
-To trigger scrolling programmatically, update the scrollToBottomTrigger value (for example, increment it). Each update triggers a scroll to the bottom.
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| `layout` | `'dialog' \| 'fill'` | `'dialog'` | Dialog keeps 800×600. Fill stretches to the host. |
+| `header` | `boolean` | `true` | Title bar with hide/close. |
+| `theme` | `FlowTheme` | `primary` | `FlowTheme.PRIMARY` or `FlowTheme.SECONDARY`. |
+| `language` | `'en' \| 'uk'` | `'en'` | Transloco language. |
+| `messageList` | `ChatMessage[]` | `[]` | Canonical list. Two-way. |
+| `messageUpdate` | `ChatMessage` | | Incoming upsert. Scrolls only when the user is at the bottom. |
+| `messageAction` | `MessageActionEvent` | | Pulse: `send` / `edit` / `delete`, then `null`. |
+| `loadHistory` | `boolean` | `false` | Pulse when older messages are needed. |
+| `hasMoreHistory` | `boolean` | `true` | Stop history pulses when the host has no older pages. |
+| `incomingUser` | `string` | `''` | Header name. |
+| `transportType` | `string` | `''` | Header transport label. |
+| `transportTypeIcon` | `string` | `''` | Header transport icon. |
+| `logoChat` | `string` | `''` | Outgoing default avatar and (desktop) list header icon. Empty uses the anonymous icon. |
+| `incomingAvatar` | `string` | `''` | Incoming default avatar when a message has no `avatar`. |
+| `mobileMode` | `boolean` | `false` | Mobile layout, long-press action sheet, native textarea composer, fullscreen image preview. |
+| `keyboardInset` | `number` | `0` | Keyboard overlap in CSS pixels. Host measures; Parl applies padding. |
+| `autoFocus` | `boolean` | `true` | Focus the composer on init. Set `false` on mobile so the IME does not open by itself. |
+| `scrollToBottomOnKeyboard` | `boolean` | `true` | Scroll to latest when `keyboardInset` becomes greater than 0. |
+| `quickActionsResolver` | `ParlQuickActionsResolver` | | Custom mapping. Default uses `message.actions`. |
+| `quickActionsWhen` | `ParlQuickActionsWhen` | `ParlQuickActionsWhen.ALWAYS` | Gate for default and custom resolvers. |
+| `quickActionsAutoSend` | `boolean` | `true` | Send `action.value` on click. |
+| `quickActionClick` | `ParlQuickActionClickEvent` | | Click pulse. Two-way. |
+| `hideHandler` / `closeHandler` | `() => unknown` | | Header actions. |
 
-- use the scrollToBottom() to control scrolling down.
-- loadHistory is used only for loading older messages and does not control scrolling.
+## Host methods
+
+- `scrollToBottom()` — jump to the latest message.
+- `confirmPending(tempId, dto)` — replace an optimistic message after the backend ACK.
+- `rejectPending(tempId)` — remove an optimistic message on send failure.
+
+Optimistic sends use **negative temp ids** so they cannot collide with backend ids.
+
+## Scrolling
+
+Inner `.chat__flow` owns scroll. `loadHistory` is only a request for older pages; it does not scroll.
 
 ```
 this.scrollToBottomTrigger.update(value => value + 1);
 ```
 
-# Example Usage
-
-## Component Setup
+## Ionic fill-page recipe
 
 ```
-public header = input<boolean>(true);
-public messageList = model<ChatMessage[]>([]);
-public messageUpdate = model<ChatMessage>();
-public logoChat = signal('');
+<ion-content [scrollY]="false">
+  <ngx-parl [layout]="'fill'"
+            [mobileMode]="true"
+            [autoFocus]="false"
+            [keyboardInset]="keyboardInset()"
+            [incomingAvatar]="peerAvatarUrl()"
+            [(messageList)]="messageList"
+            [(messageAction)]="messageAction"
+            [(loadHistory)]="loadHistory"
+            [hasMoreHistory]="hasMoreHistory()">
+  </ngx-parl>
+</ion-content>
 ```
 
-## Entity
-
-```
-export interface ChatMessageDTO {
-    id: number;
-    chat_id: number;
-    cr_time: string; // ISO or 'YYYY-MM-DD HH:mm:ss'
-    type: ChatMessageType;
-    transport_type?: string | null;
-    transport_type_icon?: string | null;
-    user: string;
-    content: string;
-    avatar?: string | null;
-    file_path?: string[] | [] | null;
-    file_list?: File[] | [] | null;
-    checked?: boolean | null;
-    pending?: boolean;
-    actions?: ChatQuickButton[] | null;
-}
-
-export type ChatMessageType = 'incoming' | 'outgoing';
-
-export interface ChatQuickButton {
-    id: number;
-    title: string;
-    value: string;
-}
-
-export interface MessageActionEvent {
-    action: MessageActionType;
-    chatMessageId?: number;
-    content: string;
-    file_path?: string[];
-    file_list?: File[];
-    user_id?: number;
-    user?: string;
-}
-```
-
-## Quick actions
-
-If your `ChatMessage` contains `actions`, they are shown as quick action buttons for **outgoing** messages in both desktop and mobile layouts (`mobileMode` does not hide them).
-
-- If you omit `[quickActionsResolver]`, the library uses `defaultParlQuickActionsResolver`, which maps `message.actions` to buttons.
-- Provide a custom `[quickActionsResolver]` to filter, reorder, or replace actions; the context includes `isMobile` if you need different behavior per layout.
-- `ChatQuickButton.title` is the button text; `ChatQuickButton.value` is the text that will be sent.
-- Each action must include a stable `id`.
-- `quickActionsAutoSend` defaults to `true` (clicking a quick action triggers `sendMessage()`).
-
-### Types
-
-```
-export interface ParlQuickAction {
-    id: string;
-    title: string;
-    value: string;
-    disabled?: boolean;
-}
-
-export interface ParlQuickActionContext {
-    message: ChatMessage;
-    isMobile: boolean;
-}
-
-export interface ParlQuickActionClickEvent {
-    actionId: string;
-    messageId: number;
-    value: string;
-}
-
-export type ParlQuickActionsResolver = (context: ParlQuickActionContext) => ParlQuickAction[];
-
-export function defaultParlQuickActionsResolver(context: ParlQuickActionContext): ParlQuickAction[];
-```
-
-### Example resolver
-
-```
-public quickActionsResolver: ParlQuickActionsResolver = ({ message }) => {
-    if (message.type !== 'outgoing') {
-        return [];
-    }
-
-    const actions = message.actions ?? [];
-    return actions.map((a) => ({
-        id: String(a.id),
-        title: a.title,   // button text
-        value: a.value,   // sent text
-    }));
-};
-```
-
-## Mobile mode
-
-Set `[mobileMode]="true"` to enable mobile UI behavior:
-
-- Outgoing message avatars are hidden to save space.
-- Quick actions use the default resolver from `message.actions` when `[quickActionsResolver]` is omitted, or your custom resolver when set (desktop and mobile).
-- Quick actions are shown as a separate “buttons-only” outgoing message when the resolver returns actions for that message.
-
-To use quick actions:
-
-- Put `actions` on outgoing `ChatMessage` instances, and optionally omit `[quickActionsResolver]` to use the default mapping.
-- Or provide `[quickActionsResolver]` for full control.
-- Optionally bind `[(quickActionClick)]` to observe clicks (analytics/logging).
-- Keep `[quickActionsAutoSend]="true"` to send `action.value` on click (default).
+Keep Capacitor / native keyboard measurement in the application. Pass the overlap into `[keyboardInset]`.
 
 ## Template
 
 ```
-<ngx-parl [header]="header()"
+<ngx-parl [header]="true"
+          [layout]="'dialog'"
+          [theme]="theme()"
           [(messageList)]="messageList"
           [(messageUpdate)]="messageUpdate"
           [(messageAction)]="messageAction"
+          [(loadHistory)]="loadHistory"
+          [hasMoreHistory]="hasMoreHistory()"
+          [quickActionsWhen]="quickActionsWhen"
           [quickActionsAutoSend]="true"
-          [mobileMode]="false"
+          [mobileMode]="mobileMode()"
           [(quickActionClick)]="quickActionClick"
           [transportType]="transportType()"
           [transportTypeIcon]="transportTypeIcon()"
-          [(isScrolledToTop)]="isScrolledToTop"
           [logoChat]="logoChat()">
 </ngx-parl>
 ```
+
+## Quick actions
+
+Outgoing `message.actions` become buttons. Set `quickActionsWhen` to `ParlQuickActionsWhen.MOBILE` to hide them on desktop without a custom resolver.
+
+`quickActionsAutoSend` defaults to `true` and sends once per click.
+
+## Mobile mode
+
+`[mobileMode]="true"`:
+
+- Hides outgoing avatars and the sender name under the bubble.
+- Uses long-press on the bubble + bottom action sheet (edit / delete). No kebab button.
+- Incoming bubbles are white with a light violet border; outgoing bubbles use violet with timestamps under the bubble.
+- Pill composer with attach on the left and send on the right.
+- Native iOS and Android emoji from the system keyboard (Apple Color Emoji / Noto Color Emoji fallbacks).
+- On-screen send button is always available; Enter still sends, Shift+Enter inserts a newline.

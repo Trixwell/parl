@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, signal, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
@@ -19,9 +19,9 @@ import {
     TranslocoService,
 } from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
-import {FlowTheme} from '../core/entity/theme';
+import {FlowTheme, ParlLayout} from '../core/entity/theme';
 import {distinctUntilChanged, map, Subscription, switchMap} from 'rxjs';
-import {ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entity/quick-actions';
+import {ParlQuickActionClickEvent, ParlQuickActionsResolver, ParlQuickActionsWhen} from '../core/entity/quick-actions';
 
 @Component({
     selector: 'ngx-parl',
@@ -34,6 +34,13 @@ import {ParlQuickActionClickEvent, ParlQuickActionsResolver} from '../core/entit
     templateUrl: './ngx-parl.html',
     styleUrl: './ngx-parl.scss',
     providers: [],
+    host: {
+        '[class.ngx-parl--fill]': 'isFillLayout()',
+        '[class.ngx-parl--mobile]': 'mobileMode()',
+        '[class.ngx-parl--keyboard-open]': 'isKeyboardOpen()',
+        '[class.ngx-parl--emoji-open]': 'emojiPickerOpen()',
+        '[style.--parl-keyboard-inset]': 'keyboardInsetCss()',
+    },
 })
 export class NgxParlComponent implements AfterViewInit, OnDestroy {
     @ViewChild(ChatFlowComponent) chatFlow?: ChatFlowComponent;
@@ -43,10 +50,24 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public dragActive = model<boolean>(false);
     private dragDepth = 0;
     private lastUpdateKey: string | null = null;
+    private nextTempId = -1;
+    private lastKeyboardInset = 0;
 
     public theme = input<FlowTheme>(FlowTheme.PRIMARY);
     public header = input<boolean>(true);
     public language = input<'en' | 'uk'>('en');
+    public layout = input<ParlLayout>('dialog');
+    public keyboardInset = input<number>(0);
+    public autoFocus = input<boolean>(true);
+    public scrollToBottomOnKeyboard = input<boolean>(true);
+    public hasMoreHistory = input<boolean>(true);
+    public quickActionsWhen = input<ParlQuickActionsWhen>(ParlQuickActionsWhen.ALWAYS);
+    public isFillLayout = computed(() => this.layout() === 'fill');
+    public emojiPickerOpen = signal(false);
+    public isKeyboardOpen = computed(() => this.keyboardInset() > 0 && !this.emojiPickerOpen());
+    public keyboardInsetCss = computed(() =>
+        this.emojiPickerOpen() ? '0px' : `${Math.max(0, this.keyboardInset())}px`
+    );
 
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
@@ -59,6 +80,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public transportTypeIconSrc = computed(() => this.utils.normalizeSourcePath(this.transportTypeIcon()));
 
     public logoChat = input<string>('');
+    public incomingAvatar = input<string>('');
 
     public mobileMode = input<boolean>(false);
     public quickActionsResolver = input<ParlQuickActionsResolver | null>(null);
@@ -115,28 +137,18 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                     return [...list, updatedMessage];
                 });
 
-                this.scrollToBottom();
+                if (this.chatFlow?.isAtBottom() ?? true) {
+                    this.scrollToBottom();
+                }
             });
         });
 
         effect(() => {
-            const event = this.quickActionClick();
-            if (!event || !this.quickActionsAutoSend()) {
-                return;
+            const inset = Math.max(0, this.keyboardInset());
+            if (this.scrollToBottomOnKeyboard() && inset > 0 && this.lastKeyboardInset === 0) {
+                queueMicrotask(() => this.scrollToBottom());
             }
-
-            const content = (event.value ?? '').trim();
-            if (!content) {
-                return;
-            }
-
-            setTimeout(() => {
-                try {
-                    this.sendMessage({content});
-                } catch (error) {
-                    console.error('Quick action send failed', error);
-                }
-            }, 0);
+            this.lastKeyboardInset = inset;
         });
     }
 
@@ -177,6 +189,10 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     }
 
     private queueInitialFocus() {
+        if (!this.autoFocus()) {
+            return;
+        }
+
         const focusInputIfAppropriate = (allowStealingFocus: boolean) => {
             if (!this.inputMessage) {
                 return;
@@ -302,32 +318,11 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             if (!hasFiles) {
                 const {content, user_id, user, transport_type, transport_type_icon} = event;
-
-                const messages = this.messageList();
-                const lastId = messages.at(-1)?.id ?? 0;
-
-                const lastOutgoing = [...messages]
-                    .reverse()
-                    .find((message) => message.type === MessageType.Outgoing,);
-                const fallbackTransport = lastOutgoing?.transport_type ?? this.transportType() ?? null;
-                const fallbackTransportIcon = lastOutgoing?.transport_type_icon ?? this.transportTypeIcon() ?? null;
-
-                const dto: ChatMessageDTO = {
-                    id: lastId + 1,
-                    chat_id: lastOutgoing?.chat_id ?? 1,
-                    cr_time: this.utils.getLocalISODate(),
-                    type: MessageType.Outgoing as ChatMessageType,
-                    transport_type: transport_type ?? fallbackTransport,
-                    transport_type_icon: transport_type_icon ?? fallbackTransportIcon,
-                    user: lastOutgoing?.user ?? '',
-                    content: content,
-                    avatar: lastOutgoing?.avatar ?? null,
-                    file_path: [],
-                    file_list: [],
-                    checked: true,
-                    pending: true,
-                    actions: [],
-                };
+                const dto = this.createOptimisticOutgoing({
+                    content,
+                    transport_type,
+                    transport_type_icon,
+                });
 
                 this.messageList.update((list) => [...list, new ChatMessage(dto)]);
                 this.scrollToBottomTrigger.update(v => v + 1);
@@ -359,31 +354,13 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             return this;
         }
 
-        const messages = this.messageList();
-        const lastId = messages.at(-1)?.id ?? 0;
-
-        const lastOutgoing = [...messages]
-            .reverse()
-            .find((message) => message.type === MessageType.Outgoing,);
-        const fallbackTransport = lastOutgoing?.transport_type ?? this.transportType() ?? null;
-        const fallbackTransportIcon = lastOutgoing?.transport_type_icon ?? this.transportTypeIcon() ?? null;
-
-        const dto: ChatMessageDTO = {
-            id: lastId + 1,
-            chat_id: lastOutgoing?.chat_id ?? 1,
-            cr_time: this.utils.getLocalISODate(),
-            type: MessageType.Outgoing as ChatMessageType,
-            transport_type: transport_type ?? fallbackTransport,
-            transport_type_icon: transport_type_icon ?? fallbackTransportIcon,
-            user: lastOutgoing?.user ?? '',
+        const dto = this.createOptimisticOutgoing({
             content: text,
-            avatar: lastOutgoing?.avatar ?? null,
             file_path: hasFiles ? file_path : [],
             file_list: hasFileList ? file_list : [],
-            checked: true,
-            pending: true,
-            actions: [],
-        };
+            transport_type,
+            transport_type_icon,
+        });
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
         this.scrollToBottomTrigger.update(v => v + 1);
@@ -402,8 +379,93 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    confirmPending(tempId: number, dto: ChatMessageDTO): this {
+        this.messageList.update(list => {
+            const index = list.findIndex(message => message.id === tempId);
+            if (index === -1) {
+                return list;
+            }
+
+            const current = list[index];
+            const updated = [...list];
+            updated[index] = new ChatMessage({
+                id: dto.id,
+                chat_id: dto.chat_id ?? current.chat_id,
+                cr_time: dto.cr_time ?? current.cr_time,
+                type: dto.type ?? current.type,
+                transport_type: dto.transport_type ?? current.transport_type,
+                transport_type_icon: dto.transport_type_icon ?? current.transport_type_icon,
+                user: dto.user ?? current.user,
+                content: dto.content ?? current.content,
+                avatar: dto.avatar ?? current.avatar,
+                file_path: dto.file_path ?? current.file_path,
+                file_list: dto.file_list ?? current.file_list,
+                checked: dto.checked ?? true,
+                pending: false,
+                actions: dto.actions ?? current.actions,
+            });
+
+            return updated;
+        });
+
+        return this;
+    }
+
+    rejectPending(tempId: number): this {
+        this.messageList.update(list => list.filter(message => message.id !== tempId));
+
+        return this;
+    }
+
     isCurrMessage(event: unknown): event is CurrMessage {
         return typeof event === 'object' && event !== null && 'content' in event;
+    }
+
+    private allocateTempId(): number {
+        const existingIds = new Set(this.messageList().map(message => message.id));
+        let tempId = this.nextTempId;
+
+        while (tempId >= 0 || existingIds.has(tempId)) {
+            tempId -= 1;
+        }
+
+        this.nextTempId = tempId - 1;
+
+        return tempId;
+    }
+
+    private createOptimisticOutgoing(event: {
+        content: string;
+        file_path?: string[] | null;
+        file_list?: File[] | null;
+        transport_type?: string | null;
+        transport_type_icon?: string | null;
+    }): ChatMessageDTO {
+        const messages = this.messageList();
+        const lastOutgoing = [...messages]
+            .reverse()
+            .find((message) => message.type === MessageType.Outgoing);
+        const fallbackTransport = lastOutgoing?.transport_type ?? this.transportType() ?? null;
+        const fallbackTransportIcon = lastOutgoing?.transport_type_icon ?? this.transportTypeIcon() ?? null;
+        const filePath = Array.isArray(event.file_path) ? event.file_path : [];
+        const fileList = Array.isArray(event.file_list) ? event.file_list : [];
+
+        return {
+            id: this.allocateTempId(),
+            chat_id: lastOutgoing?.chat_id ?? 1,
+            cr_time: this.utils.getLocalISODate(),
+            type: MessageType.Outgoing as ChatMessageType,
+            transport_type: event.transport_type ?? fallbackTransport,
+            transport_type_icon: event.transport_type_icon ?? fallbackTransportIcon,
+            user: lastOutgoing?.user ?? '',
+            content: event.content,
+            avatar: lastOutgoing?.avatar ?? null,
+            file_path: filePath,
+            file_list: fileList,
+            checked: true,
+            pending: true,
+            actions: [],
+        };
     }
 
     pushMessageAction(event: MessageActionEvent) {

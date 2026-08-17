@@ -1,9 +1,11 @@
 import {
     AfterViewInit,
+    ChangeDetectorRef,
     Component,
     computed,
     effect,
     ElementRef,
+    inject,
     input,
     model,
     OnDestroy,
@@ -15,6 +17,10 @@ import {TranslocoPipe} from '@ngneat/transloco';
 import {ChatMessage, CurrMessage, MessageActionEvent, MessageActionType} from '../core/entity/chat';
 import {NgOptimizedImage} from '@angular/common';
 
+interface EmojiMartSelection {
+    native?: string;
+}
+
 @Component({
     selector: 'app-input-message',
     imports: [TranslocoPipe, NgOptimizedImage],
@@ -24,11 +30,16 @@ import {NgOptimizedImage} from '@angular/common';
 })
 
 export class InputMessageComponent implements AfterViewInit, OnDestroy {
-    @ViewChild('inputText', {static: false}) inputTextElement!: ElementRef<HTMLDivElement>;
-    @ViewChild('mirror', {static: false}) mirrorElement!: ElementRef<HTMLDivElement>;
+    @ViewChild('inputText', {static: false}) inputTextElement!: ElementRef<HTMLElement>;
+    @ViewChild('mirror', {static: false}) mirrorElement?: ElementRef<HTMLDivElement>;
+    @ViewChild('emojiMartHost', {static: false}) emojiMartHost?: ElementRef<HTMLElement>;
+
+    private readonly changeDetector = inject(ChangeDetectorRef);
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
     public language = input<'en' | 'uk'>('en');
+    public autoFocus = input<boolean>(true);
+    public mobileMode = input<boolean>(false);
 
     public hasOriginalAttachments = computed(() => {
         const filePaths = this.editFilePaths();
@@ -45,12 +56,16 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     public sending = signal<boolean>(false);
     public hasText = computed(() => this.draft().trim().length > 0);
     public dragActive = signal<boolean>(false);
+    public emojiPickerOpen = model<boolean>(false);
+    public composerInputMode = signal<'text' | 'none'>('text');
 
     public isEditMode = computed(() => !!this.editMessage());
     public canSend = computed(() =>
-        this.hasText() ||
-        this.hasNewAttachments() ||
-        (this.isEditMode() && this.hasOriginalAttachments())
+        !this.sending() && (
+            this.hasText() ||
+            this.hasNewAttachments() ||
+            (this.isEditMode() && this.hasOriginalAttachments())
+        )
     );
 
     public files = model<File[]>([]);
@@ -60,6 +75,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private lastRows = 1;
     private resizeRaf: number | null = null;
     private dragDepth = 0;
+    private composerCaretStart = 0;
+    private composerCaretEnd = 0;
+    private emojiMartPicker: HTMLElement | null = null;
+    private emojiMartMountGeneration = 0;
+    private emojiToggleFromPointer = false;
 
     public messageEvent = model<MessageActionEvent | null>(null);
 
@@ -75,7 +95,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             if (message) {
                 const content = (message as any).content ?? '';
                 this.draft.set(content);
-                element.innerText = content;
+                this.writeComposerText(content);
 
                 queueMicrotask(() => {
                     this.autoResizeByRows();
@@ -89,8 +109,14 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit() {
         const element = this.inputTextElement.nativeElement;
+        if (element instanceof HTMLTextAreaElement && !element.value.trim()) {
+            element.value = '';
+            this.draft.set('');
+        }
         element.style.transition = 'height 160ms ease';
-        this.initMirror();
+        if (this.mirrorElement) {
+            this.initMirror();
+        }
 
         const computedStyle = getComputedStyle(element);
         const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
@@ -101,14 +127,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.updateOverflow(1);
 
         requestAnimationFrame(() => {
-            const {rows, nextHeightPx} = this.measureByMirror();
-            element.style.height = `${nextHeightPx}px`;
+            this.autoResizeByRows();
 
-            this.lastRows = rows;
-            this.lastHeightPx = nextHeightPx;
-            this.updateOverflow(rows);
-
-            this.focusInput();
+            if (this.autoFocus()) {
+                this.focusInput();
+            }
         });
     }
 
@@ -117,6 +140,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             cancelAnimationFrame(this.resizeRaf);
             this.resizeRaf = null;
         }
+        this.destroyEmojiMartPicker();
     }
 
     editFilePaths(): string[] {
@@ -146,10 +170,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         queueMicrotask(() => this.cancelEdit.set(null));
 
         this.draft.set('');
+        this.writeComposerText('');
+        this.closeEmojiPicker();
         const element = this.inputTextElement?.nativeElement;
 
         if (element) {
-            element.innerHTML = '';
             this.autoResizeByRows();
             element.focus();
         }
@@ -158,11 +183,19 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     focusInput() {
+        if (this.emojiPickerOpen()) {
+            return this;
+        }
+
         const element = this.inputTextElement?.nativeElement;
         if (!element) {
             return this;
         }
         queueMicrotask(() => {
+            if (this.emojiPickerOpen()) {
+                return;
+            }
+
             element.focus();
             this.focused.set(true);
         });
@@ -170,7 +203,37 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    onComposerSurfaceClick(event: MouseEvent) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement) || target.closest('button')) {
+            return this;
+        }
+
+        const element = this.inputTextElement?.nativeElement;
+        if (!element || target === element) {
+            return this;
+        }
+
+        element.focus();
+        this.focused.set(true);
+
+        if (element instanceof HTMLTextAreaElement) {
+            const caret = element.value.length;
+            element.setSelectionRange(caret, caret);
+        } else {
+            this.setCaretToEnd(element);
+        }
+
+        return this;
+    }
+
     private setCaretToEnd(element: HTMLElement): void {
+        if (element instanceof HTMLTextAreaElement) {
+            const length = element.value.length;
+            element.setSelectionRange(length, length);
+            return;
+        }
+
         const range = document.createRange();
         const selection = window.getSelection();
         if (!selection) return;
@@ -179,6 +242,34 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         range.collapse(false);
         selection.removeAllRanges();
         selection.addRange(range);
+    }
+
+    private readComposerText(): string {
+        const element = this.inputTextElement?.nativeElement;
+        if (!element) {
+            return '';
+        }
+
+        if (element instanceof HTMLTextAreaElement) {
+            return element.value ?? '';
+        }
+
+        return element.innerText ?? '';
+    }
+
+    private writeComposerText(text: string): this {
+        const element = this.inputTextElement?.nativeElement;
+        if (!element) {
+            return this;
+        }
+
+        if (element instanceof HTMLTextAreaElement) {
+            element.value = text;
+        } else {
+            element.innerText = text;
+        }
+
+        return this;
     }
 
     enterDown() {
@@ -221,9 +312,10 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.input_text.set(payload);
 
         this.draft.set('');
-        element.innerHTML = '';
+        this.writeComposerText('');
         this.files.set([]);
         this.previews.set([]);
+        this.closeEmojiPicker();
         element.focus();
         this.autoResizeByRows();
 
@@ -233,16 +325,311 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     onFocus() {
-        if (this.inputTextElement.nativeElement.innerHTML === '<br>') {
-            this.inputTextElement.nativeElement.innerHTML = '';
+        const element = this.inputTextElement.nativeElement;
+        if (!(element instanceof HTMLTextAreaElement) && element.innerHTML === '<br>') {
+            element.innerHTML = '';
         }
+
+        if (this.emojiPickerOpen()) {
+            queueMicrotask(() => {
+                if (this.emojiPickerOpen()) {
+                    element.blur();
+                }
+            });
+
+            return this;
+        }
+
         this.focused.set(true);
+        this.composerInputMode.set('text');
 
         return this;
     }
 
     onBlur() {
+        this.captureComposerCaret();
         this.focused.set(false);
+
+        return this;
+    }
+
+    onEmojiButtonPointerDown(event: PointerEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.emojiToggleFromPointer = true;
+        this.toggleEmojiPicker();
+
+        return this;
+    }
+
+    onEmojiButtonClick(event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.emojiToggleFromPointer) {
+            this.emojiToggleFromPointer = false;
+
+            return this;
+        }
+
+        this.toggleEmojiPicker();
+
+        return this;
+    }
+
+    onComposerTextPointerDown() {
+        if (!this.emojiPickerOpen()) {
+            return this;
+        }
+
+        this.closeEmojiPicker();
+        this.composerInputMode.set('text');
+
+        return this;
+    }
+
+    toggleEmojiPicker() {
+        if (this.emojiPickerOpen()) {
+            this.closeEmojiPicker();
+            this.focusInput();
+
+            return this;
+        }
+
+        this.captureComposerCaret();
+        this.composerInputMode.set('none');
+        this.emojiPickerOpen.set(true);
+        this.inputTextElement?.nativeElement.blur();
+        queueMicrotask(() => {
+            void this.mountEmojiMartPicker();
+        });
+
+        return this;
+    }
+
+    insertEmoji(emoji: string) {
+        const element = this.inputTextElement?.nativeElement;
+        if (!element) {
+            return this;
+        }
+
+        if (element instanceof HTMLTextAreaElement) {
+            const value = element.value ?? '';
+            const start = Math.max(0, Math.min(this.composerCaretStart, value.length));
+            const end = Math.max(start, Math.min(this.composerCaretEnd, value.length));
+            const nextValue = `${value.slice(0, start)}${emoji}${value.slice(end)}`;
+            const nextCaret = start + emoji.length;
+
+            element.value = nextValue;
+            this.composerCaretStart = nextCaret;
+            this.composerCaretEnd = nextCaret;
+            this.draft.set(nextValue);
+            this.autoResizeByRows();
+
+            return this;
+        }
+
+        const currentText = element.innerText ?? '';
+        const nextText = `${currentText}${emoji}`;
+        element.innerText = nextText;
+        this.draft.set(nextText);
+        this.autoResizeByRows();
+
+        return this;
+    }
+
+    private closeEmojiPicker() {
+        this.composerInputMode.set('text');
+        this.destroyEmojiMartPicker();
+        this.emojiPickerOpen.set(false);
+
+        return this;
+    }
+
+    private destroyEmojiMartPicker() {
+        this.emojiMartMountGeneration += 1;
+        this.emojiMartPicker?.remove();
+        this.emojiMartPicker = null;
+        this.emojiMartHost?.nativeElement.replaceChildren();
+
+        return this;
+    }
+
+    private async resolvePickerHost(): Promise<HTMLElement | null> {
+        this.changeDetector.detectChanges();
+        if (this.emojiMartHost?.nativeElement) {
+            return this.emojiMartHost.nativeElement;
+        }
+
+        await new Promise<void>(resolve => {
+            requestAnimationFrame(() => resolve());
+        });
+        this.changeDetector.detectChanges();
+
+        return this.emojiMartHost?.nativeElement ?? null;
+    }
+
+    private readPickerConstructor(emojiMart: unknown): (new (options: Record<string, unknown>) => HTMLElement) | null {
+        const candidates = [emojiMart, this.readModuleExport(emojiMart)];
+        for (const candidate of candidates) {
+            if (candidate && typeof candidate === 'object' && 'Picker' in candidate) {
+                const picker = (candidate as { Picker: unknown }).Picker;
+                if (typeof picker === 'function') {
+                    return picker as new (options: Record<string, unknown>) => HTMLElement;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private async mountEmojiMartPicker() {
+        const host = await this.resolvePickerHost();
+        if (!host || !this.emojiPickerOpen()) {
+            return this;
+        }
+
+        const mountGeneration = this.emojiMartMountGeneration;
+        const locale = this.language();
+
+        try {
+            const [emojiMart, dataModule, i18nModule] = await Promise.all([
+                import('emoji-mart'),
+                import('@emoji-mart/data'),
+                locale === 'uk' ? import('@emoji-mart/data/i18n/uk.json') : Promise.resolve(null),
+            ]);
+
+            if (mountGeneration !== this.emojiMartMountGeneration || !this.emojiPickerOpen()) {
+                return this;
+            }
+
+            const PickerConstructor = this.readPickerConstructor(emojiMart);
+            if (!PickerConstructor) {
+                return this;
+            }
+
+            const data = this.readModuleExport(dataModule);
+            const picker = new PickerConstructor({
+                data,
+                i18n: i18nModule ? this.readModuleExport(i18nModule) : undefined,
+                theme: 'light',
+                set: 'native',
+                locale,
+                previewPosition: 'none',
+                skinTonePosition: 'search',
+                navPosition: 'none',
+                searchPosition: 'sticky',
+                dynamicWidth: true,
+                emojiButtonSize: 36,
+                emojiSize: 24,
+                maxFrequentRows: 2,
+                autoFocus: false,
+                onEmojiSelect: (emoji: EmojiMartSelection) => {
+                    if (emoji.native) {
+                        this.insertEmoji(emoji.native);
+                    }
+                },
+            });
+
+            if (mountGeneration !== this.emojiMartMountGeneration || !this.emojiPickerOpen()) {
+                picker.remove();
+
+                return this;
+            }
+
+            this.fillPickerFrame(picker);
+            host.replaceChildren(picker);
+            this.emojiMartPicker = picker;
+            this.fillPickerFrame(picker);
+            this.lockPickerInputs(picker);
+        } catch {
+            return this;
+        }
+
+        return this;
+    }
+
+    private fillPickerFrame(picker: HTMLElement) {
+        picker.style.setProperty('display', 'flex', 'important');
+        picker.style.setProperty('width', '100%', 'important');
+        picker.style.setProperty('min-width', '100%', 'important');
+        picker.style.setProperty('max-width', 'none', 'important');
+        picker.style.setProperty('height', '100%', 'important');
+        picker.style.setProperty('box-sizing', 'border-box', 'important');
+
+        const shadow = picker.shadowRoot;
+        if (shadow && !shadow.querySelector('style[data-parl-fill]')) {
+            const sheet = document.createElement('style');
+            sheet.setAttribute('data-parl-fill', '');
+            sheet.textContent = `
+                :host {
+                    width: 100% !important;
+                    min-width: 100% !important;
+                    max-width: none !important;
+                    height: 100% !important;
+                }
+                #root {
+                    width: 100% !important;
+                    height: 100% !important;
+                    flex: 1 1 auto;
+                }
+            `;
+            shadow.appendChild(sheet);
+        }
+
+        return this;
+    }
+
+    private lockPickerInputs(picker: HTMLElement) {
+        const apply = (input: HTMLInputElement) => {
+            input.inputMode = 'none';
+            input.setAttribute('inputmode', 'none');
+            input.setAttribute('autocomplete', 'off');
+            input.setAttribute('autocorrect', 'off');
+            input.setAttribute('spellcheck', 'false');
+        };
+
+        const scan = (root: ParentNode) => {
+            root.querySelectorAll('input').forEach(input => apply(input));
+        };
+
+        scan(picker);
+        if (picker.shadowRoot) {
+            scan(picker.shadowRoot);
+        }
+
+        requestAnimationFrame(() => {
+            scan(picker);
+            if (picker.shadowRoot) {
+                scan(picker.shadowRoot);
+            }
+        });
+
+        picker.addEventListener('focusin', event => {
+            const target = event.target;
+            if (target instanceof HTMLInputElement) {
+                apply(target);
+            }
+        });
+
+        return this;
+    }
+
+    private readModuleExport(moduleValue: unknown): unknown {
+        if (moduleValue && typeof moduleValue === 'object' && 'default' in moduleValue) {
+            return (moduleValue as { default: unknown }).default ?? moduleValue;
+        }
+
+        return moduleValue;
+    }
+
+    private captureComposerCaret() {
+        const element = this.inputTextElement?.nativeElement;
+        if (!(element instanceof HTMLTextAreaElement)) {
+            return this;
+        }
+
+        this.composerCaretStart = element.selectionStart ?? element.value.length;
+        this.composerCaretEnd = element.selectionEnd ?? this.composerCaretStart;
 
         return this;
     }
@@ -260,7 +647,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     onInput() {
-        this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
+        this.draft.set(this.readComposerText());
         this.autoResizeByRows();
 
         return this;
@@ -268,7 +655,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     onPaste() {
         queueMicrotask(() => {
-            this.draft.set(this.inputTextElement.nativeElement.innerText ?? '');
+            this.draft.set(this.readComposerText());
             this.autoResizeByRows();
         });
 
@@ -359,6 +746,10 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     autoResizeByRows() {
         const element = this.inputTextElement.nativeElement;
+        if (element instanceof HTMLTextAreaElement) {
+            return this.autoResizeNativeComposer(element);
+        }
+
         const {rows, nextHeightPx} = this.measureByMirror();
 
         if (rows === this.lastRows) {
@@ -383,14 +774,38 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    private autoResizeNativeComposer(element: HTMLTextAreaElement): this {
+        const computedStyle = getComputedStyle(element);
+        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+        const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
+        const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
+        const maxHeightPx = Math.round(lineHeight * maxRows);
+
+        element.style.height = `${lineHeight}px`;
+        const nextHeightPx = Math.min(element.scrollHeight, maxHeightPx);
+        const rows = Math.min(maxRows, Math.max(1, Math.round(nextHeightPx / lineHeight)));
+
+        element.style.height = `${nextHeightPx}px`;
+        this.lastHeightPx = nextHeightPx;
+        this.lastRows = rows;
+        this.updateOverflow(rows);
+
+        return this;
+    }
+
     measureByMirror(): { rows: number; nextHeightPx: number } {
         const inputEl = this.inputTextElement.nativeElement;
-        const mirrorEl = this.mirrorElement.nativeElement;
+        const mirrorEl = this.mirrorElement?.nativeElement;
         const computedStyle = getComputedStyle(inputEl);
 
-        let text = inputEl.innerText;
+        let text = this.readComposerText();
         if (!text || text === '\n') {
             text = '\u00A0';
+        }
+
+        if (!mirrorEl) {
+            const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+            return {rows: 1, nextHeightPx: lineHeight};
         }
 
         mirrorEl.style.width = computedStyle.width;
@@ -414,8 +829,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     initMirror() {
-        const mirror = this.mirrorElement.nativeElement;
+        const mirror = this.mirrorElement?.nativeElement;
         const input = this.inputTextElement.nativeElement;
+        if (!mirror) {
+            return;
+        }
         const computedStyle = getComputedStyle(input);
 
         mirror.style.position = 'absolute';

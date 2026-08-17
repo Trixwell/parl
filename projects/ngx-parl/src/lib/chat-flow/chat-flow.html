@@ -1,4 +1,4 @@
-<div class="chat">
+<div class="chat" [class.chat--mobile]="mobileMode()">
     @if (hasMessages()) {
         <div #chatFlowRef
              class="chat__flow"
@@ -8,14 +8,16 @@
              [infiniteScrollThrottle]="100"
              (scrolledUp)="onScrollUp()"
         >
-            <div class="chat__manager-header" aria-hidden="true">
-                <div class="chat__manager-icon">
-                    <img [ngSrc]="logoChatSrc()"
-                         alt=""
-                         width="72"
-                         height="72"/>
+            @if (!mobileMode()) {
+                <div class="chat__manager-header" aria-hidden="true">
+                    <div class="chat__manager-icon">
+                        <img [ngSrc]="logoChatSrc()"
+                             alt=""
+                             width="72"
+                             height="72"/>
+                    </div>
                 </div>
-            </div>
+            }
 
             @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
                 @if (message | toggleDisplayChatStartDay: messageList() : i : language()) {
@@ -30,6 +32,7 @@
                         [edit]="message.edit"
                         [language]="language()"
                         [logoChat]="logoChat()"
+                        [incomingAvatar]="incomingAvatar()"
                         [mobileMode]="mobileMode()"
                         [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
                         [quickActionClick]="quickActionClick()"

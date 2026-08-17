@@ -1,5 +1,6 @@
 @use '../../styles/tokens' as tokens;
 @use '@angular/material' as mat;
+@use '../../styles/themes/secondary/tokens' as mobile;
 
 :host {
     display: block;
@@ -141,6 +142,42 @@
 
     ::-webkit-scrollbar-button {
         display: none;
+    }
+}
+
+.chat--mobile {
+    background: var(--parl-mobile-chat-bg, #{mobile.$default-50});
+
+    .chat__flow {
+        gap: mobile.$space-12;
+        padding: mobile.$space-16;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+    }
+
+    .chat__start-day {
+        width: auto;
+        height: auto;
+        background: transparent;
+        color: var(--parl-mobile-muted, #{mobile.$default-300});
+        font: mobile.$font-caption-s;
+        padding: mobile.$space-2 0;
+        margin: 0 auto;
+    }
+
+    .chat__message {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    lib-chat-message {
+        display: block;
+        width: 100%;
     }
 }
 

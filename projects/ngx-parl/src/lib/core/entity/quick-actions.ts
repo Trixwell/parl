@@ -20,6 +20,12 @@ export interface ParlQuickActionClickEvent {
 
 export type ParlQuickActionsResolver = (context: ParlQuickActionContext) => ParlQuickAction[];
 
+export enum ParlQuickActionsWhen {
+    ALWAYS = 'always',
+    MOBILE = 'mobile',
+    NEVER = 'never',
+}
+
 /**
  * Maps `message.actions` to quick action buttons for outgoing messages.
  * Used when `[quickActionsResolver]` is not provided. Independent of `mobileMode`.

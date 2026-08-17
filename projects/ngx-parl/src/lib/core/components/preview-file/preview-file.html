@@ -1,4 +1,6 @@
-<div class="preview" (click)="requestClose()">
+<div class="preview"
+     [class.preview--mobile]="mobileMode()"
+     (click)="requestClose()">
     <div class="preview__dialog"
          #dialog
          tabindex="-1"

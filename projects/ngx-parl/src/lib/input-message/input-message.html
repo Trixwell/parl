@@ -3,6 +3,8 @@
          [class.message--filled]="hasText()"
          [class.message--sending]="sending()"
          [class.message--dragover]="dragActive()"
+         [class.message--mobile]="mobileMode()"
+         [class.message--emoji-open]="emojiPickerOpen()"
          (dragenter)="onDragEnter($event)"
          (dragover)="onDragOver($event)"
          (dragleave)="onDragLeave($event)"
@@ -33,7 +35,77 @@
     }
 
     <div class="message__wrap">
-        <div class="message__wrap--input">
+        <div class="message__wrap--input" (click)="onComposerSurfaceClick($event)">
+            @if (mobileMode()) {
+                <button type="button"
+                        class="message__button message__button--emoji"
+                        [attr.aria-label]="(emojiPickerOpen() ? 'chat.keyboard' : 'chat.emoji') | transloco: {__: language()}: language()"
+                        (pointerdown)="onEmojiButtonPointerDown($event)"
+                        (click)="onEmojiButtonClick($event)">
+                    @if (emojiPickerOpen()) {
+                        <img ngSrc="assets/ngx-parl/icons/keyboard.svg"
+                             class="message__icon message__icon--keyboard"
+                             width="18" height="18" alt=""/>
+                    } @else {
+                        <img ngSrc="assets/ngx-parl/icons/emoji.svg"
+                             class="message__icon message__icon--emoji"
+                             width="18" height="18" alt=""/>
+                    }
+                </button>
+            } @else {
+                <button type="button"
+                        class="message__button message__button--attach"
+                        [attr.aria-label]="'chat.attach' | transloco: {__: language()}: language()"
+                        (click)="fileDialog.click()">
+                    <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
+                         class="message__icon message__icon--attach"
+                         width="18" height="18" alt="hide"/>
+                </button>
+            }
+
+            @if (mobileMode()) {
+                <textarea #inputText
+                          class="message__input message__input--native"
+                          rows="1"
+                          spellcheck="true"
+                          autocomplete="on"
+                          autocapitalize="sentences"
+                          enterkeyhint="send"
+                          [attr.inputmode]="composerInputMode()"
+                          [attr.lang]="language()"
+                          [placeholder]="isEditMode()
+                            ? ('chat.edit_placeholder' | transloco: {__: language()}: language())
+                            : ('chat.placeholder_mobile' | transloco: {__: language()}: language())"
+                          (pointerdown)="onComposerTextPointerDown()"
+                          (blur)="onBlur()"
+                          (focus)="onFocus()"
+                          (input)="onInput()"
+                          (paste)="onPaste()"
+                          (keydown)="onKeyDown($event)"></textarea>
+            } @else {
+                <div #inputText
+                     role="textbox"
+                     class="message__input"
+                     spellcheck="true"
+                     contenteditable="true"
+                     aria-multiline="true"
+                     [attr.data-placeholder]="isEditMode()
+                       ? ('chat.edit_placeholder' | transloco: {__: language()}: language())
+                       : ('chat.placeholder' | transloco: {__: language()}: language())"
+                     (blur)="onBlur()"
+                     (focus)="onFocus()"
+                     (input)="onInput()"
+                     (paste)="onPaste()"
+                     (keydown)="onKeyDown($event)">
+                </div>
+
+                <div #mirror class="message__input-mirror" aria-hidden="true"></div>
+            }
+
+            <ng-content></ng-content>
+        </div>
+
+        @if (mobileMode()) {
             <button type="button"
                     class="message__button message__button--attach"
                     [attr.aria-label]="'chat.attach' | transloco: {__: language()}: language()"
@@ -42,34 +114,7 @@
                      class="message__icon message__icon--attach"
                      width="18" height="18" alt="hide"/>
             </button>
-
-            <input #fileDialog
-                   type="file"
-                   class="hidden"
-                   accept="image/*"
-                   multiple
-                   (change)="inputFileChange($event)">
-
-            <div #inputText
-                 role="textbox"
-                 class="message__input"
-                 spellcheck="true"
-                 contenteditable="true"
-                 aria-multiline="true"
-                 [attr.data-placeholder]="isEditMode()
-                   ? ('chat.edit_placeholder' | transloco: {__: language()}: language())
-                   : ('chat.placeholder' | transloco: {__: language()}: language())"
-                 (blur)="onBlur()"
-                 (focus)="onFocus()"
-                 (input)="onInput()"
-                 (paste)="onPaste()"
-                 (keydown)="onKeyDown($event)">
-            </div>
-
-            <div #mirror class="message__input-mirror" aria-hidden="true"></div>
-
-            <ng-content></ng-content>
-        </div>
+        }
 
         <button class="message__button message__button--send"
                 type="button"
@@ -82,6 +127,13 @@
 
         </button>
     </div>
+
+    <input #fileDialog
+           type="file"
+           class="hidden"
+           accept="image/*"
+           multiple
+           (change)="inputFileChange($event)">
 
     @if (previews().length) {
         <div class="message__files">
@@ -107,6 +159,14 @@
                     </div>
                 </div>
             }
+        </div>
+    }
+
+    @if (mobileMode() && emojiPickerOpen()) {
+        <div #emojiMartHost
+             class="message__emoji"
+             role="dialog"
+             [attr.aria-label]="'chat.emoji_picker' | transloco: {__: language()}: language()">
         </div>
     }
 </section>
