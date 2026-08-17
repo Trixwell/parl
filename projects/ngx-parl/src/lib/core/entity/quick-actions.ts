@@ -20,11 +20,13 @@ export interface ParlQuickActionClickEvent {
 
 export type ParlQuickActionsResolver = (context: ParlQuickActionContext) => ParlQuickAction[];
 
-export enum ParlQuickActionsWhen {
-    ALWAYS = 'always',
-    MOBILE = 'mobile',
-    NEVER = 'never',
-}
+export const ParlQuickActionsWhen = {
+    ALWAYS: 'always',
+    MOBILE: 'mobile',
+    NEVER: 'never',
+} as const;
+
+export type ParlQuickActionsWhen = (typeof ParlQuickActionsWhen)[keyof typeof ParlQuickActionsWhen];
 
 /**
  * Maps `message.actions` to quick action buttons for outgoing messages.

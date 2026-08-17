@@ -14,7 +14,7 @@
         <div class="message__wrap">
             <div class="message__wrap--input">
                 <button class="message__button message__button--attach">
-                    <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
+                    <img [src]="parlAssets.icon('icon-edit.svg')"
                          class="message__icon message__icon--edit"
                          width="18" height="18" alt="hide"/>
                 </button>
@@ -27,7 +27,7 @@
             <button class="message__button message__button--close"
                     type="button"
                     (click)="cancelEditMessage()">
-                <img ngSrc="assets/ngx-parl/icons/close.svg"
+                <img [src]="parlAssets.icon('close.svg')"
                      class="message__icon message__icon--close"
                      width="18" height="18" alt="hide"/>
             </button>
@@ -43,11 +43,11 @@
                         (pointerdown)="onEmojiButtonPointerDown($event)"
                         (click)="onEmojiButtonClick($event)">
                     @if (emojiPickerOpen()) {
-                        <img ngSrc="assets/ngx-parl/icons/keyboard.svg"
+                        <img [src]="parlAssets.icon('keyboard.svg')"
                              class="message__icon message__icon--keyboard"
                              width="18" height="18" alt=""/>
                     } @else {
-                        <img ngSrc="assets/ngx-parl/icons/emoji.svg"
+                        <img [src]="parlAssets.icon('emoji.svg')"
                              class="message__icon message__icon--emoji"
                              width="18" height="18" alt=""/>
                     }
@@ -57,7 +57,7 @@
                         class="message__button message__button--attach"
                         [attr.aria-label]="'chat.attach' | transloco: {__: language()}: language()"
                         (click)="fileDialog.click()">
-                    <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
+                    <img [src]="parlAssets.icon('attach-filled.svg')"
                          class="message__icon message__icon--attach"
                          width="18" height="18" alt="hide"/>
                 </button>
@@ -110,7 +110,7 @@
                     class="message__button message__button--attach"
                     [attr.aria-label]="'chat.attach' | transloco: {__: language()}: language()"
                     (click)="fileDialog.click()">
-                <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
+                <img [src]="parlAssets.icon('attach-filled.svg')"
                      class="message__icon message__icon--attach"
                      width="18" height="18" alt="hide"/>
             </button>
@@ -121,7 +121,7 @@
                 (click)="enterDown()"
                 [attr.aria-label]="'chat.send' | transloco: {__: language()}: language()"
                 [disabled]="!canSend()">
-            <img ngSrc="assets/ngx-parl/icons/send.svg"
+            <img [src]="parlAssets.icon('send.svg')"
                  class="message__icon message__icon--send"
                  width="18" height="18" alt="hide"/>
 
@@ -143,7 +143,7 @@
                             class="message__file-remove"
                             [attr.aria-label]="'chat.delete_file' | transloco: {__: language()}: language()"
                             (click)="removeFile($index, $event)">
-                        <img ngSrc="assets/ngx-parl/icons/remove.svg"
+                        <img [src]="parlAssets.icon('remove.svg')"
                              class="message__icon message__icon--file"
                              width="18" height="18" alt="hide"/>
                     </button>
