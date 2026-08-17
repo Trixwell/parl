@@ -56,7 +56,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     public draft = signal<string>('');
     public focused = signal<boolean>(false);
     public sending = signal<boolean>(false);
-    public hasText = computed(() => this.draft().trim().length > 0);
+    public hasText = computed(() => hasComposerText(this.draft()));
     public dragActive = signal<boolean>(false);
     public emojiPickerOpen = model<boolean>(false);
     public composerInputMode = signal<'text' | 'none'>('text');
@@ -281,9 +281,10 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     enterDown() {
         const element = this.inputTextElement.nativeElement;
-        const text = this.draft().trim();
+        this.syncDraftFromComposer();
+        const text = this.readComposerText().trim();
 
-        if (!this.canSend()) {
+        if (!hasComposerText(text) || !this.canSend()) {
             return this;
         }
 
@@ -427,9 +428,11 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             const nextCaret = start + emoji.length;
 
             element.value = nextValue;
+            element.setSelectionRange(nextCaret, nextCaret);
             this.composerCaretStart = nextCaret;
             this.composerCaretEnd = nextCaret;
-            this.draft.set(nextValue);
+            this.syncDraftFromComposer();
+            element.dispatchEvent(new Event('input', {bubbles: true}));
             this.autoResizeByRows();
 
             return this;
@@ -438,7 +441,8 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const currentText = element.innerText ?? '';
         const nextText = `${currentText}${emoji}`;
         element.innerText = nextText;
-        this.draft.set(nextText);
+        this.syncDraftFromComposer();
+        element.dispatchEvent(new Event('input', {bubbles: true}));
         this.autoResizeByRows();
 
         return this;
@@ -700,7 +704,14 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     onInput() {
-        this.draft.set(this.readComposerText());
+        this.syncDraftFromComposer();
+        this.autoResizeByRows();
+
+        return this;
+    }
+
+    onCompositionEnd() {
+        this.syncDraftFromComposer();
         this.autoResizeByRows();
 
         return this;
@@ -708,9 +719,15 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     onPaste() {
         queueMicrotask(() => {
-            this.draft.set(this.readComposerText());
+            this.syncDraftFromComposer();
             this.autoResizeByRows();
         });
+
+        return this;
+    }
+
+    private syncDraftFromComposer(): this {
+        this.draft.set(this.readComposerText());
 
         return this;
     }
@@ -955,4 +972,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     }
 
     protected readonly FileType = FileType;
+}
+
+function hasComposerText(value: string | null | undefined): boolean {
+    if (!value) {
+        return false;
+    }
+
+    return [...value.trim()].length > 0;
 }
