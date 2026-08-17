@@ -123,5 +123,25 @@ describe('InputMessage', () => {
     expect(component.draft()).toBe('😀');
     expect(fixture.nativeElement.querySelector('textarea.message__input').value).toBe('😀');
     expect(fixture.nativeElement.querySelector('.message__emoji')).not.toBeNull();
+    expect(component.canSend()).toBeTrue();
+  });
+
+  it('sends an emoji-only message from the mobile composer', () => {
+    fixture.componentRef.setInput('mobileMode', true);
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea.message__input') as HTMLTextAreaElement;
+    textarea.value = '😜';
+    component.onCompositionEnd();
+    fixture.detectChanges();
+
+    expect(component.canSend()).toBeTrue();
+
+    const payloadSpy = spyOn(component.input_text, 'set').and.callThrough();
+    component.enterDown();
+    fixture.detectChanges();
+
+    expect(payloadSpy).toHaveBeenCalledWith(jasmine.objectContaining({ content: '😜' }));
+    expect(textarea.value).toBe('');
   });
 });

@@ -40,6 +40,12 @@
     }
 }
 
+:host(.ngx-parl--fill:not(.ngx-parl--keyboard-open)) {
+    .modal-chat--fill {
+        padding-bottom: var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px));
+    }
+}
+
 .modal-chat {
     width: 800px;
     height: 600px;
@@ -55,7 +61,7 @@
         height: 100%;
         min-height: 0;
         border-radius: 0;
-        padding-bottom: calc(var(--parl-keyboard-inset, 0px) + var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+        padding-bottom: var(--parl-keyboard-inset, 0px);
     }
 
     &--fill &__body {

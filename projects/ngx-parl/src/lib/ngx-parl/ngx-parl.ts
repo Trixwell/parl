@@ -318,8 +318,13 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             if (!hasFiles) {
                 const {content, user_id, user, transport_type, transport_type_icon} = event;
+                const text = (content ?? '').trim();
+                if (!hasMessageText(text)) {
+                    return this;
+                }
+
                 const dto = this.createOptimisticOutgoing({
-                    content,
+                    content: text,
                     transport_type,
                     transport_type_icon,
                 });
@@ -329,7 +334,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 this.pushMessageAction({
                     action: 'send',
                     chatMessageId: dto.id,
-                    content: content,
+                    content: text,
                     user_id: user_id,
                     user: user,
                     transport_type: dto.transport_type ?? null,
@@ -350,7 +355,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         const hasFiles = Array.isArray(file_path) && file_path.length > 0;
         const hasFileList = Array.isArray(file_list) && file_list.length > 0;
 
-        if (!text && !hasFiles) {
+        if (!hasMessageText(text) && !hasFiles) {
             return this;
         }
 
@@ -547,4 +552,12 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     }
 
     protected readonly FlowTheme = FlowTheme;
+}
+
+function hasMessageText(value: string | null | undefined): boolean {
+    if (!value) {
+        return false;
+    }
+
+    return [...value.trim()].length > 0;
 }
