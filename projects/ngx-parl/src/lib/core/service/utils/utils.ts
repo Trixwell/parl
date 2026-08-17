@@ -1,5 +1,4 @@
-import {DOCUMENT} from '@angular/common';
-import {Injectable, inject} from '@angular/core';
+import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
 
@@ -7,7 +6,6 @@ import {HttpClient} from '@angular/common/http';
     providedIn: 'root'
 })
 export class UtilsService {
-    private readonly document = inject(DOCUMENT);
 
     constructor(protected http: HttpClient) {
     }
@@ -48,7 +46,7 @@ export class UtilsService {
 
         const assetsIndex = cleanedPath.indexOf('assets/');
         if (assetsIndex >= 0) {
-            return new URL(cleanedPath.slice(assetsIndex), this.document.baseURI).toString();
+            return '/' + cleanedPath.slice(assetsIndex);
         }
 
         return cleanedPath.replace(/^\.{1,2}\//, '/');

@@ -23,7 +23,6 @@ import {InfiniteScrollDirective} from 'ngx-infinite-scroll';
 import {ToggleDisplayChatStartDayPipe} from '../core/pipes/toggle-display-chat-start-day-pipe';
 import {ChatStartDayPipe} from '../core/pipes/chat-start-day-pipe';
 import {UtilsService} from '../core/service/utils/utils';
-import {ParlAssets} from '../core/service/parl-assets';
 import {
     ParlQuickAction,
     ParlQuickActionClickEvent,
@@ -55,7 +54,6 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('messageActionsDialog') messageActionsDialog?: ElementRef<HTMLElement>;
 
     private utils = inject(UtilsService);
-    public parlAssets = inject(ParlAssets);
     private injector = inject(Injector);
 
     public scrollToBottomTrigger = model<number>(0);
@@ -81,7 +79,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         const path =
             trimmed.length > 0
                 ? trimmed
-                : this.parlAssets.icon('avatar_anonym.svg');
+                : 'assets/ngx-parl/icons/avatar_anonym.svg';
 
         return this.utils.normalizeSourcePath(path);
     });

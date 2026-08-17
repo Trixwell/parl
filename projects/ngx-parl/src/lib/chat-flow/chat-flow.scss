@@ -329,3 +329,65 @@
         margin-top: tokens.$space-1;
     }
 }
+
+[data-theme="dark"] .chat--mobile {
+    .chat__message-actions-panel {
+        background: var(--parl-mobile-composer-bg);
+        border-color: var(--parl-mobile-composer-border);
+        box-shadow: none;
+    }
+
+    .chat__message-actions-item {
+        background: var(--parl-mobile-composer-bg);
+        color: var(--parl-mobile-incoming-color);
+
+        img {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+
+        &:hover,
+        &:focus-visible {
+            background: var(--parl-mobile-incoming-border);
+            color: var(--parl-mobile-incoming-color);
+        }
+
+        &--danger {
+            color: #ff9d9e;
+
+            &:hover,
+            &:focus-visible {
+                color: #ff9d9e;
+            }
+        }
+
+        &--cancel {
+            color: var(--parl-mobile-caret, #{mobile.$violet-500});
+            border-top-color: var(--parl-mobile-composer-border);
+        }
+    }
+
+    .chat__delete-confirm-card {
+        background: var(--parl-mobile-composer-bg);
+        box-shadow: none;
+    }
+
+    .chat__delete-confirm-title {
+        color: var(--parl-mobile-incoming-color);
+    }
+
+    .chat__delete-confirm-btn {
+        &--cancel {
+            color: var(--parl-mobile-caret, #{mobile.$violet-500});
+        }
+
+        &--delete {
+            color: #ff9d9e;
+        }
+
+        &:hover,
+        &:focus-visible {
+            background: var(--parl-mobile-incoming-border);
+        }
+    }
+}

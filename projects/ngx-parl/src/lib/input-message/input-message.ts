@@ -8,6 +8,7 @@ import {
     inject,
     input,
     model,
+    NgZone,
     OnDestroy,
     signal,
     ViewChild
@@ -15,7 +16,7 @@ import {
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {ChatMessage, CurrMessage, MessageActionEvent, MessageActionType} from '../core/entity/chat';
-import {ParlAssets} from '../core/service/parl-assets';
+import {NgOptimizedImage} from '@angular/common';
 
 interface EmojiMartSelection {
     native?: string;
@@ -23,7 +24,7 @@ interface EmojiMartSelection {
 
 @Component({
     selector: 'app-input-message',
-    imports: [TranslocoPipe],
+    imports: [TranslocoPipe, NgOptimizedImage],
     templateUrl: './input-message.html',
     styleUrl: './input-message.scss',
     standalone: true,
@@ -35,7 +36,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     @ViewChild('emojiMartHost', {static: false}) emojiMartHost?: ElementRef<HTMLElement>;
 
     private readonly changeDetector = inject(ChangeDetectorRef);
-    public parlAssets = inject(ParlAssets);
+    private readonly ngZone = inject(NgZone);
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
     public language = input<'en' | 'uk'>('en');
@@ -81,6 +82,8 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private emojiMartPicker: HTMLElement | null = null;
     private emojiMartMountGeneration = 0;
     private emojiToggleFromPointer = false;
+    private lastPickerTheme: 'light' | 'dark' = 'light';
+    private themeObserver: MutationObserver | null = null;
 
     public messageEvent = model<MessageActionEvent | null>(null);
 
@@ -134,6 +137,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
                 this.focusInput();
             }
         });
+        this.bindThemeObserver();
     }
 
     ngOnDestroy() {
@@ -141,6 +145,8 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             cancelAnimationFrame(this.resizeRaf);
             this.resizeRaf = null;
         }
+        this.themeObserver?.disconnect();
+        this.themeObserver = null;
         this.destroyEmojiMartPicker();
     }
 
@@ -469,6 +475,40 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this.emojiMartHost?.nativeElement ?? null;
     }
 
+    private readPickerTheme(): 'light' | 'dark' {
+        if (typeof document === 'undefined') {
+            return 'light';
+        }
+
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    }
+
+    private bindThemeObserver(): this {
+        if (this.themeObserver || typeof MutationObserver === 'undefined' || typeof document === 'undefined') {
+            return this;
+        }
+
+        this.themeObserver = new MutationObserver(() => {
+            if (!this.mobileMode() || !this.emojiPickerOpen()) {
+                return;
+            }
+
+            const theme = this.readPickerTheme();
+            if (theme === this.lastPickerTheme) {
+                return;
+            }
+
+            this.destroyEmojiMartPicker();
+            void this.mountEmojiMartPicker();
+        });
+        this.themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme'],
+        });
+
+        return this;
+    }
+
     private readPickerConstructor(emojiMart: unknown): (new (options: Record<string, unknown>) => HTMLElement) | null {
         const candidates = [emojiMart, this.readModuleExport(emojiMart)];
         for (const candidate of candidates) {
@@ -509,10 +549,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             }
 
             const data = this.readModuleExport(dataModule);
+            const theme = this.readPickerTheme();
+            this.lastPickerTheme = theme;
             const picker = new PickerConstructor({
                 data,
                 i18n: i18nModule ? this.readModuleExport(i18nModule) : undefined,
-                theme: 'light',
+                theme,
                 set: 'native',
                 locale,
                 previewPosition: 'none',
@@ -525,9 +567,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
                 maxFrequentRows: 2,
                 autoFocus: false,
                 onEmojiSelect: (emoji: EmojiMartSelection) => {
-                    if (emoji.native) {
-                        this.insertEmoji(emoji.native);
-                    }
+                    this.ngZone.run(() => {
+                        if (emoji.native) {
+                            this.insertEmoji(emoji.native);
+                            this.changeDetector.detectChanges();
+                        }
+                    });
                 },
             });
 
@@ -556,6 +601,13 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         picker.style.setProperty('max-width', 'none', 'important');
         picker.style.setProperty('height', '100%', 'important');
         picker.style.setProperty('box-sizing', 'border-box', 'important');
+
+        if (this.readPickerTheme() === 'dark') {
+            picker.style.setProperty('--rgb-background', '19, 22, 34');
+            picker.style.setProperty('--rgb-input', '34, 40, 54');
+            picker.style.setProperty('--rgb-color', '240, 242, 246');
+            picker.style.setProperty('--rgb-accent', '89, 74, 225');
+        }
 
         const shadow = picker.shadowRoot;
         if (shadow && !shadow.querySelector('style[data-parl-fill]')) {

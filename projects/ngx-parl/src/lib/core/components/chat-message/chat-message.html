@@ -46,7 +46,8 @@
                                     [attr.aria-label]="'chat.photo_preview' | transloco: {__: language()}: language()">
                                 <img [src]="file"
                                      alt="attachment"
-                                     class="message__image"/>
+                                     class="message__image"
+                                     [attr.loading]="mobileMode() ? 'eager' : 'lazy'"/>
                             </button>
                         }
                     </div>
@@ -65,11 +66,11 @@
                                     @if (currentMessage().pending) {
                                         <span class="message__loading" aria-label="Sending"></span>
                                     } @else if (currentMessage().checked) {
-                                        <img [src]="parlAssets.icon('checked-message.svg')"
+                                        <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                                              class="message__icon"
                                              width="18" height="18" alt="hide"/>
                                     } @else {
-                                        <img [src]="parlAssets.icon('no-check.svg')"
+                                        <img ngSrc="assets/ngx-parl/icons/no-check.svg"
                                              class="message__icon"
                                              width="18" height="18" alt="hide"/>
                                     }
@@ -89,13 +90,15 @@
                         @if (currentMessage().pending) {
                             <span class="message__loading" aria-label="Sending"></span>
                         } @else if (currentMessage().checked) {
-                            <img [src]="parlAssets.icon('checked-message.svg')"
+                            <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                                  class="message__icon"
-                                 width="18" height="18" alt="hide"/>
+                                 width="18" height="18" alt="hide"
+                                 priority/>
                         } @else {
-                            <img [src]="parlAssets.icon('no-check.svg')"
+                            <img ngSrc="assets/ngx-parl/icons/no-check.svg"
                                  class="message__icon"
-                                 width="18" height="18" alt="hide"/>
+                                 width="18" height="18" alt="hide"
+                                 priority/>
                         }
                     }
                 </div>
@@ -140,13 +143,13 @@
 <mat-menu #messageMenu="matMenu" yPosition="below" xPosition="before" class="message__menu">
     @if (isOutgoingMessage()) {
         <button mat-menu-item (click)="editMessage(currentMessage())">
-            <img [src]="parlAssets.icon('icon-edit.svg')"
+            <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                  class="message__icon--menu"
                  width="20" height="20" alt="hide"/>
             <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
         </button>
         <button mat-menu-item (click)="deleteMessage(currentMessage())">
-            <img [src]="parlAssets.icon('trash.svg')"
+            <img ngSrc="assets/ngx-parl/icons/trash.svg"
                  class="message__icon--menu"
                  width="20" height="20" alt="hide"/>
             <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>

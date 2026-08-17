@@ -1,17 +1,17 @@
 import {Component, computed, DestroyRef, effect, inject, input, model, signal, Signal} from '@angular/core';
-import {DatePipe, NgClass} from '@angular/common';
+import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {PreviewFile} from '../preview-file/preview-file';
 import {UtilsService} from '../../service/utils/utils';
-import {ParlAssets} from '../../service/parl-assets';
 import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-actions';
 
 @Component({
     selector: 'lib-chat-message',
     imports: [
         NgClass,
+        NgOptimizedImage,
         DatePipe,
         MatMenu,
         MatMenuItem,
@@ -26,7 +26,6 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
 
 export class ChatMessageComponent {
     private readonly utils = inject(UtilsService);
-    public parlAssets = inject(ParlAssets);
     private readonly destroyRef = inject(DestroyRef);
     private readonly isCoarsePointer = signal(this.detectCoarsePointer());
 
@@ -57,7 +56,7 @@ export class ChatMessageComponent {
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
 
     public readonly messageType = MessageType;
-    private readonly anonymAvatarPath = this.parlAssets.icon('avatar_anonym.svg');
+    private readonly anonymAvatarPath = 'assets/ngx-parl/icons/avatar_anonym.svg';
     public readonly avatarLoadFailed = signal(false);
 
     public readonly attachments: Signal<string[]> = computed(() => {

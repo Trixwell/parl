@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, computed, effect, inject, input, model, OnDestroy, Optional, signal, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, signal, ViewChild} from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
@@ -19,7 +19,6 @@ import {
     TranslocoService,
 } from '@ngneat/transloco';
 import {UtilsService} from '../core/service/utils/utils';
-import {ParlAssets} from '../core/service/parl-assets';
 import {FlowTheme, ParlLayout} from '../core/entity/theme';
 import {distinctUntilChanged, map, Subscription, switchMap} from 'rxjs';
 import {ParlQuickActionClickEvent, ParlQuickActionsResolver, ParlQuickActionsWhen} from '../core/entity/quick-actions';
@@ -95,7 +94,6 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public loadHistory = model<boolean>(false);
     private focusTimers: number[] = [];
     private afterOpenedSubscription?: Subscription;
-    public parlAssets = inject(ParlAssets);
 
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService,
