@@ -22,10 +22,10 @@
                 </div>
 
                 <div class="modal-chat__actions">
-                    <img ngSrc="assets/ngx-parl/icons/hide.svg" class="modal-chat__icon modal-chat__icon--hide"
+                    <img [src]="parlAssets.icon('hide.svg')" class="modal-chat__icon modal-chat__icon--hide"
                          width="24" height="24" alt="hide"
                          (click)="onHideClick()"/>
-                    <img ngSrc="assets/ngx-parl/icons/close.svg" class="modal-chat__icon modal-chat__icon--close"
+                    <img [src]="parlAssets.icon('close.svg')" class="modal-chat__icon modal-chat__icon--close"
                          width="24" height="24" alt="close"
                          (click)="onCloseClick()"/>
                 </div>
@@ -45,7 +45,7 @@
                      aria-live="polite"
                      [attr.aria-label]="'chat.drag_title' | transloco: {__: language()}: language()">
                     <div class="modal-chat__drag-card">
-                        <img ngSrc="assets/ngx-parl/icons/attach-filled.svg"
+                        <img [src]="parlAssets.icon('attach-filled.svg')"
                              class="modal-chat__drag-icon"
                              alt=""
                              width="56"

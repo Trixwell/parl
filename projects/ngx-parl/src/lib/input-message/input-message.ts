@@ -15,7 +15,7 @@ import {
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {ChatMessage, CurrMessage, MessageActionEvent, MessageActionType} from '../core/entity/chat';
-import {NgOptimizedImage} from '@angular/common';
+import {ParlAssets} from '../core/service/parl-assets';
 
 interface EmojiMartSelection {
     native?: string;
@@ -23,7 +23,7 @@ interface EmojiMartSelection {
 
 @Component({
     selector: 'app-input-message',
-    imports: [TranslocoPipe, NgOptimizedImage],
+    imports: [TranslocoPipe],
     templateUrl: './input-message.html',
     styleUrl: './input-message.scss',
     standalone: true,
@@ -35,6 +35,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     @ViewChild('emojiMartHost', {static: false}) emojiMartHost?: ElementRef<HTMLElement>;
 
     private readonly changeDetector = inject(ChangeDetectorRef);
+    public parlAssets = inject(ParlAssets);
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
     public language = input<'en' | 'uk'>('en');
