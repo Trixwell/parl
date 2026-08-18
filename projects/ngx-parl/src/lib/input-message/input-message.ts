@@ -117,7 +117,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             element.value = '';
             this.draft.set('');
         }
-        element.style.transition = 'height 160ms ease';
+        if (!(element instanceof HTMLTextAreaElement)) {
+            element.style.transition = 'height 160ms ease';
+        }
         if (this.mirrorElement) {
             this.initMirror();
         }
@@ -184,7 +186,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const element = this.inputTextElement?.nativeElement;
 
         if (element) {
-            this.autoResizeByRows();
+            this.resetComposerHeight();
             element.focus();
         }
 
@@ -327,7 +329,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.previews.set([]);
         this.closeEmojiPicker();
         element.focus();
-        this.autoResizeByRows();
+        this.resetComposerHeight();
 
         setTimeout(() => this.sending.set(false), 150);
 
@@ -846,22 +848,40 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
+    private resetComposerHeight(): this {
+        this.lastRows = 0;
+        this.autoResizeByRows();
+        requestAnimationFrame(() => this.autoResizeByRows());
+
+        return this;
+    }
+
     private autoResizeNativeComposer(element: HTMLTextAreaElement): this {
         const computedStyle = getComputedStyle(element);
-        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+        const lineHeight = this.cssNum(
+            computedStyle.lineHeight,
+            this.cssNum(computedStyle.getPropertyValue('--lh').trim(), 24),
+        );
+        const paddingTop = this.cssNum(computedStyle.paddingTop, 0);
+        const paddingBottom = this.cssNum(computedStyle.paddingBottom, 0);
+        const paddingY = paddingTop + paddingBottom;
         const maxRowsCss = computedStyle.getPropertyValue('--max-rows').trim();
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
-        const maxHeightPx = Math.round(lineHeight * maxRows);
+        const minHeightPx = Math.round(lineHeight + paddingY);
+        const maxHeightPx = Math.round(lineHeight * maxRows + paddingY);
 
-        element.style.removeProperty('height');
-        const nextHeightPx = Math.min(element.scrollHeight, maxHeightPx);
-        const rows = Math.min(maxRows, Math.max(1, Math.round(nextHeightPx / lineHeight)));
+        element.style.transition = 'none';
+        element.style.height = '0px';
+        const contentHeight = element.scrollHeight;
+        const nextHeightPx = Math.max(minHeightPx, Math.min(contentHeight, maxHeightPx));
+        const rows = Math.min(
+            maxRows,
+            Math.max(1, Math.round((nextHeightPx - paddingY) / Math.max(lineHeight, 1))),
+        );
 
-        if (rows > 1) {
-            element.style.height = `${nextHeightPx}px`;
-        }
-
-        this.lastHeightPx = rows > 1 ? nextHeightPx : lineHeight;
+        element.style.height = `${nextHeightPx}px`;
+        element.rows = rows;
+        this.lastHeightPx = nextHeightPx;
         this.lastRows = rows;
         this.updateOverflow(rows);
 

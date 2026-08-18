@@ -60,6 +60,23 @@ describe('NgxParlComponent', () => {
         expect(fixture.nativeElement.style.getPropertyValue('--parl-keyboard-inset')).toBe('120px');
     });
 
+    it('lifts the composer from a keyboardDidShow event when the host inset is 0', () => {
+        fixture.componentRef.setInput('layout', 'fill');
+        fixture.componentRef.setInput('mobileMode', true);
+        fixture.detectChanges();
+
+        window.dispatchEvent(new CustomEvent('keyboardDidShow', {
+            detail: {keyboardHeight: 340},
+        }));
+        fixture.detectChanges();
+
+        expect(component.resolvedKeyboardInset()).toBe(340);
+        expect(component.isKeyboardOpen()).toBe(true);
+        expect(component.keyboardInsetCss()).toBe('340px');
+        expect(fixture.nativeElement.classList.contains('ngx-parl--keyboard-open')).toBe(true);
+        expect(fixture.nativeElement.querySelector('.modal-chat__keyboard-spacer')).not.toBeNull();
+    });
+
     it('lifts the fill layout with a keyboard spacer instead of shell padding', () => {
         fixture.componentRef.setInput('layout', 'fill');
         fixture.componentRef.setInput('keyboardInset', 120);

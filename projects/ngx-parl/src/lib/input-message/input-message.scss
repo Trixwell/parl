@@ -87,7 +87,6 @@
         overflow-wrap: break-word;
         text-align: start;
         caret-color: tokens.$primary-700;
-        transition: height 160ms ease;
         padding: 0 tokens.$margin-1 0 0;
         overflow-y: auto;
         max-height: calc(var(--lh) * var(--max-rows));
@@ -319,6 +318,7 @@
             flex-shrink: 0;
             align-items: center;
             min-height: 48px;
+            height: auto;
             padding: mobile.$space-8 mobile.$space-16;
             background: var(--parl-mobile-composer-bg, #{mobile.$default-50});
             border: mobile.$border-1 solid var(--parl-mobile-composer-border, #{mobile.$violet-100});
@@ -326,6 +326,7 @@
             gap: mobile.$space-8;
 
             &--input {
+                align-items: center;
                 padding: 0;
                 gap: mobile.$space-8;
                 justify-content: flex-start;
@@ -340,6 +341,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            align-self: center;
 
             &:hover {
                 transform: none;
@@ -376,17 +378,26 @@
 
         .message__input {
             flex: 1 1 0;
+            align-self: center;
             min-width: 0;
             width: 100%;
+            height: var(--lh);
+            min-height: var(--lh);
+            max-height: calc(var(--lh) * var(--max-rows));
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
             text-align: start;
             font: mobile.$font-body-s;
             font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
+            line-height: var(--lh);
             caret-color: var(--parl-mobile-caret, #{mobile.$violet-700});
+            transition: none;
 
             &::placeholder {
                 color: var(--parl-mobile-placeholder, #{mobile.$default-300});
                 text-align: start;
+                line-height: var(--lh);
             }
         }
 
@@ -477,7 +488,4 @@
         transform: translateY(0);
         opacity: 1;
     }
-}
-textarea {
-    height: 18px!important;
 }
