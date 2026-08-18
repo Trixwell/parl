@@ -14,7 +14,7 @@
     --max-rows: 8;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     background: tokens.$neutral-50;
     border-top: tokens.$border-1 solid #E1E7F8;
     padding: tokens.$space-1 tokens.$space-2;
@@ -477,4 +477,7 @@
         transform: translateY(0);
         opacity: 1;
     }
+}
+textarea {
+    height: 18px!important;
 }

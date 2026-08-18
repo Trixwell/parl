@@ -168,4 +168,35 @@ describe('ChatMessageComponent', () => {
         flushMicrotasks();
         expect(component.requestMessageActions()).toBeNull();
     }));
+
+    it('renders a single download path as an attachment', () => {
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 10,
+            chat_id: 1,
+            cr_time: '2026-08-13 12:00:00',
+            type: 'incoming',
+            user: 'client',
+            content: 'wqqw',
+            file_path: ['https://api.example.com/download/file?k=abc'],
+        }));
+        fixture.detectChanges();
+
+        expect(component.attachments()).toEqual(['https://api.example.com/download/file?k=abc']);
+    });
+
+    it('uses a media transport_type as the attachment when file_path is empty', () => {
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 11,
+            chat_id: 1,
+            cr_time: '2026-08-13 12:00:00',
+            type: 'incoming',
+            user: 'client',
+            content: 'wqqw',
+            file_path: null,
+            transport_type: 'https://api.example.com/download/file?k=abc',
+        }));
+        fixture.detectChanges();
+
+        expect(component.attachments()).toEqual(['https://api.example.com/download/file?k=abc']);
+    });
 });

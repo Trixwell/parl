@@ -32,7 +32,9 @@
     app-input-message {
         display: block;
         width: 100%;
+        flex: 0 0 auto;
         align-self: stretch;
+        height: auto;
     }
 
     ::ng-deep .chat {
@@ -41,8 +43,16 @@
 }
 
 :host(.ngx-parl--fill:not(.ngx-parl--keyboard-open)) {
-    .modal-chat--fill {
-        padding-bottom: var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px));
+    .modal-chat__keyboard-spacer {
+        flex-basis: var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px));
+        height: var(--ion-safe-area-bottom, env(safe-area-inset-bottom, 0px));
+    }
+}
+
+:host(.ngx-parl--fill.ngx-parl--keyboard-open) {
+    .modal-chat__keyboard-spacer {
+        flex-basis: var(--parl-keyboard-inset, 0px);
+        height: var(--parl-keyboard-inset, 0px);
     }
 }
 
@@ -61,7 +71,7 @@
         height: 100%;
         min-height: 0;
         border-radius: 0;
-        padding-bottom: var(--parl-keyboard-inset, 0px);
+        padding-bottom: 0;
     }
 
     &--fill &__body {
@@ -92,6 +102,14 @@
         display: flex;
         flex-direction: column;
         height: 100%;
+        min-height: 0;
+    }
+
+    &__keyboard-spacer {
+        flex: 0 0 0;
+        width: 100%;
+        height: 0;
+        pointer-events: none;
     }
 
     &__header {
@@ -171,10 +189,10 @@
 
         & app-chat-flow {
             flex: 1 1 auto;
-            min-height: tokens.$space-0;
-            overflow: auto;
+            min-height: 0;
+            overflow: hidden;
             display: flex;
-            align-items: flex-end;
+            flex-direction: column;
         }
     }
 

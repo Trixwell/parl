@@ -61,38 +61,14 @@ export class ChatMessageComponent {
 
     public readonly attachments: Signal<string[]> = computed(() => {
         const message = this.currentMessage();
-        const filePath = message.file_path;
-
-        if (Array.isArray(filePath)) {
-            return filePath.map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
+        const fromFilePath = this.normalizeAttachmentPaths(message.file_path);
+        if (fromFilePath.length) {
+            return fromFilePath;
         }
 
-        const rawFilePath = (filePath as unknown as string) ?? '';
-        if (typeof rawFilePath !== 'string' || !rawFilePath.trim) {
-            return [];
-        }
-
-        if (rawFilePath.trim().startsWith('[')) {
-            try {
-                const parsed = JSON.parse(rawFilePath);
-                if (Array.isArray(parsed)) {
-                    return parsed
-                        .map(item => (typeof item === 'string' ? this.utils.normalizeSourcePath(item) : ''))
-                        .filter(Boolean);
-                }
-            } catch {
-            }
-        }
-
-        if (rawFilePath.startsWith('data:')) {
-            return [rawFilePath];
-        }
-
-        if (rawFilePath.includes('|')) {
-            return rawFilePath.split('|').map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
-        }
-        if (rawFilePath.includes(',')) {
-            return rawFilePath.split(',').map(p => this.utils.normalizeSourcePath(p)).filter(Boolean);
+        if (this.isMediaSource(message.transport_type)) {
+            const normalized = this.utils.normalizeSourcePath(message.transport_type ?? '');
+            return normalized ? [normalized] : [];
         }
 
         return [];
@@ -425,5 +401,60 @@ export class ChatMessageComponent {
         }
 
         return this;
+    }
+
+    private normalizeAttachmentPaths(filePath: string[] | string | null | undefined): string[] {
+        if (Array.isArray(filePath)) {
+            return filePath.map(path => this.utils.normalizeSourcePath(path)).filter(Boolean);
+        }
+
+        const rawFilePath = typeof filePath === 'string' ? filePath.trim() : '';
+        if (!rawFilePath) {
+            return [];
+        }
+
+        if (rawFilePath.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(rawFilePath) as unknown;
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(item => (typeof item === 'string' ? this.utils.normalizeSourcePath(item) : ''))
+                        .filter(Boolean);
+                }
+            } catch {
+            }
+        }
+
+        if (rawFilePath.includes('|')) {
+            return rawFilePath.split('|').map(path => this.utils.normalizeSourcePath(path)).filter(Boolean);
+        }
+
+        if (this.isMediaSource(rawFilePath)) {
+            const normalized = this.utils.normalizeSourcePath(rawFilePath);
+            return normalized ? [normalized] : [];
+        }
+
+        if (rawFilePath.includes(',')) {
+            return rawFilePath.split(',').map(path => this.utils.normalizeSourcePath(path)).filter(Boolean);
+        }
+
+        return [];
+    }
+
+    private isMediaSource(value: string | null | undefined): boolean {
+        if (typeof value !== 'string') {
+            return false;
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+            return false;
+        }
+
+        return trimmed.startsWith('data:')
+            || trimmed.startsWith('blob:')
+            || /^https?:\/\//i.test(trimmed)
+            || /(?:^|\/)(?:download\/file|files\/media)\//.test(trimmed)
+            || trimmed.startsWith('/');
     }
 }

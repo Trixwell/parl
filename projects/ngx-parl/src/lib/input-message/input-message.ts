@@ -122,11 +122,13 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             this.initMirror();
         }
 
-        const computedStyle = getComputedStyle(element);
-        const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+        if (!(element instanceof HTMLTextAreaElement)) {
+            const computedStyle = getComputedStyle(element);
+            const lineHeight = this.cssNum(computedStyle.lineHeight, 24);
+            element.style.height = `${lineHeight}px`;
+            this.lastHeightPx = lineHeight;
+        }
 
-        element.style.height = `${lineHeight}px`;
-        this.lastHeightPx = lineHeight;
         this.lastRows = 1;
         this.updateOverflow(1);
 
@@ -851,12 +853,15 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         const maxRows = maxRowsCss ? this.cssNum(maxRowsCss, 8) : 8;
         const maxHeightPx = Math.round(lineHeight * maxRows);
 
-        element.style.height = `${lineHeight}px`;
+        element.style.removeProperty('height');
         const nextHeightPx = Math.min(element.scrollHeight, maxHeightPx);
         const rows = Math.min(maxRows, Math.max(1, Math.round(nextHeightPx / lineHeight)));
 
-        element.style.height = `${nextHeightPx}px`;
-        this.lastHeightPx = nextHeightPx;
+        if (rows > 1) {
+            element.style.height = `${nextHeightPx}px`;
+        }
+
+        this.lastHeightPx = rows > 1 ? nextHeightPx : lineHeight;
         this.lastRows = rows;
         this.updateOverflow(rows);
 
