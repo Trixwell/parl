@@ -88,5 +88,8 @@
                 }
             </app-input-message>
         </mat-dialog-content>
+        @if (isFillLayout()) {
+            <div class="modal-chat__keyboard-spacer" aria-hidden="true"></div>
+        }
     </div>
 </div>

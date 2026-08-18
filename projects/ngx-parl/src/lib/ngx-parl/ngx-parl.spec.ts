@@ -60,6 +60,15 @@ describe('NgxParlComponent', () => {
         expect(fixture.nativeElement.style.getPropertyValue('--parl-keyboard-inset')).toBe('120px');
     });
 
+    it('lifts the fill layout with a keyboard spacer instead of shell padding', () => {
+        fixture.componentRef.setInput('layout', 'fill');
+        fixture.componentRef.setInput('keyboardInset', 120);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('.modal-chat__keyboard-spacer')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('.modal-chat--fill')).not.toBeNull();
+    });
+
     it('ignores keyboard inset while the emoji picker is open', () => {
         fixture.componentRef.setInput('keyboardInset', 120);
         component.emojiPickerOpen.set(true);
