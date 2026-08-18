@@ -126,6 +126,31 @@ describe('InputMessage', () => {
     expect(component.canSend()).toBeTrue();
   });
 
+  it('collapses the mobile composer after sending a long message', () => {
+    fixture.componentRef.setInput('mobileMode', true);
+    fixture.detectChanges();
+
+    const textarea = fixture.nativeElement.querySelector('textarea.message__input') as HTMLTextAreaElement;
+    Object.defineProperty(textarea, 'scrollHeight', {
+      configurable: true,
+      get: () => textarea.value ? 90 : 18,
+    });
+
+    textarea.value = 'so I can do it for you and you can do it on the office';
+    component.onInput();
+    fixture.detectChanges();
+
+    const expandedHeight = Number.parseInt(textarea.style.height, 10);
+    expect(expandedHeight).toBeGreaterThan(24);
+
+    component.enterDown();
+    fixture.detectChanges();
+
+    expect(textarea.value).toBe('');
+    expect(Number.parseInt(textarea.style.height, 10)).toBeLessThan(expandedHeight);
+    expect(textarea.rows).toBe(1);
+  });
+
   it('sends an emoji-only message from the mobile composer', () => {
     fixture.componentRef.setInput('mobileMode', true);
     fixture.detectChanges();

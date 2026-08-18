@@ -1,4 +1,19 @@
-import {AfterViewInit, Component, computed, effect, input, model, OnDestroy, Optional, signal, ViewChild} from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    computed,
+    DestroyRef,
+    effect,
+    ElementRef,
+    inject,
+    input,
+    model,
+    NgZone,
+    OnDestroy,
+    Optional,
+    signal,
+    ViewChild,
+} from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {NgClass, NgOptimizedImage} from '@angular/common';
 import {ChatFlowComponent} from '../chat-flow/chat-flow';
@@ -22,6 +37,13 @@ import {UtilsService} from '../core/service/utils/utils';
 import {FlowTheme, ParlLayout} from '../core/entity/theme';
 import {distinctUntilChanged, map, Subscription, switchMap} from 'rxjs';
 import {ParlQuickActionClickEvent, ParlQuickActionsResolver, ParlQuickActionsWhen} from '../core/entity/quick-actions';
+import {
+    measureVisualViewportOverlap,
+    pickKeyboardOverlap,
+    readKeyboardEventHeight,
+    readNativeOverlayHeight,
+    readVirtualKeyboardHeight,
+} from '../core/service/keyboard/keyboard-overlap';
 
 @Component({
     selector: 'ngx-parl',
@@ -64,9 +86,14 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public quickActionsWhen = input<ParlQuickActionsWhen>(ParlQuickActionsWhen.ALWAYS);
     public isFillLayout = computed(() => this.layout() === 'fill');
     public emojiPickerOpen = signal(false);
-    public isKeyboardOpen = computed(() => this.keyboardInset() > 0 && !this.emojiPickerOpen());
+    private readonly detectedKeyboardInset = signal(0);
+    private pluginKeyboardInset = 0;
+    public readonly resolvedKeyboardInset = computed(() =>
+        pickKeyboardOverlap([this.keyboardInset(), this.detectedKeyboardInset()]),
+    );
+    public isKeyboardOpen = computed(() => this.resolvedKeyboardInset() > 0 && !this.emojiPickerOpen());
     public keyboardInsetCss = computed(() =>
-        this.emojiPickerOpen() ? '0px' : `${Math.max(0, this.keyboardInset())}px`
+        this.emojiPickerOpen() ? '0px' : `${this.resolvedKeyboardInset()}px`
     );
 
     public messageList = model<ChatMessage[]>([]);
@@ -94,6 +121,13 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public loadHistory = model<boolean>(false);
     private focusTimers: number[] = [];
     private afterOpenedSubscription?: Subscription;
+
+    private readonly hostElement = inject(ElementRef<HTMLElement>);
+    private readonly ngZone = inject(NgZone);
+    private readonly destroyRef = inject(DestroyRef);
+    private keyboardSyncRaf: number | null = null;
+    private focusPollId: ReturnType<typeof setInterval> | null = null;
+    private capacitorKeyboardRemovers: Array<() => void> = [];
 
     constructor(private utils: UtilsService,
                 private transloco: TranslocoService,
@@ -144,7 +178,13 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         });
 
         effect(() => {
-            const inset = Math.max(0, this.keyboardInset());
+            this.emojiPickerOpen();
+            this.mobileMode();
+            this.scheduleKeyboardOverlapSync();
+        });
+
+        effect(() => {
+            const inset = this.emojiPickerOpen() ? 0 : this.resolvedKeyboardInset();
             if (this.scrollToBottomOnKeyboard() && inset > 0 && this.lastKeyboardInset === 0) {
                 queueMicrotask(() => this.scrollToBottom());
             }
@@ -173,6 +213,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit() {
+        this.bindKeyboardOverlapListeners();
         if (this.dialogRef) {
             this.afterOpenedSubscription = this.dialogRef.afterOpened().subscribe(() => {
                 this.queueInitialFocus();
@@ -186,6 +227,197 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         this.focusTimers.forEach(timerId => clearTimeout(timerId));
         this.focusTimers = [];
         this.afterOpenedSubscription?.unsubscribe();
+        this.stopFocusPoll();
+        if (this.keyboardSyncRaf !== null) {
+            cancelAnimationFrame(this.keyboardSyncRaf);
+            this.keyboardSyncRaf = null;
+        }
+        this.capacitorKeyboardRemovers.forEach(remove => remove());
+        this.capacitorKeyboardRemovers = [];
+    }
+
+    private bindKeyboardOverlapListeners(): this {
+        if (typeof window === 'undefined') {
+            return this;
+        }
+
+        const onSync = () => this.scheduleKeyboardOverlapSync();
+        const onShow = (event: Event) => {
+            const detail = (event as CustomEvent<{ dismissed?: boolean }>).detail;
+            this.pluginKeyboardInset = detail?.dismissed ? 0 : readKeyboardEventHeight(event);
+            this.syncDetectedKeyboardInset();
+        };
+        const onHide = () => {
+            this.pluginKeyboardInset = 0;
+            this.syncDetectedKeyboardInset();
+        };
+        const onFocusChange = () => {
+            if (this.hasComposerFocus()) {
+                this.startFocusPoll();
+            } else {
+                this.stopFocusPoll();
+            }
+            this.scheduleKeyboardOverlapSync();
+        };
+
+        const viewport = window.visualViewport;
+        this.ngZone.runOutsideAngular(() => {
+            viewport?.addEventListener('resize', onSync);
+            viewport?.addEventListener('scroll', onSync);
+            window.addEventListener('resize', onSync);
+            window.addEventListener('orientationchange', onSync);
+            window.addEventListener('keyboardWillShow', onShow);
+            window.addEventListener('keyboardDidShow', onShow);
+            window.addEventListener('keyboardWillHide', onHide);
+            window.addEventListener('keyboardDidHide', onHide);
+            window.addEventListener('ionKeyboardDidShow', onShow);
+            window.addEventListener('ionKeyboardDidHide', onHide);
+            window.addEventListener('nativekeyboardoverlay', onShow);
+            document.addEventListener('focusin', onFocusChange);
+            document.addEventListener('focusout', onFocusChange);
+            this.bindVirtualKeyboardListener(onSync);
+            void this.bindCapacitorKeyboardListeners();
+        });
+
+        this.destroyRef.onDestroy(() => {
+            viewport?.removeEventListener('resize', onSync);
+            viewport?.removeEventListener('scroll', onSync);
+            window.removeEventListener('resize', onSync);
+            window.removeEventListener('orientationchange', onSync);
+            window.removeEventListener('keyboardWillShow', onShow);
+            window.removeEventListener('keyboardDidShow', onShow);
+            window.removeEventListener('keyboardWillHide', onHide);
+            window.removeEventListener('keyboardDidHide', onHide);
+            window.removeEventListener('ionKeyboardDidShow', onShow);
+            window.removeEventListener('ionKeyboardDidHide', onHide);
+            window.removeEventListener('nativekeyboardoverlay', onShow);
+            document.removeEventListener('focusin', onFocusChange);
+            document.removeEventListener('focusout', onFocusChange);
+        });
+
+        this.scheduleKeyboardOverlapSync();
+
+        return this;
+    }
+
+    private bindVirtualKeyboardListener(onSync: () => void): this {
+        const virtualKeyboard = (navigator as Navigator & {
+            virtualKeyboard?: {
+                addEventListener?: (type: string, listener: () => void) => void;
+                removeEventListener?: (type: string, listener: () => void) => void;
+            };
+        }).virtualKeyboard;
+        if (!virtualKeyboard?.addEventListener) {
+            return this;
+        }
+
+        virtualKeyboard.addEventListener('geometrychange', onSync);
+        this.destroyRef.onDestroy(() => {
+            virtualKeyboard.removeEventListener?.('geometrychange', onSync);
+        });
+
+        return this;
+    }
+
+    private async bindCapacitorKeyboardListeners(): Promise<this> {
+        const keyboard = (window as Window & {
+            Capacitor?: {
+                Plugins?: {
+                    Keyboard?: {
+                        addListener?: (
+                            eventName: string,
+                            callback: (info: { keyboardHeight?: number }) => void,
+                        ) => Promise<{ remove: () => Promise<void> }> | { remove: () => Promise<void> };
+                    };
+                };
+            };
+        }).Capacitor?.Plugins?.Keyboard;
+        if (!keyboard?.addListener) {
+            return this;
+        }
+
+        const onShow = (info: { keyboardHeight?: number }) => {
+            this.pluginKeyboardInset = Math.max(0, Math.round(info.keyboardHeight ?? 0));
+            this.scheduleKeyboardOverlapSync();
+        };
+        const onHide = () => {
+            this.pluginKeyboardInset = 0;
+            this.scheduleKeyboardOverlapSync();
+        };
+
+        const handles = await Promise.all([
+            keyboard.addListener('keyboardWillShow', onShow),
+            keyboard.addListener('keyboardDidShow', onShow),
+            keyboard.addListener('keyboardWillHide', onHide),
+            keyboard.addListener('keyboardDidHide', onHide),
+        ]);
+
+        this.capacitorKeyboardRemovers = handles.map(handle => () => {
+            void handle.remove();
+        });
+
+        return this;
+    }
+
+    private scheduleKeyboardOverlapSync(): this {
+        if (this.keyboardSyncRaf !== null) {
+            return this;
+        }
+
+        this.keyboardSyncRaf = requestAnimationFrame(() => {
+            this.keyboardSyncRaf = null;
+            this.syncDetectedKeyboardInset();
+        });
+
+        return this;
+    }
+
+    private syncDetectedKeyboardInset(): this {
+        const nextInset = this.emojiPickerOpen()
+            ? 0
+            : pickKeyboardOverlap([
+                measureVisualViewportOverlap(this.hostElement.nativeElement),
+                this.pluginKeyboardInset,
+                readNativeOverlayHeight(),
+                readVirtualKeyboardHeight(),
+            ]);
+
+        if (nextInset === this.detectedKeyboardInset()) {
+            return this;
+        }
+
+        this.ngZone.run(() => this.detectedKeyboardInset.set(nextInset));
+
+        return this;
+    }
+
+    private hasComposerFocus(): boolean {
+        const target = document.activeElement;
+        if (!(target instanceof HTMLElement)) {
+            return false;
+        }
+
+        return this.hostElement.nativeElement.contains(target)
+            && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable);
+    }
+
+    private startFocusPoll(): this {
+        if (this.focusPollId !== null) {
+            return this;
+        }
+
+        this.focusPollId = setInterval(() => this.scheduleKeyboardOverlapSync(), 100);
+
+        return this;
+    }
+
+    private stopFocusPoll(): this {
+        if (this.focusPollId !== null) {
+            clearInterval(this.focusPollId);
+            this.focusPollId = null;
+        }
+
+        return this;
     }
 
     private queueInitialFocus() {

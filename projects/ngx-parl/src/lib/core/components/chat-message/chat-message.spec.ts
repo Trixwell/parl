@@ -169,6 +169,48 @@ describe('ChatMessageComponent', () => {
         expect(component.requestMessageActions()).toBeNull();
     }));
 
+    it('keeps long mobile messages narrower than the chat row', () => {
+        fixture.componentRef.setInput('mobileMode', true);
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 12,
+            chat_id: 1,
+            cr_time: '2026-08-13 12:00:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.',
+        }));
+        fixture.detectChanges();
+
+        const message = fixture.nativeElement.querySelector('.message') as HTMLElement;
+        const meta = fixture.nativeElement.querySelector('.message__meta') as HTMLElement;
+
+        expect(message.classList.contains('message--mobile')).toBeTrue();
+        expect(message.classList.contains('message--outgoing')).toBeTrue();
+        expect(meta).not.toBeNull();
+        expect(meta.querySelector('.message__time')).not.toBeNull();
+        expect(meta.parentElement?.classList.contains('message__column')).toBeTrue();
+    });
+
+    it('places incoming mobile avatar beside the bubble and time below the bubble', () => {
+        fixture.componentRef.setInput('mobileMode', true);
+        fixture.componentRef.setInput('currentMessage', createIncomingMessage());
+        fixture.detectChanges();
+
+        const message = fixture.nativeElement.querySelector('.message') as HTMLElement;
+        const avatar = fixture.nativeElement.querySelector('.message__avatar') as HTMLElement;
+        const body = fixture.nativeElement.querySelector('.message__body') as HTMLElement;
+        const meta = fixture.nativeElement.querySelector('.message__meta') as HTMLElement;
+        const bubbleTime = fixture.nativeElement.querySelector('.message__bubble .message__time');
+
+        expect(message.classList.contains('message--incoming')).toBeTrue();
+        expect(avatar).not.toBeNull();
+        expect(body).not.toBeNull();
+        expect(meta).not.toBeNull();
+        expect(bubbleTime).toBeNull();
+        expect(meta.parentElement?.classList.contains('message__column')).toBeTrue();
+        expect(body.nextElementSibling).toBe(meta);
+    });
+
     it('renders a single download path as an attachment', () => {
         fixture.componentRef.setInput('currentMessage', new ChatMessage({
             id: 10,

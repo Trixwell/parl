@@ -271,9 +271,10 @@
     }
 
     &--mobile {
+        --message-gutter: calc(32px + #{mobile.$space-4});
         align-items: flex-end;
-        width: 100%;
-        max-width: 100%;
+        width: auto;
+        max-width: calc(100% - var(--message-gutter));
         gap: mobile.$space-4;
         font-family: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", sans-serif;
 
@@ -316,6 +317,9 @@
         }
 
         .message__meta {
+            display: inline-flex;
+            width: auto;
+            max-width: 100%;
             padding: 0;
             gap: mobile.$space-4;
             min-height: 14px;
@@ -325,6 +329,7 @@
             font: mobile.$font-caption-s;
             color: var(--parl-mobile-muted, #{mobile.$default-300});
             min-width: 0;
+            line-height: 14px;
         }
 
         .message__icon {
@@ -347,14 +352,30 @@
         }
 
         &.message--incoming {
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr);
+            grid-template-rows: auto auto;
+            gap: mobile.$space-2 mobile.$space-4;
+            align-items: end;
+            width: 100%;
+            max-width: 100%;
             margin-right: auto;
 
             .message__column {
-                align-items: flex-start;
-                max-width: calc(100% - 32px - #{mobile.$space-4});
+                display: contents;
+                max-width: none;
+            }
+
+            .message__avatar {
+                grid-column: 1;
+                grid-row: 1;
+                align-self: end;
             }
 
             .message__body {
+                grid-column: 2;
+                grid-row: 1;
+                justify-self: start;
                 background: var(--parl-mobile-incoming-bg, #{mobile.$default-50});
                 color: var(--parl-mobile-incoming-color, #{mobile.$default-900});
                 border: mobile.$border-1 solid var(--parl-mobile-incoming-border, #{mobile.$violet-100});
@@ -366,16 +387,27 @@
             }
 
             .message__meta {
+                grid-column: 2;
+                grid-row: 2;
+                justify-self: start;
                 justify-content: flex-start;
+            }
+
+            .message__quick-actions-wrap {
+                grid-column: 1 / -1;
+                grid-row: 3;
             }
         }
 
         &.message--outgoing {
+            width: auto;
+            max-width: calc(100% - var(--message-gutter));
             margin-left: auto;
 
             .message__column {
                 align-items: flex-end;
                 margin-left: auto;
+                max-width: 100%;
             }
 
             .message__body {
