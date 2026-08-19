@@ -226,6 +226,27 @@ describe('ChatMessageComponent', () => {
         expect(component.attachments()).toEqual(['https://api.example.com/download/file?k=abc']);
     });
 
+    it('renders allowed html tags and escapes the rest', () => {
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 13,
+            chat_id: 1,
+            cr_time: '2026-08-13 12:00:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'Balance: <b>350.00</b> <a href="https://pay.example/link">pay</a> <script>alert(1)</script>',
+        }));
+        fixture.detectChanges();
+
+        const text = fixture.nativeElement.querySelector('.message__text') as HTMLElement;
+        const bold = text.querySelector('b');
+        const link = text.querySelector('a');
+
+        expect(bold?.textContent).toBe('350.00');
+        expect(link?.getAttribute('href')).toBe('https://pay.example/link');
+        expect(text.querySelector('script')).toBeNull();
+        expect(text.textContent).toContain('alert(1)');
+    });
+
     it('uses a media transport_type as the attachment when file_path is empty', () => {
         fixture.componentRef.setInput('currentMessage', new ChatMessage({
             id: 11,

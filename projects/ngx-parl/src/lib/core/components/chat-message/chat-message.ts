@@ -1,5 +1,6 @@
-import {Component, computed, DestroyRef, effect, inject, input, model, signal, Signal} from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, model, SecurityContext, signal, Signal} from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
+import {DomSanitizer} from '@angular/platform-browser';
 import {ChatMessage, MessageType} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
@@ -26,6 +27,7 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
 
 export class ChatMessageComponent {
     private readonly utils = inject(UtilsService);
+    private readonly sanitizer = inject(DomSanitizer);
     private readonly destroyRef = inject(DestroyRef);
     private readonly isCoarsePointer = signal(this.detectCoarsePointer());
 
@@ -100,6 +102,12 @@ export class ChatMessageComponent {
         }
 
         return this.avatarSrc();
+    });
+
+    public readonly safeMessageHtml: Signal<string> = computed(() => {
+        const filtered = this.utils.filterAllowedHtml(this.currentMessage().content ?? '');
+
+        return this.sanitizer.sanitize(SecurityContext.HTML, filtered) ?? '';
     });
 
     public readonly isOutgoingMessage: Signal<boolean> = computed(
