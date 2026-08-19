@@ -55,7 +55,7 @@
 
                 @if (showMessageBubble()) {
                     <div class="message__bubble" tabindex="0">
-                        <div class="message__text">{{ currentMessage().content }}</div>
+                        <div class="message__text" [innerHTML]="safeMessageHtml()"></div>
 
                         @if (!mobileMode()) {
                             <div class="message__meta">
