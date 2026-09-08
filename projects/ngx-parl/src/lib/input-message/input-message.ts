@@ -14,13 +14,21 @@ import {
     ViewChild
 } from '@angular/core';
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
-import {TranslocoPipe} from '@ngneat/transloco';
-import {ChatMessage, CurrMessage, MessageActionEvent, MessageActionType} from '../core/entity/chat';
+import {TranslocoPipe, TranslocoService} from '@ngneat/transloco';
+import {
+    ChatMessage,
+    CurrMessage,
+    MessageActionEvent,
+    MessageActionType,
+    PARL_DEFAULT_MAX_FILE_SIZE_BYTES,
+} from '../core/entity/chat';
 import {NgOptimizedImage} from '@angular/common';
-
-interface EmojiMartSelection {
-    native?: string;
-}
+import {clearMessageDraft, loadMessageDraft, saveMessageDraft} from '../core/service/draft/message-draft';
+import {FlowTheme} from '../core/entity/theme';
+import {
+    createEmojiMartPicker,
+    ensureEmojiMartReady,
+} from '../core/service/emoji-mart/emoji-mart';
 
 @Component({
     selector: 'app-input-message',
@@ -37,18 +45,29 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     private readonly changeDetector = inject(ChangeDetectorRef);
     private readonly ngZone = inject(NgZone);
+    private readonly transloco = inject(TranslocoService);
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
+    public replyTo = model<ChatMessage | null>(null);
     public language = input<'en' | 'uk'>('en');
     public autoFocus = input<boolean>(true);
     public mobileMode = input<boolean>(false);
+    public theme = input<FlowTheme>(FlowTheme.PRIMARY);
+    public isSecondaryTheme = computed(() => this.theme() === FlowTheme.SECONDARY);
+    public showEmojiButton = computed(() => this.mobileMode() || this.isSecondaryTheme());
+    public draftKey = input<string>('default');
+    public draftTtlMs = input<number>(24 * 60 * 60 * 1000);
+    public maxFileSizeBytes = input<number>(PARL_DEFAULT_MAX_FILE_SIZE_BYTES);
+    public fileError = signal<string | null>(null);
 
     public hasOriginalAttachments = computed(() => {
         const filePaths = this.editFilePaths();
         return filePaths.length > 0;
     });
 
-    public hasNewAttachments = computed(() => (this.previews()?.length ?? 0) > 0);
+    public hasNewAttachments = computed(() =>
+        (this.previews() ?? []).some(item => item.status === 'ready' || (!item.status && !!item.src)),
+    );
 
     public cancelEdit = model<number | null>(null);
     public input_text = model<string | CurrMessage>('');
@@ -84,10 +103,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private emojiToggleFromPointer = false;
     private lastPickerTheme: 'light' | 'dark' = 'light';
     private themeObserver: MutationObserver | null = null;
+    private lastFocusedReplyId: number | null = null;
 
     public messageEvent = model<MessageActionEvent | null>(null);
 
     constructor() {
+        void ensureEmojiMartReady();
         effect(() => {
             const message = this.editMessage();
             const element = this.inputTextElement?.nativeElement;
@@ -97,7 +118,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             }
 
             if (message) {
-                const content = (message as any).content ?? '';
+                const content = message.content ?? '';
                 this.draft.set(content);
                 this.writeComposerText(content);
 
@@ -109,11 +130,42 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
                 });
             }
         });
+
+        effect(() => {
+            const reply = this.replyTo();
+            if (!reply || this.isEditMode()) {
+                this.lastFocusedReplyId = null;
+                return;
+            }
+
+            if (this.lastFocusedReplyId === reply.id) {
+                return;
+            }
+
+            this.lastFocusedReplyId = reply.id;
+            queueMicrotask(() => this.focusInput());
+        });
+
+        effect(() => {
+            const content = this.draft();
+            const reply = this.replyTo();
+            if (this.isEditMode()) {
+                return;
+            }
+
+            saveMessageDraft(
+                this.draftKey(),
+                content,
+                reply?.id ?? null,
+                this.draftTtlMs(),
+            );
+        });
     }
 
     ngAfterViewInit() {
         const element = this.inputTextElement.nativeElement;
-        if (element instanceof HTMLTextAreaElement && !element.value.trim()) {
+        this.restoreDraft();
+        if (element instanceof HTMLTextAreaElement && !element.value.trim() && !this.draft()) {
             element.value = '';
             this.draft.set('');
         }
@@ -160,13 +212,46 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             return [];
         }
 
-        const file_path = (message as any).file_path;
+        const file_path = message.file_path;
 
         return Array.isArray(file_path) ? file_path : [];
     }
 
+    restoreDraft(): this {
+        if (this.editMessage()) {
+            return this;
+        }
+
+        const saved = loadMessageDraft(this.draftKey());
+        if (!saved) {
+            return this;
+        }
+
+        this.draft.set(saved.content);
+        this.writeComposerText(saved.content);
+        queueMicrotask(() => this.autoResizeByRows());
+
+        return this;
+    }
+
+    cancelReply(): this {
+        this.replyTo.set(null);
+        return this;
+    }
+
+    formatMaxSize(): string {
+        const bytes = this.maxFileSizeBytes();
+        if (bytes >= 1024 * 1024) {
+            return `${Math.round(bytes / (1024 * 1024))} MB`;
+        }
+        return `${Math.round(bytes / 1024)} KB`;
+    }
+
     collectAttachmentSources(): string[] {
-        const newAttachments = (this.previews() ?? []).map(p => p.src).filter(Boolean);
+        const newAttachments = (this.previews() ?? [])
+            .filter(item => item.status === 'ready' || (!item.status && !!item.src))
+            .map(p => p.src)
+            .filter(Boolean);
         if (!this.isEditMode()) {
             return newAttachments;
         }
@@ -177,7 +262,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
     cancelEditMessage() {
         const message = this.editMessage();
-        this.cancelEdit.set((message as any)?.id ?? null);
+        this.cancelEdit.set(message?.id ?? null);
         queueMicrotask(() => this.cancelEdit.set(null));
 
         this.draft.set('');
@@ -202,13 +287,15 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         if (!element) {
             return this;
         }
+
         queueMicrotask(() => {
             if (this.emojiPickerOpen()) {
                 return;
             }
 
-            element.focus();
+            element.focus({preventScroll: true});
             this.focused.set(true);
+            this.setCaretToEnd(element);
         });
 
         return this;
@@ -310,6 +397,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
 
         queueMicrotask(() => this.messageEvent.set(null));
 
+        const reply = this.replyTo();
         const payload: CurrMessage = message ? {
             id: message.id,
             content: text,
@@ -319,6 +407,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             content: text,
             file_path: files.length ? files : [],
             file_list: fileList.length ? fileList : [],
+            reply_to: reply
+                ? {id: reply.id, user: reply.user, content: reply.content}
+                : null,
         };
 
         this.input_text.set(payload);
@@ -327,6 +418,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.writeComposerText('');
         this.files.set([]);
         this.previews.set([]);
+        this.replyTo.set(null);
+        this.fileError.set(null);
+        clearMessageDraft(this.draftKey());
         this.closeEmojiPicker();
         element.focus();
         this.resetComposerHeight();
@@ -497,7 +591,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
 
         this.themeObserver = new MutationObserver(() => {
-            if (!this.mobileMode() || !this.emojiPickerOpen()) {
+            if (!this.showEmojiButton() || !this.emojiPickerOpen()) {
                 return;
             }
 
@@ -517,20 +611,6 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    private readPickerConstructor(emojiMart: unknown): (new (options: Record<string, unknown>) => HTMLElement) | null {
-        const candidates = [emojiMart, this.readModuleExport(emojiMart)];
-        for (const candidate of candidates) {
-            if (candidate && typeof candidate === 'object' && 'Picker' in candidate) {
-                const picker = (candidate as { Picker: unknown }).Picker;
-                if (typeof picker === 'function') {
-                    return picker as new (options: Record<string, unknown>) => HTMLElement;
-                }
-            }
-        }
-
-        return null;
-    }
-
     private async mountEmojiMartPicker() {
         const host = await this.resolvePickerHost();
         if (!host || !this.emojiPickerOpen()) {
@@ -538,43 +618,17 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         }
 
         const mountGeneration = this.emojiMartMountGeneration;
-        const locale = this.language();
 
         try {
-            const [emojiMart, dataModule, i18nModule] = await Promise.all([
-                import('emoji-mart'),
-                import('@emoji-mart/data'),
-                locale === 'uk' ? import('@emoji-mart/data/i18n/uk.json') : Promise.resolve(null),
-            ]);
-
-            if (mountGeneration !== this.emojiMartMountGeneration || !this.emojiPickerOpen()) {
-                return this;
-            }
-
-            const PickerConstructor = this.readPickerConstructor(emojiMart);
-            if (!PickerConstructor) {
-                return this;
-            }
-
-            const data = this.readModuleExport(dataModule);
             const theme = this.readPickerTheme();
             this.lastPickerTheme = theme;
-            const picker = new PickerConstructor({
-                data,
-                i18n: i18nModule ? this.readModuleExport(i18nModule) : undefined,
+            const picker = await createEmojiMartPicker({
                 theme,
-                set: 'native',
-                locale,
-                previewPosition: 'none',
-                skinTonePosition: 'search',
                 navPosition: 'none',
-                searchPosition: 'sticky',
-                dynamicWidth: true,
-                emojiButtonSize: 36,
+                skinTonePosition: 'search',
                 emojiSize: 24,
                 maxFrequentRows: 2,
-                autoFocus: false,
-                onEmojiSelect: (emoji: EmojiMartSelection) => {
+                onEmojiSelect: emoji => {
                     this.ngZone.run(() => {
                         if (emoji.native) {
                             this.insertEmoji(emoji.native);
@@ -673,14 +727,6 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         });
 
         return this;
-    }
-
-    private readModuleExport(moduleValue: unknown): unknown {
-        if (moduleValue && typeof moduleValue === 'object' && 'default' in moduleValue) {
-            return (moduleValue as { default: unknown }).default ?? moduleValue;
-        }
-
-        return moduleValue;
     }
 
     private captureComposerCaret() {
@@ -947,7 +993,9 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             'white-space', 'text-transform', 'box-sizing'
         ];
 
-        properties.forEach(property => (mirror.style as any)[property] = computedStyle.getPropertyValue(property));
+        properties.forEach(property => {
+            mirror.style.setProperty(property, computedStyle.getPropertyValue(property));
+        });
         mirror.style.paddingTop = '0px';
         mirror.style.paddingBottom = '0px';
     }
@@ -962,11 +1010,19 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    readFileAsDataURL(file: File): Promise<string> {
+    readFileAsDataURL(
+        file: File,
+        onProgress?: (progress: number) => void,
+    ): Promise<string> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
+            reader.onprogress = event => {
+                if (event.lengthComputable && onProgress) {
+                    onProgress(Math.round((event.loaded / event.total) * 100));
+                }
+            };
             reader.onload = e => resolve((e.target?.result as string) || '');
-            reader.onerror = reject;
+            reader.onerror = () => reject(new Error('read_failed'));
             reader.readAsDataURL(file);
         });
     }
@@ -982,16 +1038,114 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
             return this;
         }
 
-        this.files.set([...(this.files() ?? []), ...list]);
+        const maxBytes = this.maxFileSizeBytes();
+        const accepted: File[] = [];
+        let hasOversized = false;
 
-        Promise.all(
-            list.map(async f => {
-                const src = await this.readFileAsDataURL(f);
-                const originalKind: OriginalKind = (f.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
-                return <PreviewItem>{src, originalKind, name: f.name, type: f.type || '', size: f.size};
+        for (const file of list) {
+            if (file.size > maxBytes) {
+                hasOversized = true;
+                const preview: PreviewItem = {
+                    src: '',
+                    originalKind: (file.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE,
+                    name: file.name,
+                    type: file.type || '',
+                    size: file.size,
+                    progress: 0,
+                    status: 'oversized',
+                    error: this.transloco.translate('chat.file_too_large', {max: this.formatMaxSize()}),
+                };
+                this.previews.set([...(this.previews() ?? []), preview]);
+                continue;
+            }
+            accepted.push(file);
+        }
+
+        this.fileError.set(
+            hasOversized
+                ? this.transloco.translate('chat.file_too_large', {max: this.formatMaxSize()})
+                : null,
+        );
+
+        if (!accepted.length) {
+            return this;
+        }
+
+        const startIndex = (this.previews() ?? []).length;
+        this.files.set([...(this.files() ?? []), ...accepted]);
+
+        accepted.forEach((file, offset) => {
+            const previewIndex = startIndex + offset;
+            const originalKind: OriginalKind = (file.type || '') === 'image/gif' ? FileType.GIF : FileType.IMAGE;
+            const placeholder: PreviewItem = {
+                src: '',
+                originalKind,
+                name: file.name,
+                type: file.type || '',
+                size: file.size,
+                progress: 0,
+                status: 'reading',
+                error: null,
+            };
+            this.previews.set([...(this.previews() ?? []), placeholder]);
+
+            this.readFileAsDataURL(file, progress => {
+                this.patchPreview(previewIndex, {progress, status: 'reading'});
             })
-        )
-            .then(items => this.previews.set([...(this.previews() ?? []), ...items]));
+                .then(src => {
+                    this.patchPreview(previewIndex, {
+                        src,
+                        progress: 100,
+                        status: 'ready',
+                        error: null,
+                    });
+                })
+                .catch(() => {
+                    this.patchPreview(previewIndex, {
+                        progress: 0,
+                        status: 'error',
+                        error: this.transloco.translate('chat.file_upload_error'),
+                    });
+                    this.fileError.set(this.transloco.translate('chat.file_upload_error'));
+                });
+        });
+
+        return this;
+    }
+
+    retryPreview(index: number): this {
+        const preview = this.previews()[index];
+        const file = this.files().find(item => item.name === preview?.name && item.size === preview?.size);
+        if (!preview || !file || preview.status === 'oversized') {
+            return this;
+        }
+
+        this.patchPreview(index, {status: 'reading', progress: 0, error: null});
+        this.readFileAsDataURL(file, progress => {
+            this.patchPreview(index, {progress, status: 'reading'});
+        })
+            .then(src => {
+                this.patchPreview(index, {src, progress: 100, status: 'ready', error: null});
+                this.fileError.set(null);
+            })
+            .catch(() => {
+                this.patchPreview(index, {
+                    status: 'error',
+                    error: this.transloco.translate('chat.file_upload_error'),
+                });
+            });
+
+        return this;
+    }
+
+    private patchPreview(index: number, patch: Partial<PreviewItem>): this {
+        const list = [...(this.previews() ?? [])];
+        if (index < 0 || index >= list.length) {
+            return this;
+        }
+
+        list[index] = {...list[index], ...patch};
+        this.previews.set(list);
 
         return this;
     }

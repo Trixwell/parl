@@ -62,12 +62,18 @@
             }
             <app-chat-flow [messageListInput]="messageList()"
                            [(selectedForEdit)]="selectedForEdit"
+                           [(replyTo)]="replyTo"
+                           [(scrollToMessageId)]="scrollToMessageId"
                            (requestDeleteChange)="onRequestDelete($event)"
+                           (messageUiActionChange)="onMessageUiAction($event)"
                            [language]="language()"
                            [logoChat]="logoChat()"
                            [incomingAvatar]="incomingAvatar()"
                            [mobileMode]="mobileMode()"
+                           [theme]="theme()"
                            [hasMoreHistory]="hasMoreHistory()"
+                           [enableSearch]="enableSearch()"
+                           [reactionEmojis]="reactionEmojis()"
                            [quickActionsWhen]="quickActionsWhen()"
                            [quickActionsResolver]="quickActionsResolver()"
                            [quickActionClick]="quickActionClick()"
@@ -77,9 +83,14 @@
             </app-chat-flow>
 
             <app-input-message [editMessage]="selectedForEdit()"
+                               [(replyTo)]="replyTo"
                                [language]="language()"
                                [autoFocus]="autoFocus()"
                                [mobileMode]="mobileMode()"
+                               [theme]="theme()"
+                               [draftKey]="draftKey()"
+                               [draftTtlMs]="draftTtlMs()"
+                               [maxFileSizeBytes]="maxFileSizeBytes()"
                                [(emojiPickerOpen)]="emojiPickerOpen"
                                (cancelEditChange)="onCancelEdit($event)"
                                (input_textChange)="sendMessage($event)">

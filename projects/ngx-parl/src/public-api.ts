@@ -3,3 +3,5 @@ export * from './lib/ngx-parl.providers';
 export * from './lib/core/entity/quick-actions';
 export * from './lib/core/entity/chat';
 export * from './lib/core/entity/theme';
+export * from './lib/core/entity/file';
+export * from './lib/core/service/draft/message-draft';

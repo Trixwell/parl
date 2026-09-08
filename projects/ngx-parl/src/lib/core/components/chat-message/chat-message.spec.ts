@@ -191,6 +191,61 @@ describe('ChatMessageComponent', () => {
         expect(meta.parentElement?.classList.contains('message__column')).toBeTrue();
     });
 
+    it('places the edited label on the same row as time in mobile mode', () => {
+        fixture.componentRef.setInput('mobileMode', true);
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 14,
+            chat_id: 1,
+            cr_time: '2026-08-13 23:06:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'This text was edited',
+            edited: true,
+            checked: true,
+        }));
+        fixture.detectChanges();
+
+        const meta = fixture.nativeElement.querySelector('.message__meta') as HTMLElement;
+        const label = meta.querySelector('.message__changed-label') as HTMLElement;
+        const time = meta.querySelector('.message__time') as HTMLElement;
+        const changed = fixture.nativeElement.querySelector('.message__changed');
+
+        expect(changed).toBeNull();
+        expect(label).not.toBeNull();
+        expect(label.parentElement).toBe(meta);
+        expect(time).not.toBeNull();
+        expect(time.parentElement).toBe(meta);
+        expect(label.nextElementSibling).toBe(time);
+        expect(meta.querySelector('.message__icon')).not.toBeNull();
+    });
+
+    it('places the edited label next to time in desktop mode', () => {
+        fixture.componentRef.setInput('mobileMode', false);
+        fixture.componentRef.setInput('currentMessage', new ChatMessage({
+            id: 15,
+            chat_id: 1,
+            cr_time: '2026-08-13 23:06:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'This text was edited',
+            edited: true,
+            checked: true,
+        }));
+        fixture.detectChanges();
+
+        const meta = fixture.nativeElement.querySelector('.message__bubble .message__meta') as HTMLElement;
+        const label = meta.querySelector('.message__changed-label') as HTMLElement;
+        const time = meta.querySelector('.message__time') as HTMLElement;
+        const userRow = fixture.nativeElement.querySelector('.message__user') as HTMLElement;
+
+        expect(label).not.toBeNull();
+        expect(label.parentElement).toBe(meta);
+        expect(time).not.toBeNull();
+        expect(label.nextElementSibling).toBe(time);
+        expect(userRow?.querySelector('.message__changed-label')).toBeNull();
+        expect(userRow?.querySelector('.message__user-name')).not.toBeNull();
+    });
+
     it('places incoming mobile avatar beside the bubble and time below the bubble', () => {
         fixture.componentRef.setInput('mobileMode', true);
         fixture.componentRef.setInput('currentMessage', createIncomingMessage());

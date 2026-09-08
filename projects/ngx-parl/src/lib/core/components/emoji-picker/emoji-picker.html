@@ -1,0 +1,34 @@
+<div class="emoji-picker"
+     [class.emoji-picker--outgoing]="outgoing()"
+     role="listbox"
+     [attr.aria-label]="'chat.react' | transloco: {__: language()}: language()"
+     (click)="$event.stopPropagation()">
+    <div class="emoji-picker__bar">
+        @for (emoji of emojis(); track emoji; let emojiIndex = $index) {
+            <button type="button"
+                    class="emoji-picker__emoji"
+                    [class.emoji-picker__emoji--primary]="emojiIndex === 0"
+                    (click)="pickEmoji(emoji, $event)">
+                {{ emoji }}
+            </button>
+        }
+        <button type="button"
+                class="emoji-picker__more"
+                [class.emoji-picker__more--open]="showMartPicker()"
+                [attr.aria-expanded]="showMartPicker()"
+                [attr.aria-label]="'chat.emoji' | transloco: {__: language()}: language()"
+                (click)="toggleMartPicker($event)">
+            <img ngSrc="assets/ngx-parl/icons/chevron-down.svg"
+                 width="14"
+                 height="14"
+                 alt=""
+                 [priority]="mobileMode()"/>
+        </button>
+    </div>
+
+    @if (showMartPicker()) {
+        <div #emojiMartHost
+             class="emoji-picker__mart"
+             (click)="onMartHostClick($event)"></div>
+    }
+</div>

@@ -169,4 +169,22 @@ describe('InputMessage', () => {
     expect(payloadSpy).toHaveBeenCalledWith(jasmine.objectContaining({ content: '😜' }));
     expect(textarea.value).toBe('');
   });
+
+  it('rejects photos larger than 8 MB and does not queue them for send', () => {
+    fixture.componentRef.setInput('maxFileSizeBytes', 8 * 1024 * 1024);
+    fixture.detectChanges();
+
+    const oversized = new File([new Uint8Array(8 * 1024 * 1024 + 1)], 'large.png', {
+      type: 'image/png',
+    });
+    const allowed = new File([new Uint8Array(1024)], 'ok.png', {type: 'image/png'});
+
+    component.addFiles([oversized, allowed]);
+    fixture.detectChanges();
+
+    expect(component.files().length).toBe(1);
+    expect(component.files()[0].name).toBe('ok.png');
+    expect(component.previews().some(item => item.status === 'oversized')).toBeTrue();
+    expect(component.fileError()).toContain('8 MB');
+  });
 });

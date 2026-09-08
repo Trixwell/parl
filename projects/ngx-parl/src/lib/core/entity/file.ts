@@ -8,6 +8,8 @@ export class ImageFile {
 
 export type OriginalKind = 'image' | 'gif';
 
+export type PreviewUploadStatus = 'ready' | 'reading' | 'error' | 'oversized';
+
 export interface PreviewItem {
     originalKind: OriginalKind;
     duration?: number;
@@ -15,6 +17,9 @@ export interface PreviewItem {
     name: string;
     type: string;
     size: number;
+    progress?: number;
+    status?: PreviewUploadStatus;
+    error?: string | null;
 }
 
 export enum FileType {

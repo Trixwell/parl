@@ -24,7 +24,12 @@ import {
     ChatMessageType,
     CurrMessage,
     MessageActionEvent,
-    MessageType
+    MessageEditHistoryEntry,
+    MessageReaction,
+    MessageReplyTo,
+    MessageType,
+    PARL_DEFAULT_MAX_FILE_SIZE_BYTES,
+    PARL_DEFAULT_REACTION_EMOJIS,
 } from '../core/entity/chat';
 import {MatProgressSpinner} from '@angular/material/progress-spinner';
 import {InputMessageComponent} from '../input-message/input-message';
@@ -44,7 +49,8 @@ import {
     readNativeOverlayHeight,
     readVirtualKeyboardHeight,
 } from '../core/service/keyboard/keyboard-overlap';
-
+import {ChatMessageActionRequest} from '../core/components/chat-message/chat-message';
+import {loadMessageDraft} from '../core/service/draft/message-draft';
 @Component({
     selector: 'ngx-parl',
     standalone: true,
@@ -83,6 +89,11 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public autoFocus = input<boolean>(true);
     public scrollToBottomOnKeyboard = input<boolean>(true);
     public hasMoreHistory = input<boolean>(true);
+    public enableSearch = input<boolean>(true);
+    public maxFileSizeBytes = input<number>(PARL_DEFAULT_MAX_FILE_SIZE_BYTES);
+    public draftKey = input<string>('default');
+    public draftTtlMs = input<number>(24 * 60 * 60 * 1000);
+    public reactionEmojis = input<readonly string[]>(PARL_DEFAULT_REACTION_EMOJIS);
     public quickActionsWhen = input<ParlQuickActionsWhen>(ParlQuickActionsWhen.ALWAYS);
     public isFillLayout = computed(() => this.layout() === 'fill');
     public emojiPickerOpen = signal(false);
@@ -99,7 +110,9 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
     public messageList = model<ChatMessage[]>([]);
     public messageUpdate = model<ChatMessage>();
     public selectedForEdit = model<ChatMessage | null>(null);
+    public replyTo = model<ChatMessage | null>(null);
     public messageAction = model<MessageActionEvent | null>(null);
+    public scrollToMessageId = model<number | null>(null);
 
     public incomingUser = input<string>('');
     public transportType = input<string>('');
@@ -177,6 +190,17 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             });
         });
 
+        effect(() => {
+            const draft = loadMessageDraft(this.draftKey());
+            if (!draft?.replyToId) {
+                return;
+            }
+
+            const replyMessage = this.messageList().find(message => message.id === draft.replyToId);
+            if (replyMessage && !this.replyTo()) {
+                this.replyTo.set(replyMessage);
+            }
+        });
         effect(() => {
             this.emojiPickerOpen();
             this.mobileMode();
@@ -425,30 +449,15 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             return;
         }
 
-        const focusInputIfAppropriate = (allowStealingFocus: boolean) => {
-            if (!this.inputMessage) {
-                return;
-            }
-            if (!allowStealingFocus) {
-                const activeElement = document.activeElement;
-                if (activeElement && activeElement !== document.body) {
-                    return;
-                }
-            }
-
-            this.inputMessage.focusInput();
+        const focusComposer = () => {
+            this.inputMessage?.focusInput();
         };
 
-        const immediateTimerId = window.setTimeout(() => {
-            focusInputIfAppropriate(true);
-        }, 0);
-        this.focusTimers.push(immediateTimerId);
-
-        const delayedTimerId = window.setTimeout(() => {
-            focusInputIfAppropriate(false);
-        }, 200);
-
-        this.focusTimers.push(delayedTimerId);
+        // Retry: dialog / always-visible search can steal first focus.
+        for (const delayMs of [0, 50, 150, 300]) {
+            const timerId = window.setTimeout(focusComposer, delayMs);
+            this.focusTimers.push(timerId);
+        }
     }
 
     onCancelEdit(messageId: number | null) {
@@ -464,6 +473,200 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         }
 
         this.selectedForEdit.set(null);
+
+        return this;
+    }
+
+    onMessageUiAction(request: ChatMessageActionRequest | null): this {
+        if (!request) {
+            return this;
+        }
+
+        const {action, message, emoji} = request;
+
+        if (action === 'reply') {
+            this.replyTo.set(message);
+            this.selectedForEdit.set(null);
+            this.pushMessageAction({
+                action: 'reply',
+                chatMessageId: message.id,
+                content: message.content,
+                reply_to: {id: message.id, user: message.user, content: message.content},
+            });
+            queueMicrotask(() => this.inputMessage?.focusInput());
+            return this;
+        }
+
+        if (action === 'react' && emoji) {
+            this.toggleReaction(message.id, emoji);
+            this.pushMessageAction({
+                action: 'react',
+                chatMessageId: message.id,
+                content: message.content,
+                reactionEmoji: emoji,
+            });
+            return this;
+        }
+
+        if (action === 'pin' || action === 'unpin') {
+            this.setPinned(message.id, action === 'pin');
+            this.pushMessageAction({
+                action,
+                chatMessageId: message.id,
+                content: message.content,
+                pinned: action === 'pin',
+            });
+            return this;
+        }
+
+        if (action === 'copy') {
+            this.pushMessageAction({
+                action: 'copy',
+                chatMessageId: message.id,
+                content: message.content,
+            });
+            return this;
+        }
+
+        if (action === 'read') {
+            this.markRead(message.id);
+            this.pushMessageAction({
+                action: 'read',
+                chatMessageId: message.id,
+                content: message.content,
+            });
+            return this;
+        }
+
+        if (action === 'retry') {
+            return this.retryFailedMessage(message.id);
+        }
+
+        return this;
+    }
+
+    toggleReaction(messageId: number, emoji: string): this {
+        this.messageList.update(list => {
+            const index = list.findIndex(message => message.id === messageId);
+            if (index < 0) {
+                return list;
+            }
+
+            const updated = [...list];
+            const current = updated[index];
+            const existing = (current.reactions ?? [])[0] ?? null;
+
+            // Same emoji again → remove the only reaction.
+            if (existing?.emoji === emoji && existing.reactedByMe) {
+                updated[index] = Object.assign(
+                    new ChatMessage({
+                        ...toDto(current),
+                        reactions: [],
+                    }),
+                    {edit: current.edit},
+                );
+                return updated;
+            }
+
+            // One reaction only: replace whatever was there.
+            updated[index] = Object.assign(
+                new ChatMessage({
+                    ...toDto(current),
+                    reactions: [{emoji, count: 1, reactedByMe: true}],
+                }),
+                {edit: current.edit},
+            );
+
+            return updated;
+        });
+
+        return this;
+    }
+
+    setPinned(messageId: number, pinned: boolean): this {
+        this.messageList.update(list => {
+            const index = list.findIndex(message => message.id === messageId);
+            if (index < 0 || list[index].pinned === pinned) {
+                return list;
+            }
+
+            const updated = [...list];
+            const current = updated[index];
+            updated[index] = Object.assign(
+                new ChatMessage({
+                    ...toDto(current),
+                    pinned,
+                }),
+                {edit: current.edit},
+            );
+
+            return updated;
+        });
+
+        return this;
+    }
+
+    markRead(messageId: number): this {
+        this.messageList.update(list => {
+            const index = list.findIndex(message => message.id === messageId);
+            if (index < 0 || !list[index].unread) {
+                return list;
+            }
+
+            const updated = [...list];
+            const current = updated[index];
+            updated[index] = Object.assign(
+                new ChatMessage({
+                    ...toDto(current),
+                    unread: false,
+                    checked: current.type === MessageType.Outgoing ? true : current.checked,
+                }),
+                {edit: current.edit},
+            );
+
+            return updated;
+        });
+
+        return this;
+    }
+
+    retryFailedMessage(messageId: number): this {
+        const message = this.messageList().find(item => item.id === messageId);
+        if (!message) {
+            return this;
+        }
+
+        this.messageList.update(list => {
+            const index = list.findIndex(item => item.id === messageId);
+            if (index < 0) {
+                return list;
+            }
+
+            const updated = [...list];
+            const current = updated[index];
+            updated[index] = Object.assign(
+                new ChatMessage({
+                    ...toDto(current),
+                    pending: true,
+                    failed: false,
+                    upload: current.upload
+                        ? {...current.upload, status: 'uploading', progress: 0, error: null}
+                        : null,
+                }),
+                {edit: current.edit},
+            );
+
+            return updated;
+        });
+
+        this.pushMessageAction({
+            action: 'retry',
+            chatMessageId: messageId,
+            content: message.content,
+            file_path: message.file_path ?? [],
+            file_list: message.file_list ?? [],
+            reply_to: message.reply_to,
+        });
 
         return this;
     }
@@ -508,20 +711,36 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 );
 
                 if (index > -1) {
-                    updatedList[index].content = (content ?? '').trim();
+                    const previous = updatedList[index];
+                    const nextContent = (content ?? '').trim();
+                    const history: MessageEditHistoryEntry[] = [
+                        ...(previous.edit_history ?? []),
+                    ];
 
-                    updatedList[index].file_path =
-                        Array.isArray(file_path) && file_path.length ? file_path : null;
-                    updatedList[index].file_list =
-                        Array.isArray(file_list) && file_list.length ? file_list : null;
-                    if (transport_type !== undefined) {
-                        updatedList[index].transport_type = transport_type ?? null;
-                    }
-                    if (transport_type_icon !== undefined) {
-                        updatedList[index].transport_type_icon = transport_type_icon ?? null;
+                    if (previous.content !== nextContent) {
+                        history.push({
+                            content: previous.content,
+                            editedAt: this.utils.getLocalISODate(),
+                        });
                     }
 
-                    updatedList[index].edit = false;
+                    updatedList[index] = Object.assign(
+                        new ChatMessage({
+                            ...toDto(previous),
+                            content: nextContent,
+                            file_path: Array.isArray(file_path) && file_path.length ? file_path : null,
+                            file_list: Array.isArray(file_list) && file_list.length ? file_list : null,
+                            transport_type: transport_type !== undefined
+                                ? transport_type ?? null
+                                : previous.transport_type,
+                            transport_type_icon: transport_type_icon !== undefined
+                                ? transport_type_icon ?? null
+                                : previous.transport_type_icon,
+                            edited: true,
+                            edit_history: history,
+                        }),
+                        {edit: false},
+                    );
                 }
 
                 return updatedList;
@@ -549,7 +768,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
 
             if (!hasFiles) {
-                const {content, user_id, user, transport_type, transport_type_icon} = event;
+                const {content, user_id, user, transport_type, transport_type_icon, reply_to} = event;
                 const text = (content ?? '').trim();
                 if (!hasMessageText(text)) {
                     return this;
@@ -559,9 +778,11 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                     content: text,
                     transport_type,
                     transport_type_icon,
+                    reply_to: reply_to ?? this.replyPreview(),
                 });
 
                 this.messageList.update((list) => [...list, new ChatMessage(dto)]);
+                this.replyTo.set(null);
                 this.scrollToBottomTrigger.update(v => v + 1);
                 this.pushMessageAction({
                     action: 'send',
@@ -571,6 +792,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                     user: user,
                     transport_type: dto.transport_type ?? null,
                     transport_type_icon: dto.transport_type_icon ?? null,
+                    reply_to: dto.reply_to,
                 });
 
                 return this;
@@ -582,7 +804,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             return this;
         }
 
-        const {content, file_path, file_list, user_id, user, transport_type, transport_type_icon} = event;
+        const {content, file_path, file_list, user_id, user, transport_type, transport_type_icon, reply_to} = event;
         const text = (content ?? '').trim();
         const hasFiles = Array.isArray(file_path) && file_path.length > 0;
         const hasFileList = Array.isArray(file_list) && file_list.length > 0;
@@ -597,9 +819,12 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             file_list: hasFileList ? file_list : [],
             transport_type,
             transport_type_icon,
+            reply_to: reply_to ?? this.replyPreview(),
+            withUpload: hasFiles,
         });
 
         this.messageList.update((list) => [...list, new ChatMessage(dto)]);
+        this.replyTo.set(null);
         this.scrollToBottomTrigger.update(v => v + 1);
         this.pushMessageAction({
             action: 'send',
@@ -611,6 +836,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             user: user,
             transport_type: dto.transport_type ?? null,
             transport_type_icon: dto.transport_type_icon ?? null,
+            reply_to: dto.reply_to,
         });
 
         return this;
@@ -639,7 +865,15 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 file_list: dto.file_list ?? current.file_list,
                 checked: dto.checked ?? true,
                 pending: false,
+                failed: false,
+                edited: dto.edited ?? current.edited,
+                pinned: dto.pinned ?? current.pinned,
+                unread: dto.unread ?? false,
                 actions: dto.actions ?? current.actions,
+                reply_to: dto.reply_to ?? current.reply_to,
+                reactions: dto.reactions ?? current.reactions,
+                edit_history: dto.edit_history ?? current.edit_history,
+                upload: dto.upload ?? {progress: 100, status: 'done'},
             });
 
             return updated;
@@ -671,12 +905,27 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         return tempId;
     }
 
+    private replyPreview(): MessageReplyTo | null {
+        const reply = this.replyTo();
+        if (!reply) {
+            return null;
+        }
+
+        return {
+            id: reply.id,
+            user: reply.user,
+            content: reply.content,
+        };
+    }
+
     private createOptimisticOutgoing(event: {
         content: string;
         file_path?: string[] | null;
         file_list?: File[] | null;
         transport_type?: string | null;
         transport_type_icon?: string | null;
+        reply_to?: MessageReplyTo | null;
+        withUpload?: boolean;
     }): ChatMessageDTO {
         const messages = this.messageList();
         const lastOutgoing = [...messages]
@@ -699,9 +948,16 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             avatar: lastOutgoing?.avatar ?? null,
             file_path: filePath,
             file_list: fileList,
-            checked: true,
+            checked: false,
             pending: true,
+            failed: false,
             actions: [],
+            reply_to: event.reply_to ?? null,
+            reactions: [],
+            edit_history: [],
+            upload: event.withUpload
+                ? {progress: 5, status: 'uploading', error: null}
+                : null,
         };
     }
 
@@ -792,4 +1048,31 @@ function hasMessageText(value: string | null | undefined): boolean {
     }
 
     return [...value.trim()].length > 0;
+}
+
+function toDto(message: ChatMessage): ChatMessageDTO {
+    return {
+        id: message.id,
+        chat_id: message.chat_id,
+        cr_time: message.cr_time,
+        type: message.type,
+        transport_type: message.transport_type,
+        transport_type_icon: message.transport_type_icon,
+        user: message.user,
+        content: message.content,
+        avatar: message.avatar,
+        file_path: message.file_path,
+        file_list: message.file_list,
+        checked: message.checked,
+        pending: message.pending,
+        failed: message.failed,
+        edited: message.edited,
+        pinned: message.pinned,
+        unread: message.unread,
+        actions: message.actions,
+        reply_to: message.reply_to,
+        reactions: message.reactions as MessageReaction[],
+        edit_history: message.edit_history,
+        upload: message.upload,
+    };
 }

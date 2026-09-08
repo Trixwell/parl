@@ -15,6 +15,14 @@ export class ChatMessage {
     public checked: boolean | null;
     public edit = false;
     public pending = false;
+    public failed = false;
+    public edited = false;
+    public pinned = false;
+    public unread = false;
+    public reply_to: MessageReplyTo | null = null;
+    public reactions: MessageReaction[] = [];
+    public edit_history: MessageEditHistoryEntry[] = [];
+    public upload: MessageUploadState | null = null;
 
     constructor(data: ChatMessageDTO) {
         this.id = data.id;
@@ -28,9 +36,17 @@ export class ChatMessage {
         this.avatar = data.avatar ?? null;
         this.checked = data.checked ?? null;
         this.pending = data.pending ?? false;
+        this.failed = data.failed ?? false;
+        this.edited = data.edited ?? false;
+        this.pinned = data.pinned ?? false;
+        this.unread = data.unread ?? false;
         this.file_path = data.file_path ?? null;
         this.file_list = data.file_list ?? null;
         this.actions = Array.isArray(data.actions) ? data.actions : [];
+        this.reply_to = data.reply_to ?? null;
+        this.reactions = Array.isArray(data.reactions) ? data.reactions : [];
+        this.edit_history = Array.isArray(data.edit_history) ? data.edit_history : [];
+        this.upload = data.upload ?? null;
     }
 
     get dateSimple(): string {
@@ -63,13 +79,46 @@ export interface ChatMessageDTO {
     file_list?: File[] | [] | null;
     checked?: boolean | null;
     pending?: boolean;
+    failed?: boolean;
+    edited?: boolean;
+    pinned?: boolean;
+    unread?: boolean;
     actions?: ChatQuickButton[] | null;
+    reply_to?: MessageReplyTo | null;
+    reactions?: MessageReaction[] | null;
+    edit_history?: MessageEditHistoryEntry[] | null;
+    upload?: MessageUploadState | null;
 }
 
 export interface ChatQuickButton {
     id: number;
     title: string;
     value: string;
+}
+
+export interface MessageReplyTo {
+    id: number;
+    user: string;
+    content: string;
+}
+
+export interface MessageReaction {
+    emoji: string;
+    count: number;
+    reactedByMe: boolean;
+}
+
+export interface MessageEditHistoryEntry {
+    content: string;
+    editedAt: string;
+}
+
+export type MessageUploadStatus = 'idle' | 'uploading' | 'error' | 'done';
+
+export interface MessageUploadState {
+    progress: number;
+    status: MessageUploadStatus;
+    error?: string | null;
 }
 
 export type ChatMessageType = 'incoming' | 'outgoing';
@@ -88,9 +137,20 @@ export interface CurrMessage {
     user?: string;
     transport_type?: string | null;
     transport_type_icon?: string | null;
+    reply_to?: MessageReplyTo | null;
 }
 
-export type MessageActionType = 'send' | 'edit' | 'delete';
+export type MessageActionType =
+    | 'send'
+    | 'edit'
+    | 'delete'
+    | 'react'
+    | 'reply'
+    | 'pin'
+    | 'unpin'
+    | 'copy'
+    | 'retry'
+    | 'read';
 
 export interface MessageActionEvent {
     action: MessageActionType;
@@ -102,4 +162,12 @@ export interface MessageActionEvent {
     user?: string;
     transport_type?: string | null;
     transport_type_icon?: string | null;
+    reply_to?: MessageReplyTo | null;
+    reactionEmoji?: string;
+    pinned?: boolean;
 }
+
+/** Default max attachment size (8 MB). Hosts can override via maxFileSizeBytes. */
+export const PARL_DEFAULT_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+
+export const PARL_DEFAULT_REACTION_EMOJIS = ['❤️', '👍', '😂', '😮', '😢', '🙏', '🔥'] as const;
