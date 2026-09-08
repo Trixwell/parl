@@ -1,48 +1,253 @@
 <div class="chat" [class.chat--mobile]="mobileMode()">
-    @if (hasMessages()) {
-        <div #chatFlowRef
-             class="chat__flow"
-             infiniteScroll
-             [scrollWindow]="false"
-             [infiniteScrollUpDistance]="Math.max(historyLoadThreshold(), 2)"
-             [infiniteScrollThrottle]="100"
-             (scrolledUp)="onScrollUp()"
-        >
-            @if (!mobileMode()) {
-                <div class="chat__manager-header" aria-hidden="true">
-                    <div class="chat__manager-icon">
-                        <img [ngSrc]="logoChatSrc()"
-                             alt=""
-                             width="72"
-                             height="72"/>
-                    </div>
-                </div>
-            }
+    @if (selectionMode()) {
+        <div class="chat__selection"
+             role="toolbar"
+             [attr.aria-label]="'chat.selection' | transloco: {__: language()}: language()"
+             (keydown.escape)="clearSelection()">
+            <button type="button"
+                    class="chat__selection-close"
+                    [attr.aria-label]="'chat.cancel' | transloco: {__: language()}: language()"
+                    (click)="clearSelection()">
+                <img ngSrc="assets/ngx-parl/icons/search-close.svg"
+                     width="18"
+                     height="18"
+                     alt=""
+                     priority/>
+            </button>
 
-            @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
-                @if (message | toggleDisplayChatStartDay: messageList() : i : language()) {
-                    <span class="chat__start-day">
-                        {{ message.cr_time | chatStartDay:'d MMMM':language() }}
+            <span class="chat__selection-count">
+                {{
+                    'chat.selected_count' | transloco: {
+                        count: selectedCount(),
+                        __: language()
+                    }: language()
+                }}
+            </span>
+
+            <div class="chat__selection-actions">
+                <button type="button"
+                        class="chat__selection-btn"
+                        [disabled]="!canReplySelected()"
+                        [attr.aria-label]="'chat.reply' | transloco: {__: language()}: language()"
+                        (click)="replyToSelected()">
+                    <img ngSrc="assets/ngx-parl/icons/reply.svg"
+                         width="20"
+                         height="20"
+                         alt=""
+                         priority/>
+                    <span>{{ 'chat.reply' | transloco: {__: language()}: language() }}</span>
+                </button>
+                <button type="button"
+                        class="chat__selection-btn chat__selection-btn--danger"
+                        [disabled]="!canDeleteSelected()"
+                        [attr.aria-label]="'chat.remove' | transloco: {__: language()}: language()"
+                        [attr.title]="!canDeleteSelected() ? ('chat.delete_outgoing_only' | transloco: {__: language()}: language()) : null"
+                        (click)="deleteSelected()">
+                    <img ngSrc="assets/ngx-parl/icons/trash.svg"
+                         width="20"
+                         height="20"
+                         alt=""
+                         priority/>
+                    <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (enableSearch() && !selectionMode()) {
+        <div class="chat__search"
+             [class.chat__search--secondary]="isSecondaryTheme()"
+             role="search">
+            <label class="chat__search-field">
+                <img ngSrc="assets/ngx-parl/icons/search.svg"
+                     class="chat__search-field-icon"
+                     width="18"
+                     height="18"
+                     alt=""
+                     priority/>
+                <input #searchInput
+                       class="chat__search-input"
+                       type="search"
+                       [value]="searchQuery()"
+                       [attr.placeholder]="'chat.search_placeholder' | transloco: {__: language()}: language()"
+                       [attr.aria-label]="'chat.search' | transloco: {__: language()}: language()"
+                       (input)="onSearchInput($event)"
+                       (keydown)="onSearchKeydown($event)"/>
+                <div class="chat__search-actions">
+                    @if (searchQuery().trim()) {
+                        <span class="chat__search-count"
+                              [class.chat__search-count--empty]="!searchMatchIds().length"
+                              aria-live="polite">
+                            @if (searchMatchIds().length) {
+                                {{
+                                    'chat.search_results' | transloco: {
+                                        current: searchMatchIndex() + 1,
+                                        total: searchMatchIds().length,
+                                        __: language()
+                                    }: language()
+                                }}
+                            } @else {
+                                {{ 'chat.search_empty' | transloco: {__: language()}: language() }}
+                            }
+                        </span>
+                    }
+                    <button type="button"
+                            class="chat__search-nav-btn"
+                            [disabled]="!searchMatchIds().length"
+                            [attr.aria-label]="'chat.search_prev' | transloco: {__: language()}: language()"
+                            (click)="goToSearchMatch(-1)">
+                        <img ngSrc="assets/ngx-parl/icons/chevron-up.svg"
+                             width="18"
+                             height="18"
+                             alt=""
+                             priority/>
+                    </button>
+                    <button type="button"
+                            class="chat__search-nav-btn"
+                            [disabled]="!searchMatchIds().length"
+                            [attr.aria-label]="'chat.search_next' | transloco: {__: language()}: language()"
+                            (click)="goToSearchMatch(1)">
+                        <img ngSrc="assets/ngx-parl/icons/chevron-down.svg"
+                             width="18"
+                             height="18"
+                             alt=""
+                             priority/>
+                    </button>
+                    @if (searchQuery().trim()) {
+                        <button type="button"
+                                class="chat__search-close"
+                                [attr.aria-label]="'chat.search_clear' | transloco: {__: language()}: language()"
+                                (click)="clearSearchQuery()">
+                            <img ngSrc="assets/ngx-parl/icons/search-close.svg"
+                                 width="18"
+                                 height="18"
+                                 alt=""
+                                 priority/>
+                        </button>
+                    }
+                </div>
+            </label>
+        </div>
+    }
+
+    @if (activePinnedMessage(); as pinned) {
+        <div class="chat__pinned"
+             [class.chat__pinned--multi]="pinnedMessages().length > 1"
+             role="region"
+             [attr.aria-label]="'chat.pinned' | transloco: {__: language()}: language()">
+            @if (pinnedMessages().length > 1) {
+                <div class="chat__pinned-tracks" aria-hidden="true">
+                    @for (item of pinnedMessages(); track item.id; let trackIndex = $index) {
+                        <button type="button"
+                                class="chat__pinned-track"
+                                [class.chat__pinned-track--active]="trackIndex === (pinnedPreviewIndex() % pinnedMessages().length)"
+                                (click)="selectPinnedPreview(trackIndex)">
+                        </button>
+                    }
+                </div>
+            } @else {
+                <div class="chat__pinned-accent" aria-hidden="true"></div>
+            }
+            <button type="button"
+                    class="chat__pinned-main"
+                    (click)="jumpToPinned()">
+                <span class="chat__pinned-header">
+                    <img ngSrc="assets/ngx-parl/icons/pin.svg"
+                         class="chat__pinned-icon"
+                         width="14"
+                         height="14"
+                         alt=""
+                         [priority]="mobileMode()"/>
+                    <span class="chat__pinned-label">
+                        @if (pinnedPreviewLabel(); as label) {
+                            {{
+                                'chat.pinned_of' | transloco: {
+                                    current: label.current,
+                                    total: label.total,
+                                    __: language()
+                                }: language()
+                            }}
+                        } @else {
+                            {{ 'chat.pinned' | transloco: {__: language()}: language() }}
+                        }
                     </span>
+                </span>
+                <span class="chat__pinned-text">{{ pinned.content }}</span>
+            </button>
+        </div>
+    }
+
+    @if (hasMessages()) {
+        <div class="chat__flow-wrap">
+            <div #chatFlowRef
+                 class="chat__flow"
+                 infiniteScroll
+                 [scrollWindow]="false"
+                 [infiniteScrollUpDistance]="Math.max(historyLoadThreshold(), 2)"
+                 [infiniteScrollThrottle]="100"
+                 (scrolledUp)="onScrollUp()"
+            >
+                @if (!mobileMode()) {
+                    <div class="chat__manager-header" aria-hidden="true">
+                        <div class="chat__manager-icon">
+                            <img [ngSrc]="logoChatSrc()"
+                                 alt=""
+                                 width="72"
+                                 height="72"/>
+                        </div>
+                    </div>
                 }
 
-                <div class="chat__message" [attr.data-message-id]="message.id">
-                    <lib-chat-message
-                        [currentMessage]="message"
-                        [edit]="message.edit"
-                        [language]="language()"
-                        [logoChat]="logoChat()"
-                        [incomingAvatar]="incomingAvatar()"
-                        [mobileMode]="mobileMode()"
-                        [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
-                        [quickActionClick]="quickActionClick()"
-                        (quickActionClickChange)="quickActionClick.set($event)"
-                        (editChange)="onEditChange(message.id, $event)"
-                        (requestEditChange)="onRequestEdit($event)"
-                        (requestDeleteChange)="onRequestDelete($event)"
-                        (requestMessageActionsChange)="onRequestMessageActions($event)">
-                    </lib-chat-message>
-                </div>
+                @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
+                    @if (message | toggleDisplayChatStartDay: messageList() : i : language()) {
+                        <span class="chat__start-day">
+                            {{ message.cr_time | chatStartDay:'d MMMM':language() }}
+                        </span>
+                    }
+
+                    <div class="chat__message"
+                         [attr.data-message-id]="message.id"
+                         [class.chat__message--selected]="selectedIdsSet().has(message.id)">
+                        <lib-chat-message
+                            [currentMessage]="message"
+                            [edit]="message.edit"
+                            [language]="language()"
+                            [logoChat]="logoChat()"
+                            [incomingAvatar]="incomingAvatar()"
+                            [mobileMode]="mobileMode()"
+                            [theme]="theme()"
+                            [highlighted]="highlightedMessageId() === message.id"
+                            [showUnreadMarker]="firstUnreadMessageId() === message.id"
+                            [selectionMode]="selectionMode()"
+                            [selected]="selectedIdsSet().has(message.id)"
+                            [reactionEmojis]="reactionEmojis()"
+                            [quickActions]="quickActionsByMessageId().get(message.id) ?? []"
+                            [quickActionClick]="quickActionClick()"
+                            (quickActionClickChange)="quickActionClick.set($event)"
+                            (editChange)="onEditChange(message.id, $event)"
+                            (requestEditChange)="onRequestEdit($event)"
+                            (requestDeleteChange)="onRequestDelete($event)"
+                            (requestMessageActionsChange)="onRequestMessageActions($event)"
+                            (messageActionRequestChange)="onMessageUiAction($event)">
+                        </lib-chat-message>
+                    </div>
+                }
+            </div>
+
+            @if (showScrollToBottom()) {
+                <button class="chat__scroll-button"
+                        type="button"
+                        (click)="scrollToBottomSmooth()"
+                        [attr.aria-label]="'chat.scroll_to_bottom' | transloco: {__: language()}: language()">
+                    <img ngSrc="assets/ngx-parl/icons/bottom-scroll.svg"
+                         alt=""
+                         width="16"
+                         height="16"
+                         priority/>
+                    @if (unreadCount() > 0) {
+                        <span class="chat__scroll-unread">{{ unreadCount() }}</span>
+                    }
+                </button>
             }
         </div>
 
@@ -57,22 +262,88 @@
                 <div class="chat__message-actions-backdrop"
                      (click)="onMessageActionsBackdropClick()"></div>
                 <div class="chat__message-actions-panel">
+                    <div class="chat__message-actions-handle" aria-hidden="true"></div>
+                    <button type="button"
+                            class="chat__message-actions-item chat__message-actions-item--select"
+                            (click)="onMessageActionsSelect()">
+                        <img [ngSrc]="selectCheckIcon()"
+                             width="20" height="20" alt=""
+                             priority/>
+                        <span>{{ 'chat.select' | transloco: {__: language()}: language() }}</span>
+                    </button>
                     <button type="button"
                             class="chat__message-actions-item"
-                            (click)="onMessageActionsEdit()">
-                        <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
+                            (click)="onMessageActionsReply()">
+                        <img ngSrc="assets/ngx-parl/icons/reply.svg"
                              width="20" height="20" alt=""
                              priority/>
-                        <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
+                        <span>{{ 'chat.reply' | transloco: {__: language()}: language() }}</span>
                     </button>
                     <button type="button"
-                            class="chat__message-actions-item chat__message-actions-item--danger"
-                            (click)="onMessageActionsDelete()">
-                        <img ngSrc="assets/ngx-parl/icons/trash.svg"
+                            class="chat__message-actions-item"
+                            (click)="onMessageActionsReact()">
+                        <img ngSrc="assets/ngx-parl/icons/react.svg"
                              width="20" height="20" alt=""
                              priority/>
-                        <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
+                        <span>{{ 'chat.react' | transloco: {__: language()}: language() }}</span>
                     </button>
+                    @if (reactionPickerOpen()) {
+                        <div class="chat__reaction-row">
+                            @for (emoji of reactionEmojis(); track emoji) {
+                                <button type="button"
+                                        class="chat__reaction-emoji"
+                                        (click)="onMessageActionsPickReaction(emoji)">
+                                    {{ emoji }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    <!--                    <button type="button"-->
+                    <!--                            class="chat__message-actions-item"-->
+                    <!--                            (click)="onMessageActionsCopy()">-->
+                    <!--                        <img ngSrc="assets/ngx-parl/icons/copy.svg"-->
+                    <!--                             width="20" height="20" alt=""-->
+                    <!--                             priority/>-->
+                    <!--                        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>-->
+                    <!--                    </button>-->
+                    <button type="button"
+                            class="chat__message-actions-item"
+                            (click)="onMessageActionsPin()">
+                        <img ngSrc="assets/ngx-parl/icons/pin.svg"
+                             width="20" height="20" alt=""
+                             priority/>
+                        <span>{{ ((pendingActionsMessage()?.pinned ? 'chat.unpin' : 'chat.pin') | transloco: {__: language()}: language()) }}</span>
+                    </button>
+                    @if (pendingActionsMessage()?.type === 'outgoing') {
+                        <button type="button"
+                                class="chat__message-actions-item"
+                                (click)="onMessageActionsEdit()">
+                            <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
+                                 width="20" height="20" alt=""
+                                 priority/>
+                            <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
+                        </button>
+                        <div class="chat__message-actions-divider" role="separator"></div>
+                        <button type="button"
+                                class="chat__message-actions-item chat__message-actions-item--danger"
+                                (click)="onMessageActionsDelete()">
+                            <img ngSrc="assets/ngx-parl/icons/trash.svg"
+                                 width="20" height="20" alt=""
+                                 priority/>
+                            <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
+                        </button>
+                    }
+                    @if (pendingActionsMessage()?.failed || pendingActionsMessage()?.upload?.status === 'error') {
+                        <button type="button"
+                                class="chat__message-actions-item"
+                                (click)="onMessageActionsRetry()">
+                            <img ngSrc="assets/ngx-parl/icons/retry.svg"
+                                 width="20" height="20" alt=""
+                                 priority/>
+                            <span>{{ 'chat.retry' | transloco: {__: language()}: language() }}</span>
+                        </button>
+                    }
+                    <div class="chat__message-actions-divider" role="separator"></div>
                     <button type="button"
                             class="chat__message-actions-item chat__message-actions-item--cancel"
                             (click)="closeMessageActions()">
@@ -94,7 +365,16 @@
                      (click)="closeDeleteConfirm()"></div>
                 <div class="chat__delete-confirm-card">
                     <h2 id="chat-delete-confirm-title" class="chat__delete-confirm-title">
-                        {{ 'chat.delete_message_title' | transloco: {__: language()}: language() }}
+                        @if (pendingDeleteIds().length > 1) {
+                            {{
+                                'chat.delete_messages_title' | transloco: {
+                                    count: pendingDeleteIds().length,
+                                    __: language()
+                                }: language()
+                            }}
+                        } @else {
+                            {{ 'chat.delete_message_title' | transloco: {__: language()}: language() }}
+                        }
                     </h2>
                     <div class="chat__delete-confirm-actions">
                         <button type="button"
@@ -111,18 +391,6 @@
                 </div>
             </div>
         }
-
-        @if (showScrollToBottom()) {
-            <button class="chat__scroll-button"
-                    type="button"
-                    (click)="scrollToBottomSmooth()"
-                    aria-label="Scroll to bottom">
-                <img ngSrc="assets/ngx-parl/icons/bottom-scroll.svg"
-                     alt=""
-                     width="14"
-                     height="14"/>
-            </button>
-        }
     } @else {
         <div class="chat__flow__empty">
             <img ngSrc="assets/ngx-parl/icons/lucide_send.svg"
@@ -136,4 +404,3 @@
         </div>
     }
 </div>
-

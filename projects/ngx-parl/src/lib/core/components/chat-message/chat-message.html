@@ -1,10 +1,41 @@
+@if (showUnreadMarker()) {
+    <div class="message__unread-separator" role="separator">
+        {{ 'chat.unread_separator' | transloco: {__: language()}: language() }}
+    </div>
+}
+
 <div class="message"
      [ngClass]="{
        'message--outgoing': isOutgoingMessage(),
        'message--incoming': !isOutgoingMessage(),
        'message--mobile': mobileMode(),
-       'message--touch-actions': useMobileMessageActions()
-     }">
+       'message--touch-actions': useMobileMessageActions() && !selectionMode(),
+       'message--highlighted': highlighted(),
+       'message--pinned': currentMessage().pinned,
+       'message--failed': hasUploadError(),
+       'message--selection': selectionMode(),
+       'message--selected': selected()
+     }"
+     [style.--swipe-offset.px]="swipeOffset()"
+     (click)="onMessageClick($event)">
+    @if (showSelectionCheck()) {
+        <div class="message__select" aria-hidden="true">
+            @if (selected()) {
+                <img [ngSrc]="selectCheckIcon()"
+                     width="22"
+                     height="22"
+                     alt=""
+                     [priority]="mobileMode()"/>
+            } @else {
+                <img ngSrc="assets/ngx-parl/icons/select-empty.svg"
+                     width="22"
+                     height="22"
+                     alt=""
+                     [priority]="mobileMode()"/>
+            }
+        </div>
+    }
+
     @if (showAvatar()) {
         <div class="message__avatar">
             <img [src]="displayedAvatarSrc()"
@@ -17,17 +48,23 @@
 
     @if (showMessageBody()) {
         <div class="message__column">
+            <div class="message__swipe-hint" aria-hidden="true">↩</div>
+
             <div class="message__body"
+                 #messageBody
+                 role="article"
+                 [attr.aria-label]="currentMessage().user"
                  (contextmenu)="openContextMenu($event, menuTrigger, menuTriggerEl)"
                  (keydown.shift.F10)="openContextMenu($event, menuTrigger, menuTriggerEl)"
+                 (dblclick)="onMessageDoubleClick($event)"
                  (pointerdown)="onMessagePointerDown($event)"
                  (pointermove)="onMessagePointerMove($event)"
-                 (pointerup)="onMessagePointerUp()"
-                 (pointercancel)="onMessagePointerUp()"
+                 (pointerup)="onMessagePointerUp($event)"
+                 (pointercancel)="onMessagePointerUp($event)"
                  (touchstart)="onMessageTouchStart($event)"
                  (touchmove)="onMessageTouchMove($event)"
-                 (touchend)="onMessageTouchEnd()"
-                 (touchcancel)="onMessageTouchEnd()">
+                 (touchend)="onMessageTouchEnd($event)"
+                 (touchcancel)="onMessageTouchEnd($event)">
                 <button type="button"
                         class="message__menu-trigger"
                         aria-hidden="true"
@@ -36,6 +73,31 @@
                         #menuTriggerEl
                         [matMenuTriggerFor]="messageMenu">
                 </button>
+
+                @if (showReactionPicker()) {
+                    <lib-emoji-picker
+                        class="message__emoji-picker"
+                        [class.message__emoji-picker--outgoing]="isOutgoingMessage()"
+                        [emojis]="reactionEmojis()"
+                        [language]="language()"
+                        [outgoing]="isOutgoingMessage()"
+                        [mobileMode]="mobileMode()"
+                        (pickedEmojiChange)="onReactionPicked($event)">
+                    </lib-emoji-picker>
+                }
+
+                @if (currentMessage().pinned) {
+                    <div class="message__pin-badge">📌 {{ 'chat.pinned' | transloco: {__: language()}: language() }}</div>
+                }
+
+                @if (currentMessage().reply_to; as reply) {
+                    <button type="button"
+                            class="message__quote"
+                            (click)="openReplyTarget($event)">
+                        <span class="message__quote-user">{{ reply.user }}</span>
+                        <span class="message__quote-text">{{ reply.content }}</span>
+                    </button>
+                }
 
                 @if (attachments().length) {
                     <div class="message__attachments">
@@ -53,12 +115,39 @@
                     </div>
                 }
 
+                @if (uploadProgress() !== null) {
+                    <div class="message__upload"
+                         role="progressbar"
+                         [attr.aria-valuenow]="uploadProgress()"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        <div class="message__upload-bar" [style.width.%]="uploadProgress()"></div>
+                        <span class="message__upload-label">
+                            {{ 'chat.uploading' | transloco: {progress: uploadProgress(), __: language()}: language() }}
+                        </span>
+                    </div>
+                }
+
+                @if (hasUploadError()) {
+                    <div class="message__error" role="alert">
+                        <span>{{ currentMessage().upload?.error || ('chat.network_error' | transloco: {__: language()}: language()) }}</span>
+                        <button type="button" class="message__error-retry" (click)="retryMessage()">
+                            {{ 'chat.retry' | transloco: {__: language()}: language() }}
+                        </button>
+                    </div>
+                }
+
                 @if (showMessageBubble()) {
                     <div class="message__bubble" tabindex="0">
                         <div class="message__text" [innerHTML]="safeMessageHtml()"></div>
 
                         @if (!mobileMode()) {
                             <div class="message__meta">
+                                @if (currentMessage().edited) {
+                                    <span class="message__changed-label">
+                                        {{ 'chat.edited' | transloco: {__: language()}: language() }}
+                                    </span>
+                                }
                                 <time class="message__time">
                                     {{ currentMessage().cr_time | date:'HH:mm' }}
                                 </time>
@@ -68,21 +157,37 @@
                                     } @else if (currentMessage().checked) {
                                         <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                                              class="message__icon"
-                                             width="18" height="18" alt="hide"/>
+                                             width="18" height="18" alt="read"/>
                                     } @else {
                                         <img ngSrc="assets/ngx-parl/icons/no-check.svg"
                                              class="message__icon"
-                                             width="18" height="18" alt="hide"/>
+                                             width="18" height="18" alt="sent"/>
                                     }
                                 }
                             </div>
                         }
                     </div>
                 }
+
+                @if (primaryReaction(); as reaction) {
+                    <div class="message__reactions" role="group">
+                        <button type="button"
+                                class="message__reaction"
+                                [class.message__reaction--mine]="reaction.reactedByMe"
+                                (click)="toggleReaction(reaction)">
+                            <span>{{ reaction.emoji }}</span>
+                        </button>
+                    </div>
+                }
             </div>
 
             @if (mobileMode()) {
                 <div class="message__meta">
+                    @if (currentMessage().edited) {
+                        <span class="message__changed-label">
+                            {{ 'chat.edited' | transloco: {__: language()}: language() }}
+                        </span>
+                    }
                     <time class="message__time">
                         {{ currentMessage().cr_time | date:'HH:mm' }}
                     </time>
@@ -92,16 +197,20 @@
                         } @else if (currentMessage().checked) {
                             <img ngSrc="assets/ngx-parl/icons/checked-message.svg"
                                  class="message__icon"
-                                 width="18" height="18" alt="hide"
+                                 width="18" height="18" alt="read"
                                  priority/>
                         } @else {
                             <img ngSrc="assets/ngx-parl/icons/no-check.svg"
                                  class="message__icon"
-                                 width="18" height="18" alt="hide"
+                                 width="18" height="18" alt="sent"
                                  priority/>
                         }
                     }
                 </div>
+            }
+
+            @if (copyFeedback()) {
+                <span class="message__copied" role="status">{{ 'chat.copied' | transloco: {__: language()}: language() }}</span>
             }
         </div>
     }
@@ -122,11 +231,10 @@
         </div>
     }
 </div>
-@if (!hasQuickActionButtons() && !mobileMode()) {
-    <div class="message__user">
-        @if (isOutgoingMessage()) {
-            <span class="message__user-name">{{ currentMessage().user }}</span>
-        }
+@if (!hasQuickActionButtons() && !mobileMode() && isOutgoingMessage()) {
+    <div class="message__user"
+         [class.message__user--secondary]="isSecondaryTheme()">
+        <span class="message__user-name">{{ currentMessage().user }}</span>
     </div>
 }
 
@@ -140,19 +248,63 @@
     </lib-preview-file>
 }
 
-<mat-menu #messageMenu="matMenu" yPosition="below" xPosition="before" class="message__menu">
+<mat-menu #messageMenu="matMenu"
+          yPosition="below"
+          xPosition="before"
+          [class]="isSecondaryTheme() ? 'message__menu message__menu--secondary' : 'message__menu message__menu--primary'">
+    <button mat-menu-item class="message__menu-item" (click)="selectMessage()">
+        <img [ngSrc]="selectCheckIcon()"
+             class="message__icon--menu"
+             width="20" height="20" alt=""/>
+        <span>{{ 'chat.select' | transloco: {__: language()}: language() }}</span>
+    </button>
+    <button mat-menu-item class="message__menu-item" (click)="replyMessage()">
+        <img ngSrc="assets/ngx-parl/icons/reply.svg"
+             class="message__icon--menu"
+             width="20" height="20" alt=""/>
+        <span>{{ 'chat.reply' | transloco: {__: language()}: language() }}</span>
+    </button>
+    <button mat-menu-item class="message__menu-item" (click)="toggleReactionPicker()">
+        <img ngSrc="assets/ngx-parl/icons/react.svg"
+             class="message__icon--menu"
+             width="20" height="20" alt=""/>
+        <span>{{ 'chat.react' | transloco: {__: language()}: language() }}</span>
+    </button>
+<!--    <button mat-menu-item class="message__menu-item" (click)="copyMessage()">-->
+<!--        <img ngSrc="assets/ngx-parl/icons/copy.svg"-->
+<!--             class="message__icon&#45;&#45;menu"-->
+<!--             width="20" height="20" alt=""/>-->
+<!--        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>-->
+<!--    </button>-->
+    <button mat-menu-item class="message__menu-item" (click)="pinMessage()">
+        <img ngSrc="assets/ngx-parl/icons/pin.svg"
+             class="message__icon--menu"
+             width="20" height="20" alt=""/>
+        <span>{{ (currentMessage().pinned ? 'chat.unpin' : 'chat.pin') | transloco: {__: language()}: language() }}</span>
+    </button>
     @if (isOutgoingMessage()) {
-        <button mat-menu-item (click)="editMessage(currentMessage())">
+        <button mat-menu-item class="message__menu-item" (click)="editMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/icon-edit.svg"
                  class="message__icon--menu"
-                 width="20" height="20" alt="hide"/>
+                 width="20" height="20" alt=""/>
             <span>{{ 'chat.edit' | transloco: {__: language()}: language() }}</span>
         </button>
-        <button mat-menu-item (click)="deleteMessage(currentMessage())">
+        <div class="message__menu-divider" role="separator"></div>
+        <button mat-menu-item
+                class="message__menu-item message__menu-item--danger"
+                (click)="deleteMessage(currentMessage())">
             <img ngSrc="assets/ngx-parl/icons/trash.svg"
                  class="message__icon--menu"
-                 width="20" height="20" alt="hide"/>
+                 width="20" height="20" alt=""/>
             <span>{{ 'chat.remove' | transloco: {__: language()}: language() }}</span>
+        </button>
+    }
+    @if (hasUploadError()) {
+        <button mat-menu-item class="message__menu-item" (click)="retryMessage()">
+            <img ngSrc="assets/ngx-parl/icons/retry.svg"
+                 class="message__icon--menu"
+                 width="20" height="20" alt=""/>
+            <span>{{ 'chat.retry' | transloco: {__: language()}: language() }}</span>
         </button>
     }
 </mat-menu>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5b8def"/>
+      <stop offset="100%" stop-color="#7c5cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#g)"/>
+  <text x="50%" y="48%" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="28">
+    Image preview demo
+  </text>
+  <text x="50%" y="58%" text-anchor="middle" fill="#e8e8ff" font-family="system-ui,sans-serif" font-size="16">
+    Tap for fullscreen / pinch to zoom
+  </text>
+</svg>

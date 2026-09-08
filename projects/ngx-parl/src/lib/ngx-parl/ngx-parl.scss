@@ -128,36 +128,82 @@
         border-top-left-radius: tokens.$radius-large;
         border-top-right-radius: tokens.$radius-large;
         flex-direction: row;
+        box-sizing: border-box;
+        margin: 0;
+
+        &.mat-mdc-dialog-title,
+        &[mat-dialog-title] {
+            margin: 0;
+            padding: tokens.$space-0 tokens.$space-4;
+            display: flex;
+            align-items: center;
+        }
     }
 
     &__hide-block {
         width: 48px;
+        min-width: 48px;
+        height: 24px;
+        flex: 0 0 48px;
         color: tokens.$primary-500;
     }
 
     &__title {
-        #modal-chat__heading {
-            color: tokens.$neutral-50;
-            font: tokens.$font-h5-600;
-            display: inline-flex;
-            align-items: center;
-            gap: tokens.$margin-2;
-        }
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+
+    &__heading {
+        margin: 0;
+        padding: 0;
+        color: tokens.$neutral-50;
+        font: tokens.$font-h5-600;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: tokens.$margin-2;
+        max-width: 100%;
+        min-height: 24px;
     }
 
     &__heading-icon {
+        display: block;
         width: 20px;
         height: 20px;
         border-radius: tokens.$radius-round;
         flex: 0 0 auto;
+        object-fit: cover;
     }
 
     &__heading-text {
+        display: block;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     &__actions {
         display: flex;
+        align-items: center;
+        justify-content: flex-end;
         gap: tokens.$margin-2;
+        flex: 0 0 auto;
+        min-width: 48px;
+        height: 24px;
+    }
+
+    &__icon {
+        display: block;
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+        cursor: pointer;
     }
 
     &__content {

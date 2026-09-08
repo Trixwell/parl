@@ -98,3 +98,10 @@ $border-4: 4px;
     --shadow-lg: 0px 8px 24px rgba(0, 0, 0, 0.12);
     --shadow-soft: 0px 0px 6px 0px rgba(46, 46, 46, 0.12)
 }
+
+$gradient-bg: linear-gradient(
+        135deg,
+        #7464f8 0%,
+        #6554f2 48%,
+        #5546e8 100%
+);

@@ -32,6 +32,7 @@
 
     &__wrap {
         display: flex;
+        align-items: center;
         width: 100%;
         min-width: 0;
 
@@ -72,6 +73,7 @@
 
     &__input {
         flex: 1 1 0;
+        align-self: center;
         min-width: 0;
         width: auto;
         min-height: var(--lh);
@@ -88,6 +90,7 @@
         text-align: start;
         caret-color: tokens.$primary-700;
         padding: 0 tokens.$margin-1 0 0;
+        margin: 0;
         overflow-y: auto;
         max-height: calc(var(--lh) * var(--max-rows));
 
@@ -95,7 +98,10 @@
             content: attr(data-placeholder);
             color: tokens.$neutral-400;
             pointer-events: none;
-            display: inline-block;
+            display: block;
+            line-height: var(--lh);
+            height: var(--lh);
+            margin: 0;
             animation: subtle-rise .18s ease both;
         }
 
@@ -124,6 +130,16 @@
 
     &__button {
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        align-self: center;
+        height: var(--lh);
+        min-height: var(--lh);
+        padding: 0;
+        margin: 0;
+        line-height: 0;
         background: none;
         border: none;
         transition: transform .12s ease, opacity .12s ease, background-color .12s ease;
@@ -139,9 +155,10 @@
     }
 
     &__icon {
-        display: inline-flex;
+        display: block;
         width: 22px;
         height: 22px;
+        flex: 0 0 auto;
 
         &:not(.message__icon--file):hover {
             filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
@@ -191,6 +208,51 @@
             height: 100%;
             object-fit: cover;
             display: block;
+        }
+
+        &-placeholder {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 4px;
+            font-size: 8px;
+            text-align: center;
+            color: tokens.$neutral-600;
+            word-break: break-all;
+        }
+
+        &-progress {
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        &-progress-bar {
+            height: 100%;
+            background: tokens.$primary-500;
+        }
+
+        &-retry {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            border: none;
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            font-size: 8px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        &--error .message__file-media {
+            outline: 1px solid #f73838;
         }
 
         &-badge {
@@ -477,6 +539,122 @@
     padding: 0;
     border: 0;
     pointer-events: none;
+}
+
+.message__file-error {
+    margin: 0 tokens.$margin-3 tokens.$margin-2;
+    color: #f73838;
+    font: tokens.$font-caption-m-400;
+}
+
+.message__reply-label {
+    font-weight: 600;
+    margin: 0 0 2px;
+}
+
+.message--secondary {
+    background: tokens.$neutral-50;
+    border-top: tokens.$border-1 solid #E1E7F8;
+    padding: tokens.$space-1 tokens.$space-2;
+    margin-top: tokens.$space-1;
+    gap: tokens.$margin-2;
+    border-bottom-left-radius: tokens.$radius-large;
+    border-bottom-right-radius: tokens.$radius-large;
+
+    .message__wrap {
+        align-items: center;
+        gap: 0;
+
+        &--input {
+            align-items: center;
+            gap: tokens.$margin-3;
+            padding: tokens.$margin-2 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+
+            &:focus-within {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    }
+
+    .message__button {
+        height: var(--lh);
+        min-height: var(--lh);
+        width: auto;
+        padding: 0;
+        background: none;
+        border-radius: 0;
+
+        &--send {
+            background: none;
+
+            .message__icon--send {
+                filter: none;
+            }
+
+            &:hover:not(:disabled) .message__icon--send,
+            &:focus-visible:not(:disabled) .message__icon--send {
+                filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
+            }
+        }
+    }
+
+    .message__icon {
+        display: block;
+        width: 22px;
+        height: 22px;
+
+        &--attach,
+        &--emoji,
+        &--keyboard,
+        &--send {
+            filter: invert(1%) sepia(1%) saturate(1%) hue-rotate(100deg) brightness(100%) contrast(30%);
+        }
+
+        &:not(.message__icon--file):hover,
+        &--focus,
+        &--filled {
+            filter: invert(33%) sepia(79%) saturate(2933%) hue-rotate(205deg) brightness(93%) contrast(91%);
+        }
+    }
+
+    .message__input {
+        align-self: center;
+        padding-top: 0;
+        padding-bottom: 0;
+        padding-right: tokens.$margin-1;
+        margin: 0;
+        line-height: var(--lh);
+    }
+
+    .message__emoji {
+        --parl-mobile-emoji-rgb-bg: 254, 254, 254;
+        --parl-mobile-emoji-rgb-input: 239, 239, 239;
+        --parl-mobile-emoji-rgb-color: 48, 48, 48;
+        --parl-mobile-emoji-rgb-accent: 89, 74, 225;
+        width: 100%;
+        max-height: 280px;
+        overflow: auto;
+        border-radius: mobile.$radius-16;
+        border: mobile.$border-1 solid #E1E7F8;
+        background: mobile.$default-50;
+
+        ::ng-deep em-emoji-picker {
+            width: 100%;
+            --rgb-background: var(--parl-mobile-emoji-rgb-bg);
+            --rgb-input: var(--parl-mobile-emoji-rgb-input);
+            --rgb-color: var(--parl-mobile-emoji-rgb-color);
+            --rgb-accent: var(--parl-mobile-emoji-rgb-accent);
+        }
+    }
+
+    &.message--emoji-open {
+        padding-bottom: mobile.$space-8;
+    }
 }
 
 @keyframes subtle-rise {

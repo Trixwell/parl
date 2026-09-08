@@ -4,6 +4,7 @@
          [class.message--sending]="sending()"
          [class.message--dragover]="dragActive()"
          [class.message--mobile]="mobileMode()"
+         [class.message--secondary]="isSecondaryTheme() && !mobileMode()"
          [class.message--emoji-open]="emojiPickerOpen()"
          (dragenter)="onDragEnter($event)"
          (dragover)="onDragOver($event)"
@@ -32,6 +33,32 @@
                      width="18" height="18" alt="hide"/>
             </button>
         </div>
+    }
+
+    @if (!isEditMode() && replyTo(); as reply) {
+        <div class="message__wrap message__wrap--reply">
+            <div class="message__wrap--input">
+                <div class="message__edit-hint">
+                    <p class="message__reply-label">
+                        {{ 'chat.replying_to' | transloco: {user: reply.user, __: language()}: language() }}
+                    </p>
+                    <p>{{ reply.content }}</p>
+                </div>
+            </div>
+
+            <button class="message__button message__button--close"
+                    type="button"
+                    [attr.aria-label]="'chat.cancel' | transloco: {__: language()}: language()"
+                    (click)="cancelReply()">
+                <img ngSrc="assets/ngx-parl/icons/close.svg"
+                     class="message__icon message__icon--close"
+                     width="18" height="18" alt=""/>
+            </button>
+        </div>
+    }
+
+    @if (fileError()) {
+        <div class="message__file-error" role="alert">{{ fileError() }}</div>
     }
 
     <div class="message__wrap">
@@ -63,6 +90,24 @@
                          class="message__icon message__icon--attach"
                          width="18" height="18" alt="hide"/>
                 </button>
+
+                @if (isSecondaryTheme()) {
+                    <button type="button"
+                            class="message__button message__button--emoji"
+                            [attr.aria-label]="(emojiPickerOpen() ? 'chat.keyboard' : 'chat.emoji') | transloco: {__: language()}: language()"
+                            (pointerdown)="onEmojiButtonPointerDown($event)"
+                            (click)="onEmojiButtonClick($event)">
+                        @if (emojiPickerOpen()) {
+                            <img ngSrc="assets/ngx-parl/icons/keyboard.svg"
+                                 class="message__icon message__icon--keyboard"
+                                 width="18" height="18" alt=""/>
+                        } @else {
+                            <img ngSrc="assets/ngx-parl/icons/emoji.svg"
+                                 class="message__icon message__icon--emoji"
+                                 width="18" height="18" alt=""/>
+                        }
+                    </button>
+                }
             }
 
             @if (mobileMode()) {
@@ -143,7 +188,9 @@
     @if (previews().length) {
         <div class="message__files">
             @for (item of previews(); track $index) {
-                <div class="message__file" [attr.data-kind]="item.originalKind">
+                <div class="message__file"
+                     [attr.data-kind]="item.originalKind"
+                     [class.message__file--error]="item.status === 'error' || item.status === 'oversized'">
                     <button type="button"
                             class="message__file-remove"
                             [attr.aria-label]="'chat.delete_file' | transloco: {__: language()}: language()"
@@ -154,7 +201,31 @@
                     </button>
 
                     <div class="message__file-media" (click)="openPreview(item, $index)">
-                        <img [src]="item.src" [alt]="item.name" class="message__file-img"/>
+                        @if (item.src) {
+                            <img [src]="item.src" [alt]="item.name" class="message__file-img"/>
+                        } @else {
+                            <div class="message__file-placeholder">{{ item.name }}</div>
+                        }
+
+                        @if (item.status === 'reading') {
+                            <div class="message__file-progress"
+                                 role="progressbar"
+                                 [attr.aria-valuenow]="item.progress ?? 0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                <div class="message__file-progress-bar" [style.width.%]="item.progress ?? 0"></div>
+                            </div>
+                        }
+
+                        @if (item.status === 'error' || item.status === 'oversized') {
+                            <button type="button"
+                                    class="message__file-retry"
+                                    (click)="retryPreview($index); $event.stopPropagation()">
+                                {{ item.status === 'oversized'
+                                    ? ('chat.file_too_large' | transloco: {max: formatMaxSize(), __: language()}: language())
+                                    : ('chat.file_retry' | transloco: {__: language()}: language()) }}
+                            </button>
+                        }
 
                         @if (item.originalKind === FileType.GIF) {
                             <span class="message__file-badge message__file-badge--gif">
@@ -167,7 +238,7 @@
         </div>
     }
 
-    @if (mobileMode() && emojiPickerOpen()) {
+    @if (showEmojiButton() && emojiPickerOpen()) {
         <div #emojiMartHost
              class="message__emoji"
              role="dialog"

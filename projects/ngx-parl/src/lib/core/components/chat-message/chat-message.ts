@@ -1,12 +1,53 @@
-import {Component, computed, DestroyRef, effect, inject, input, model, SecurityContext, signal, Signal} from '@angular/core';
+import {
+    Component,
+    computed,
+    DestroyRef,
+    effect,
+    ElementRef,
+    inject,
+    input,
+    model,
+    SecurityContext,
+    signal,
+    Signal,
+    ViewChild,
+} from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {DomSanitizer} from '@angular/platform-browser';
-import {ChatMessage, MessageType} from '../../entity/chat';
+import {
+    ChatMessage,
+    MessageReaction,
+    MessageType,
+    PARL_DEFAULT_REACTION_EMOJIS,
+} from '../../entity/chat';
 import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {PreviewFile} from '../preview-file/preview-file';
+import {EmojiPicker} from '../emoji-picker/emoji-picker';
 import {UtilsService} from '../../service/utils/utils';
+import {ensureEmojiMartReady} from '../../service/emoji-mart/emoji-mart';
 import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-actions';
+import {FlowTheme} from '../../entity/theme';
+
+export type ChatMessageUiAction =
+    | 'reply'
+    | 'goto-reply'
+    | 'react'
+    | 'copy'
+    | 'edit'
+    | 'delete'
+    | 'pin'
+    | 'unpin'
+    | 'retry'
+    | 'history'
+    | 'read'
+    | 'select';
+
+export interface ChatMessageActionRequest {
+    action: ChatMessageUiAction;
+    message: ChatMessage;
+    emoji?: string;
+}
 
 @Component({
     selector: 'lib-chat-message',
@@ -19,6 +60,7 @@ import {ParlQuickAction, ParlQuickActionClickEvent} from '../../entity/quick-act
         MatMenuTrigger,
         TranslocoPipe,
         PreviewFile,
+        EmojiPicker,
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
@@ -31,6 +73,8 @@ export class ChatMessageComponent {
     private readonly destroyRef = inject(DestroyRef);
     private readonly isCoarsePointer = signal(this.detectCoarsePointer());
 
+    @ViewChild('messageBody') messageBodyRef?: ElementRef<HTMLElement>;
+
     private longPressTimer: ReturnType<typeof setTimeout> | null = null;
     private longPressOriginX = 0;
     private longPressOriginY = 0;
@@ -38,6 +82,16 @@ export class ChatMessageComponent {
     private longPressFromPointer = false;
     private readonly longPressDurationMs = 480;
     private readonly longPressMoveThresholdPx = 12;
+    private readonly doubleTapWindowMs = 350;
+    private readonly doubleTapMoveThresholdPx = 24;
+    private lastTapAt = 0;
+    private lastTapX = 0;
+    private lastTapY = 0;
+
+    private swipeStartX = 0;
+    private swipeStartY = 0;
+    private swipeActive = false;
+    private readonly swipeReplyThresholdPx = 56;
 
     public currentMessage = input.required<ChatMessage>();
     public edit = model<boolean>(false);
@@ -45,21 +99,37 @@ export class ChatMessageComponent {
     public previewIndex = model<number>(0);
     public previewOpener = model<HTMLElement | null>(null);
     public closePreviewHandler = (): this => this.closePreview();
+    public highlighted = input<boolean>(false);
+    public showUnreadMarker = input<boolean>(false);
+    public selectionMode = input<boolean>(false);
+    public selected = input<boolean>(false);
 
     public requestEdit = model<ChatMessage | null>(null);
     public requestDelete = model<number | null>(null);
     public requestMessageActions = model<ChatMessage | null>(null);
+    public messageActionRequest = model<ChatMessageActionRequest | null>(null);
 
     public mobileMode = input<boolean>(false);
+    public theme = input<FlowTheme>(FlowTheme.PRIMARY);
+    public isSecondaryTheme = computed(() => this.theme() === FlowTheme.SECONDARY);
+    public selectCheckIcon = computed(() =>
+        this.isSecondaryTheme()
+            ? 'assets/ngx-parl/icons/select-check.svg'
+            : 'assets/ngx-parl/icons/select-check-primary.svg'
+    );
     public language = input<'en' | 'uk'>('en');
     public logoChat = input<string>('');
     public incomingAvatar = input<string>('');
     public quickActions = input<ParlQuickAction[]>([]);
     public quickActionClick = model<ParlQuickActionClickEvent | null>(null);
+    public reactionEmojis = input<readonly string[]>(PARL_DEFAULT_REACTION_EMOJIS);
 
     public readonly messageType = MessageType;
     private readonly anonymAvatarPath = 'assets/ngx-parl/icons/avatar_anonym.svg';
     public readonly avatarLoadFailed = signal(false);
+    public readonly showReactionPicker = signal(false);
+    public readonly swipeOffset = signal(0);
+    public readonly copyFeedback = signal(false);
 
     public readonly attachments: Signal<string[]> = computed(() => {
         const message = this.currentMessage();
@@ -130,7 +200,9 @@ export class ChatMessageComponent {
     });
 
     public readonly showMessageBody: Signal<boolean> = computed(
-        () => this.showMessageBubble() || this.attachments().length > 0,
+        () => this.showMessageBubble()
+            || this.attachments().length > 0
+            || !!this.currentMessage().reply_to,
     );
 
     public readonly showAvatar: Signal<boolean> = computed(() => {
@@ -139,17 +211,53 @@ export class ChatMessageComponent {
     });
 
     public readonly canOpenContextMenu: Signal<boolean> = computed(() => {
+        if (this.selectionMode()) {
+            return false;
+        }
+
         const message = this.currentMessage();
-        return message.type === this.messageType.Outgoing && message.pending !== true;
+        return message.pending !== true;
     });
+
+    public readonly showSelectionCheck: Signal<boolean> = computed(() => this.selectionMode());
 
     public readonly useMobileMessageActions: Signal<boolean> = computed(
         () => this.mobileMode() || this.isCoarsePointer(),
     );
 
+    public readonly reactions: Signal<MessageReaction[]> = computed(
+        () => this.currentMessage().reactions ?? [],
+    );
+
+    /** A message shows at most one reaction. */
+    public readonly primaryReaction: Signal<MessageReaction | null> = computed(() => {
+        const list = this.reactions();
+        return list.length ? list[0] : null;
+    });
+
+    public readonly firstReactionEmoji: Signal<string> = computed(
+        () => this.reactionEmojis()[0] ?? '❤️',
+    );
+
+    public readonly uploadProgress: Signal<number | null> = computed(() => {
+        const upload = this.currentMessage().upload;
+        if (!upload || upload.status !== 'uploading') {
+            return null;
+        }
+        return Math.max(0, Math.min(100, Math.round(upload.progress ?? 0)));
+    });
+
+    public readonly hasUploadError: Signal<boolean> = computed(() => {
+        const upload = this.currentMessage().upload;
+        return upload?.status === 'error' || this.currentMessage().failed === true;
+    });
+
     constructor() {
+        void ensureEmojiMartReady();
         this.bindCoarsePointerListener();
-        this.destroyRef.onDestroy(() => this.clearLongPressTimer());
+        this.destroyRef.onDestroy(() => {
+            this.clearLongPressTimer();
+        });
         effect(() => {
             this.avatarSrc();
             this.avatarLoadFailed.set(false);
@@ -165,6 +273,12 @@ export class ChatMessageComponent {
     }
 
     openContextMenu(event: Event, trigger: MatMenuTrigger, triggerElement: HTMLElement): this {
+        if (this.selectionMode()) {
+            event.preventDefault();
+            event.stopPropagation();
+            return this.emitAction('select');
+        }
+
         if (!this.canOpenContextMenu()) {
             return this;
         }
@@ -189,34 +303,77 @@ export class ChatMessageComponent {
         return this;
     }
 
-    onMessagePointerDown(event: PointerEvent): this {
-        if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
+    onMessageClick(event: MouseEvent): this {
+        if (!this.selectionMode()) {
             return this;
         }
 
+        event.preventDefault();
+        event.stopPropagation();
+        return this.emitAction('select');
+    }
+
+    onMessageDoubleClick(event: MouseEvent): this {
+        if (this.selectionMode() || !this.canOpenContextMenu()) {
+            return this;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        return this.reactWithFirstEmoji();
+    }
+
+    selectMessage(): this {
+        return this.emitAction('select');
+    }
+
+    onMessagePointerDown(event: PointerEvent): this {
         if (event.pointerType === 'mouse') {
+            return this;
+        }
+
+        if (this.selectionMode()) {
+            return this;
+        }
+
+        this.swipeStartX = event.clientX;
+        this.swipeStartY = event.clientY;
+        this.swipeActive = true;
+
+        if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
             return this;
         }
 
         this.longPressFromPointer = true;
 
-        return this.beginLongPress(event.clientX, event.clientY);
+        return this.beginLongPress(event.clientX, event.clientY, 'select');
     }
 
     onMessagePointerMove(event: PointerEvent): this {
+        if (this.swipeActive) {
+            this.updateSwipe(event.clientX, event.clientY);
+        }
+
         return this.updateLongPressPosition(event.clientX, event.clientY);
     }
 
-    onMessagePointerUp(): this {
-        this.clearLongPressTimer();
-        queueMicrotask(() => {
-            this.longPressFromPointer = false;
-        });
-
-        return this;
-    }
-
     onMessageTouchStart(event: TouchEvent): this {
+        if (event.touches.length !== 1) {
+            this.clearLongPressTimer();
+            this.resetSwipe();
+
+            return this;
+        }
+
+        if (this.selectionMode()) {
+            return this;
+        }
+
+        const touch = event.touches[0];
+        this.swipeStartX = touch.clientX;
+        this.swipeStartY = touch.clientY;
+        this.swipeActive = true;
+
         if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
             return this;
         }
@@ -225,37 +382,59 @@ export class ChatMessageComponent {
             return this;
         }
 
+        return this.beginLongPress(touch.clientX, touch.clientY, 'select');
+    }
+
+    onMessageTouchMove(event: TouchEvent): this {
         if (event.touches.length !== 1) {
             this.clearLongPressTimer();
+            this.resetSwipe();
 
             return this;
         }
 
         const touch = event.touches[0];
+        if (this.swipeActive) {
+            this.updateSwipe(touch.clientX, touch.clientY);
+        }
 
-        return this.beginLongPress(touch.clientX, touch.clientY);
-    }
-
-    onMessageTouchMove(event: TouchEvent): this {
         if (this.longPressFromPointer) {
             return this;
         }
 
-        if (event.touches.length !== 1) {
-            this.clearLongPressTimer();
-
-            return this;
-        }
-
-        const touch = event.touches[0];
-
         return this.updateLongPressPosition(touch.clientX, touch.clientY);
     }
 
-    onMessageTouchEnd(): this {
+    onMessageTouchEnd(event?: TouchEvent): this {
+        const touch = event?.changedTouches?.[0];
+        if (touch && this.swipeActive) {
+            this.finishSwipe(touch.clientX);
+        }
+
         if (!this.longPressFromPointer) {
             this.clearLongPressTimer();
         }
+
+        if (touch && !this.longPressFromPointer && !this.selectionMode() && !this.longPressOpened) {
+            this.registerTapForDoubleTap(touch.clientX, touch.clientY);
+        }
+
+        return this;
+    }
+
+    onMessagePointerUp(event: PointerEvent): this {
+        if (event.pointerType !== 'mouse' && this.swipeActive) {
+            this.finishSwipe(event.clientX);
+        }
+
+        if (event.pointerType !== 'mouse' && !this.selectionMode() && !this.longPressOpened) {
+            this.registerTapForDoubleTap(event.clientX, event.clientY);
+        }
+
+        this.clearLongPressTimer();
+        queueMicrotask(() => {
+            this.longPressFromPointer = false;
+        });
 
         return this;
     }
@@ -271,8 +450,21 @@ export class ChatMessageComponent {
         }
 
         this.clearLongPressTimer();
+        this.showReactionPicker.set(false);
         this.requestMessageActions.set(this.currentMessage());
         queueMicrotask(() => this.requestMessageActions.set(null));
+
+        return this;
+    }
+
+    emitAction(action: ChatMessageUiAction, emoji?: string): this {
+        this.messageActionRequest.set({
+            action,
+            message: this.currentMessage(),
+            emoji,
+        });
+        queueMicrotask(() => this.messageActionRequest.set(null));
+        this.showReactionPicker.set(false);
 
         return this;
     }
@@ -280,8 +472,93 @@ export class ChatMessageComponent {
     editMessage(message: ChatMessage): this {
         this.edit.set(true);
         this.requestEdit.set(message);
+        this.emitAction('edit');
 
         return this;
+    }
+
+    replyMessage(): this {
+        return this.emitAction('reply');
+    }
+
+    openReplyTarget(event: Event): this {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const replyId = this.currentMessage().reply_to?.id;
+        if (replyId == null) {
+            return this;
+        }
+
+        return this.emitAction('goto-reply');
+    }
+
+    pinMessage(): this {
+        return this.emitAction(this.currentMessage().pinned ? 'unpin' : 'pin');
+    }
+
+    copyMessage(): this {
+        const text = this.currentMessage().content ?? '';
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+            void navigator.clipboard.writeText(text).then(() => {
+                this.copyFeedback.set(true);
+                setTimeout(() => this.copyFeedback.set(false), 1200);
+            });
+        }
+
+        return this.emitAction('copy');
+    }
+
+    toggleReactionPicker(): this {
+        this.showReactionPicker.update(open => !open);
+        return this;
+    }
+
+    reactWith(emoji: string): this {
+        return this.emitAction('react', emoji);
+    }
+
+    reactWithFirstEmoji(): this {
+        return this.reactWith(this.firstReactionEmoji());
+    }
+
+    onReactionPicked(emoji: string | null): this {
+        if (!emoji) {
+            return this;
+        }
+
+        return this.reactWith(emoji);
+    }
+
+    toggleReaction(reaction: MessageReaction): this {
+        return this.emitAction('react', reaction.emoji);
+    }
+
+    private registerTapForDoubleTap(clientX: number, clientY: number): this {
+        if (!this.canOpenContextMenu()) {
+            return this;
+        }
+
+        const now = Date.now();
+        const withinTime = now - this.lastTapAt <= this.doubleTapWindowMs;
+        const withinDistance =
+            Math.abs(clientX - this.lastTapX) <= this.doubleTapMoveThresholdPx &&
+            Math.abs(clientY - this.lastTapY) <= this.doubleTapMoveThresholdPx;
+
+        this.lastTapAt = now;
+        this.lastTapX = clientX;
+        this.lastTapY = clientY;
+
+        if (withinTime && withinDistance) {
+            this.lastTapAt = 0;
+            this.reactWithFirstEmoji();
+        }
+
+        return this;
+    }
+
+    retryMessage(): this {
+        return this.emitAction('retry');
     }
 
     openPreview(index: number, event: MouseEvent): this {
@@ -336,6 +613,51 @@ export class ChatMessageComponent {
         return this;
     }
 
+    private updateSwipe(clientX: number, clientY: number): this {
+        const deltaX = clientX - this.swipeStartX;
+        const deltaY = clientY - this.swipeStartY;
+
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+            this.resetSwipe();
+            return this;
+        }
+
+        if (Math.abs(deltaX) > this.longPressMoveThresholdPx) {
+            this.clearLongPressTimer();
+        }
+
+        const direction = this.isOutgoingMessage() ? -1 : 1;
+        const offset = Math.max(0, Math.min(72, deltaX * direction));
+        this.swipeOffset.set(offset);
+
+        return this;
+    }
+
+    private finishSwipe(clientX: number): this {
+        if (this.selectionMode()) {
+            this.resetSwipe();
+            return this;
+        }
+
+        const deltaX = clientX - this.swipeStartX;
+        const direction = this.isOutgoingMessage() ? -1 : 1;
+        const offset = deltaX * direction;
+
+        this.resetSwipe();
+
+        if (offset >= this.swipeReplyThresholdPx && this.canOpenContextMenu()) {
+            this.replyMessage();
+        }
+
+        return this;
+    }
+
+    private resetSwipe(): this {
+        this.swipeActive = false;
+        this.swipeOffset.set(0);
+        return this;
+    }
+
     private detectCoarsePointer(): boolean {
         if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
             return false;
@@ -383,7 +705,11 @@ export class ChatMessageComponent {
         return this;
     }
 
-    private beginLongPress(clientX: number, clientY: number): this {
+    private beginLongPress(
+        clientX: number,
+        clientY: number,
+        action: 'sheet' | 'select' = 'sheet',
+    ): this {
         this.clearLongPressTimer();
         this.longPressOpened = false;
         this.longPressOriginX = clientX;
@@ -391,7 +717,11 @@ export class ChatMessageComponent {
         this.longPressTimer = setTimeout(() => {
             this.longPressTimer = null;
             this.longPressOpened = true;
-            this.openMobileActionSheet();
+            if (action === 'select') {
+                this.emitAction('select');
+            } else {
+                this.openMobileActionSheet();
+            }
         }, this.longPressDurationMs);
 
         return this;
