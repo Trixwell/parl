@@ -45,6 +45,11 @@ describe('ChatMessageComponent', () => {
         fixture.detectChanges();
     });
 
+    afterEach(() => {
+        component.closeReactionPicker();
+        fixture.destroy();
+    });
+
     it('should create', () => {
         expect(component).toBeTruthy();
     });
@@ -317,4 +322,45 @@ describe('ChatMessageComponent', () => {
 
         expect(component.attachments()).toEqual(['https://api.example.com/download/file?k=abc']);
     });
+
+    it('keeps only one reaction picker open across messages', () => {
+        component.toggleReactionPicker();
+        expect(component.showReactionPicker()).toBe(true);
+
+        const secondFixture = TestBed.createComponent(ChatMessageComponent);
+        const second = secondFixture.componentInstance;
+        secondFixture.componentRef.setInput('currentMessage', createOutgoingMessage(2));
+        secondFixture.detectChanges();
+
+        second.toggleReactionPicker();
+        expect(second.showReactionPicker()).toBe(true);
+        expect(component.showReactionPicker()).toBe(false);
+
+        secondFixture.destroy();
+    });
+
+    it('closes the reaction picker on outside pointerdown', fakeAsync(() => {
+        component.toggleReactionPicker();
+        fixture.detectChanges();
+        expect(component.showReactionPicker()).toBe(true);
+
+        flushMicrotasks();
+        tick();
+        document.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true}));
+        expect(component.showReactionPicker()).toBe(false);
+    }));
+
+    it('does not close the reaction picker when pointerdown is inside it', fakeAsync(() => {
+        component.toggleReactionPicker();
+        fixture.detectChanges();
+        flushMicrotasks();
+        tick();
+
+        const picker = fixture.nativeElement.querySelector('.emoji-picker') as HTMLElement | null;
+        expect(picker).not.toBeNull();
+        picker?.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true}));
+
+        expect(component.showReactionPicker()).toBe(true);
+        component.closeReactionPicker();
+    }));
 });

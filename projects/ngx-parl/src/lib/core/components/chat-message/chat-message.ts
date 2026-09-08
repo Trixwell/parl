@@ -49,6 +49,9 @@ export interface ChatMessageActionRequest {
     emoji?: string;
 }
 
+/** Only one inline reaction picker across all messages. */
+const openReactionPickerMessageId = signal<number | null>(null);
+
 @Component({
     selector: 'lib-chat-message',
     imports: [
@@ -71,6 +74,7 @@ export class ChatMessageComponent {
     private readonly utils = inject(UtilsService);
     private readonly sanitizer = inject(DomSanitizer);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly hostElement = inject(ElementRef<HTMLElement>);
     private readonly isCoarsePointer = signal(this.detectCoarsePointer());
 
     @ViewChild('messageBody') messageBodyRef?: ElementRef<HTMLElement>;
@@ -127,7 +131,9 @@ export class ChatMessageComponent {
     public readonly messageType = MessageType;
     private readonly anonymAvatarPath = 'assets/ngx-parl/icons/avatar_anonym.svg';
     public readonly avatarLoadFailed = signal(false);
-    public readonly showReactionPicker = signal(false);
+    public readonly showReactionPicker = computed(
+        () => openReactionPickerMessageId() === this.currentMessage().id,
+    );
     public readonly swipeOffset = signal(0);
     public readonly copyFeedback = signal(false);
 
@@ -255,8 +261,10 @@ export class ChatMessageComponent {
     constructor() {
         void ensureEmojiMartReady();
         this.bindCoarsePointerListener();
+        this.bindReactionPickerOutsideClose();
         this.destroyRef.onDestroy(() => {
             this.clearLongPressTimer();
+            this.closeReactionPicker();
         });
         effect(() => {
             this.avatarSrc();
@@ -450,7 +458,7 @@ export class ChatMessageComponent {
         }
 
         this.clearLongPressTimer();
-        this.showReactionPicker.set(false);
+        this.closeReactionPicker();
         this.requestMessageActions.set(this.currentMessage());
         queueMicrotask(() => this.requestMessageActions.set(null));
 
@@ -464,7 +472,7 @@ export class ChatMessageComponent {
             emoji,
         });
         queueMicrotask(() => this.messageActionRequest.set(null));
-        this.showReactionPicker.set(false);
+        this.closeReactionPicker();
 
         return this;
     }
@@ -510,7 +518,19 @@ export class ChatMessageComponent {
     }
 
     toggleReactionPicker(): this {
-        this.showReactionPicker.update(open => !open);
+        const messageId = this.currentMessage().id;
+        openReactionPickerMessageId.update(currentId =>
+            currentId === messageId ? null : messageId,
+        );
+
+        return this;
+    }
+
+    closeReactionPicker(): this {
+        if (openReactionPickerMessageId() === this.currentMessage().id) {
+            openReactionPickerMessageId.set(null);
+        }
+
         return this;
     }
 
@@ -678,6 +698,51 @@ export class ChatMessageComponent {
 
         mediaQuery.addEventListener('change', onChange);
         this.destroyRef.onDestroy(() => mediaQuery.removeEventListener('change', onChange));
+
+        return this;
+    }
+
+    private bindReactionPickerOutsideClose(): this {
+        effect((onCleanup) => {
+            if (!this.showReactionPicker() || typeof document === 'undefined') {
+                return;
+            }
+
+            const onPointerDown = (event: PointerEvent) => {
+                const pickerRoot = this.hostElement.nativeElement.querySelector(
+                    '.message__emoji-picker, .emoji-picker',
+                );
+                if (!pickerRoot) {
+                    this.closeReactionPicker();
+
+                    return;
+                }
+
+                const path = typeof event.composedPath === 'function'
+                    ? event.composedPath()
+                    : [];
+                if (path.includes(pickerRoot)) {
+                    return;
+                }
+
+                const target = event.target;
+                if (target instanceof Node && pickerRoot.contains(target)) {
+                    return;
+                }
+
+                this.closeReactionPicker();
+            };
+
+            // Defer so the menu click that opens the picker does not dismiss it immediately.
+            const attachTimer = window.setTimeout(() => {
+                document.addEventListener('pointerdown', onPointerDown, true);
+            });
+
+            onCleanup(() => {
+                window.clearTimeout(attachTimer);
+                document.removeEventListener('pointerdown', onPointerDown, true);
+            });
+        });
 
         return this;
     }
