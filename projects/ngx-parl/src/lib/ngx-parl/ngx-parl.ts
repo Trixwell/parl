@@ -765,7 +765,8 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
         // new message
         if (this.isCurrMessage(event)) {
-            const hasFiles = Array.isArray(event.file_path) && event.file_path.length > 0;
+            const hasFiles = (Array.isArray(event.file_path) && event.file_path.length > 0)
+                || (Array.isArray(event.file_list) && event.file_list.length > 0);
 
             if (!hasFiles) {
                 const {content, user_id, user, transport_type, transport_type_icon, reply_to} = event;
@@ -809,7 +810,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         const hasFiles = Array.isArray(file_path) && file_path.length > 0;
         const hasFileList = Array.isArray(file_list) && file_list.length > 0;
 
-        if (!hasMessageText(text) && !hasFiles) {
+        if (!hasMessageText(text) && !hasFiles && !hasFileList) {
             return this;
         }
 
