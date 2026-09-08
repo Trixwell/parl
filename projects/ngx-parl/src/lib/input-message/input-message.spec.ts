@@ -170,6 +170,32 @@ describe('InputMessage', () => {
     expect(textarea.value).toBe('');
   });
 
+  it('sends photo attachments without text', () => {
+    const photo = new File([new Uint8Array(1024)], 'photo.png', {type: 'image/png'});
+    component.addFiles([photo]);
+    component.previews.set(
+      component.previews().map((item) => ({
+        ...item,
+        src: item.src || 'data:image/png;base64,aaa',
+        status: 'ready',
+        progress: 100,
+      })),
+    );
+    fixture.detectChanges();
+
+    expect(component.canSend()).toBeTrue();
+
+    const payloadSpy = spyOn(component.input_text, 'set').and.callThrough();
+    component.enterDown();
+    fixture.detectChanges();
+
+    expect(payloadSpy).toHaveBeenCalled();
+    const payload = payloadSpy.calls.mostRecent().args[0] as {content: string; file_list: File[]};
+    expect(payload.content).toBe('');
+    expect(payload.file_list.length).toBe(1);
+    expect(payload.file_list[0].name).toBe('photo.png');
+  });
+
   it('rejects photos larger than 8 MB and does not queue them for send', () => {
     fixture.componentRef.setInput('maxFileSizeBytes', 8 * 1024 * 1024);
     fixture.detectChanges();

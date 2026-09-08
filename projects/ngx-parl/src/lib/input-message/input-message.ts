@@ -375,7 +375,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
         this.syncDraftFromComposer();
         const text = this.readComposerText().trim();
 
-        if (!hasComposerText(text) || !this.canSend()) {
+        if (!this.canSend()) {
             return this;
         }
 
