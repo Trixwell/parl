@@ -197,7 +197,7 @@
                     </div>
                 }
 
-                @for (message of messageList(); track message; let i = $index) {
+                @for (message of messageList(); track trackByMessageId(i, message); let i = $index) {
                     @if (message | toggleDisplayChatStartDay: messageList() : i : language()) {
                         <span class="chat__start-day">
                             {{ message.cr_time | chatStartDay:'d MMMM':language() }}

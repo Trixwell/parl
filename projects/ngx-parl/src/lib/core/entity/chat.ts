@@ -1,4 +1,12 @@
+let nextMessageClientKey = 1;
+
+function allocateMessageClientKey(): number {
+    return nextMessageClientKey++;
+}
+
 export class ChatMessage {
+    /** Stable @for track key; survives temp-id → server-id ACK without remounting the bubble. */
+    public readonly clientKey: number;
     public id: number;
     public chat_id: number;
     public cr_time: string;
@@ -24,7 +32,8 @@ export class ChatMessage {
     public edit_history: MessageEditHistoryEntry[] = [];
     public upload: MessageUploadState | null = null;
 
-    constructor(data: ChatMessageDTO) {
+    constructor(data: ChatMessageDTO, clientKey = allocateMessageClientKey()) {
+        this.clientKey = clientKey;
         this.id = data.id;
         this.chat_id = data.chat_id;
         this.cr_time = data.cr_time;
@@ -49,31 +58,76 @@ export class ChatMessage {
         this.upload = data.upload ?? null;
     }
 
-    applyAck(dto: ChatMessageDTO): this {
-        this.id = dto.id;
-        this.chat_id = dto.chat_id ?? this.chat_id;
-        this.cr_time = dto.cr_time ?? this.cr_time;
-        this.type = dto.type ?? this.type;
-        this.transport_type = dto.transport_type ?? this.transport_type;
-        this.transport_type_icon = dto.transport_type_icon ?? this.transport_type_icon;
-        this.user = dto.user ?? this.user;
-        this.content = dto.content ?? this.content;
-        this.avatar = dto.avatar ?? this.avatar;
-        this.file_path = dto.file_path ?? this.file_path;
-        this.file_list = dto.file_list ?? this.file_list;
-        this.checked = dto.checked ?? true;
-        this.pending = false;
-        this.failed = false;
-        this.edited = dto.edited ?? this.edited;
-        this.pinned = dto.pinned ?? this.pinned;
-        this.unread = dto.unread ?? false;
-        this.actions = Array.isArray(dto.actions) ? dto.actions : this.actions;
-        this.reply_to = dto.reply_to ?? this.reply_to;
-        this.reactions = Array.isArray(dto.reactions) ? dto.reactions : this.reactions;
-        this.edit_history = Array.isArray(dto.edit_history) ? dto.edit_history : this.edit_history;
-        this.upload = dto.upload ?? {progress: 100, status: 'done'};
+    /** Immutable field update; keeps clientKey (and edit unless overridden). */
+    clone(overrides: Partial<ChatMessageDTO> = {}, edit = this.edit): ChatMessage {
+        const next = new ChatMessage(
+            {
+                id: overrides.id ?? this.id,
+                chat_id: overrides.chat_id ?? this.chat_id,
+                cr_time: overrides.cr_time ?? this.cr_time,
+                type: overrides.type ?? this.type,
+                transport_type: overrides.transport_type !== undefined
+                    ? overrides.transport_type
+                    : this.transport_type,
+                transport_type_icon: overrides.transport_type_icon !== undefined
+                    ? overrides.transport_type_icon
+                    : this.transport_type_icon,
+                user: overrides.user ?? this.user,
+                content: overrides.content ?? this.content,
+                avatar: overrides.avatar !== undefined ? overrides.avatar : this.avatar,
+                file_path: overrides.file_path !== undefined ? overrides.file_path : this.file_path,
+                file_list: overrides.file_list !== undefined ? overrides.file_list : this.file_list,
+                checked: overrides.checked !== undefined ? overrides.checked : this.checked,
+                pending: overrides.pending ?? this.pending,
+                failed: overrides.failed ?? this.failed,
+                edited: overrides.edited ?? this.edited,
+                pinned: overrides.pinned ?? this.pinned,
+                unread: overrides.unread ?? this.unread,
+                actions: overrides.actions !== undefined ? overrides.actions : this.actions,
+                reply_to: overrides.reply_to !== undefined ? overrides.reply_to : this.reply_to,
+                reactions: overrides.reactions !== undefined ? overrides.reactions : this.reactions,
+                edit_history: overrides.edit_history !== undefined
+                    ? overrides.edit_history
+                    : this.edit_history,
+                upload: overrides.upload !== undefined ? overrides.upload : this.upload,
+            },
+            this.clientKey,
+        );
+        next.edit = edit;
 
-        return this;
+        return next;
+    }
+
+    /** Server ACK / realtime merge as a new instance so signal inputs see a reference change. */
+    withAck(dto: ChatMessageDTO): ChatMessage {
+        const wasPending = this.pending;
+
+        return this.clone({
+            id: dto.id,
+            chat_id: dto.chat_id ?? this.chat_id,
+            cr_time: dto.cr_time ?? this.cr_time,
+            type: dto.type ?? this.type,
+            transport_type: dto.transport_type ?? this.transport_type,
+            transport_type_icon: dto.transport_type_icon ?? this.transport_type_icon,
+            user: dto.user ?? this.user,
+            content: dto.content ?? this.content,
+            avatar: dto.avatar ?? this.avatar,
+            file_path: dto.file_path ?? this.file_path,
+            file_list: dto.file_list ?? this.file_list,
+            // Pending send ACK may omit checked → treat as delivered. Other upserts must not
+            // invent a read/delivered state when the DTO left it unset (null/undefined).
+            checked: dto.checked ?? (wasPending ? true : this.checked),
+            pending: false,
+            failed: false,
+            edited: dto.edited ?? this.edited,
+            pinned: dto.pinned ?? this.pinned,
+            unread: dto.unread ?? false,
+            actions: Array.isArray(dto.actions) ? dto.actions : this.actions,
+            reply_to: dto.reply_to ?? this.reply_to,
+            reactions: Array.isArray(dto.reactions) ? dto.reactions : this.reactions,
+            edit_history: Array.isArray(dto.edit_history) ? dto.edit_history : this.edit_history,
+            upload: dto.upload ?? {progress: 100, status: 'done'},
+        });
     }
 
     get dateSimple(): string {

@@ -548,24 +548,14 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             // Same emoji again → remove the only reaction.
             if (existing?.emoji === emoji && existing.reactedByMe) {
-                updated[index] = Object.assign(
-                    new ChatMessage({
-                        ...toDto(current),
-                        reactions: [],
-                    }),
-                    {edit: current.edit},
-                );
+                updated[index] = current.clone({reactions: []});
                 return updated;
             }
 
             // One reaction only: replace whatever was there.
-            updated[index] = Object.assign(
-                new ChatMessage({
-                    ...toDto(current),
-                    reactions: [{emoji, count: 1, reactedByMe: true}],
-                }),
-                {edit: current.edit},
-            );
+            updated[index] = current.clone({
+                reactions: [{emoji, count: 1, reactedByMe: true}],
+            });
 
             return updated;
         });
@@ -581,14 +571,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             }
 
             const updated = [...list];
-            const current = updated[index];
-            updated[index] = Object.assign(
-                new ChatMessage({
-                    ...toDto(current),
-                    pinned,
-                }),
-                {edit: current.edit},
-            );
+            updated[index] = updated[index].clone({pinned});
 
             return updated;
         });
@@ -605,14 +588,10 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             const updated = [...list];
             const current = updated[index];
-            updated[index] = Object.assign(
-                new ChatMessage({
-                    ...toDto(current),
-                    unread: false,
-                    checked: current.type === MessageType.Outgoing ? true : current.checked,
-                }),
-                {edit: current.edit},
-            );
+            updated[index] = current.clone({
+                unread: false,
+                checked: current.type === MessageType.Outgoing ? true : current.checked,
+            });
 
             return updated;
         });
@@ -634,17 +613,13 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
             const updated = [...list];
             const current = updated[index];
-            updated[index] = Object.assign(
-                new ChatMessage({
-                    ...toDto(current),
-                    pending: true,
-                    failed: false,
-                    upload: current.upload
-                        ? {...current.upload, status: 'uploading', progress: 0, error: null}
-                        : null,
-                }),
-                {edit: current.edit},
-            );
+            updated[index] = current.clone({
+                pending: true,
+                failed: false,
+                upload: current.upload
+                    ? {...current.upload, status: 'uploading', progress: 0, error: null}
+                    : null,
+            });
 
             return updated;
         });
@@ -714,9 +689,8 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                         });
                     }
 
-                    updatedList[index] = Object.assign(
-                        new ChatMessage({
-                            ...toDto(previous),
+                    updatedList[index] = previous.clone(
+                        {
                             content: nextContent,
                             file_path: Array.isArray(file_path) && file_path.length ? file_path : null,
                             file_list: Array.isArray(file_list) && file_list.length ? file_list : null,
@@ -728,8 +702,8 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                                 : previous.transport_type_icon,
                             edited: true,
                             edit_history: history,
-                        }),
-                        {edit: false},
+                        },
+                        false,
                     );
                 }
 
@@ -847,8 +821,9 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 return list.filter((_, itemIndex) => itemIndex !== index);
             }
 
-            list[index].applyAck(dto);
-            return [...list];
+            const updated = [...list];
+            updated[index] = list[index].withAck(dto);
+            return updated;
         });
 
         return this;
@@ -865,25 +840,61 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             const index = list.findIndex(message => message.id === updatedMessage.id);
 
             if (index > -1) {
-                list[index].applyAck(toDto(updatedMessage));
-                return [...list];
+                const updated = [...list];
+                updated[index] = list[index].withAck(toDto(updatedMessage));
+                return updated;
             }
 
-            const pendingIndex = list.findIndex(message =>
-                message.pending
-                && message.type === updatedMessage.type
-                && message.content === updatedMessage.content
-            );
+            const pendingIndex = this.findPendingMessageIndex(list, updatedMessage);
 
             if (pendingIndex > -1) {
-                list[pendingIndex].applyAck(toDto(updatedMessage));
-                return [...list];
+                const updated = [...list];
+                updated[pendingIndex] = list[pendingIndex].withAck(toDto(updatedMessage));
+                return updated;
             }
 
             return [...list, updatedMessage];
         });
 
         return this;
+    }
+
+    /**
+     * Match an unacked optimistic row for a realtime upsert.
+     * Requires type/content/chat_id; when several pendings collide, pick closest cr_time
+     * so out-of-order ACKs do not rewrite an earlier bubble.
+     */
+    private findPendingMessageIndex(list: ChatMessage[], updatedMessage: ChatMessage): number {
+        const candidates = list
+            .map((message, index) => ({message, index}))
+            .filter(({message}) =>
+                message.pending
+                && message.type === updatedMessage.type
+                && message.chat_id === updatedMessage.chat_id
+                && message.content === updatedMessage.content
+            );
+
+        if (candidates.length === 0) {
+            return -1;
+        }
+
+        if (candidates.length === 1) {
+            return candidates[0].index;
+        }
+
+        const targetTime = parseMessageTime(updatedMessage.cr_time);
+        let bestIndex = candidates[0].index;
+        let bestDelta = Number.POSITIVE_INFINITY;
+
+        for (const candidate of candidates) {
+            const delta = Math.abs(parseMessageTime(candidate.message.cr_time) - targetTime);
+            if (delta < bestDelta) {
+                bestDelta = delta;
+                bestIndex = candidate.index;
+            }
+        }
+
+        return bestIndex;
     }
 
     isCurrMessage(event: unknown): event is CurrMessage {
@@ -1046,6 +1057,11 @@ function hasMessageText(value: string | null | undefined): boolean {
     }
 
     return [...value.trim()].length > 0;
+}
+
+function parseMessageTime(value: string): number {
+    const parsed = Date.parse(value.replace(' ', 'T'));
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 function toDto(message: ChatMessage): ChatMessageDTO {

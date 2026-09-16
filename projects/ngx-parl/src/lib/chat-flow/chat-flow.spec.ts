@@ -199,10 +199,17 @@ describe('ChatFlowComponent', () => {
         pending.pending = true;
         const firstKey = component.trackByMessageId(0, pending);
 
-        pending.id = 42;
-        pending.pending = false;
+        const confirmed = pending.withAck({
+            id: 42,
+            chat_id: pending.chat_id,
+            cr_time: pending.cr_time,
+            type: pending.type,
+            user: pending.user,
+            content: pending.content,
+        });
 
-        expect(component.trackByMessageId(0, pending)).toBe(firstKey);
-        expect(firstKey).toBe(pending);
+        expect(component.trackByMessageId(0, confirmed)).toBe(firstKey);
+        expect(confirmed.clientKey).toBe(pending.clientKey);
+        expect(confirmed.id).toBe(42);
     });
 });
