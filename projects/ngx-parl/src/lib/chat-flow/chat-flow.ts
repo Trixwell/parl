@@ -931,8 +931,8 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
         return this;
     }
 
-    trackByMessageId(index: number, message: ChatMessage): string {
-        return `${message.chat_id}-${message.type}-${message.id}-${index}`;
+    trackByMessageId(_index: number, message: ChatMessage): ChatMessage {
+        return message;
     }
 
     private clearMessageActionsGuard(): this {

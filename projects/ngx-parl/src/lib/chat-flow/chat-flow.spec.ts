@@ -193,4 +193,16 @@ describe('ChatFlowComponent', () => {
         tick();
         expect(component.loadHistory()).toBe(false);
     }));
+
+    it('keeps the same track identity after a pending message id is confirmed', () => {
+        const pending = createMessage(-1);
+        pending.pending = true;
+        const firstKey = component.trackByMessageId(0, pending);
+
+        pending.id = 42;
+        pending.pending = false;
+
+        expect(component.trackByMessageId(0, pending)).toBe(firstKey);
+        expect(firstKey).toBe(pending);
+    });
 });

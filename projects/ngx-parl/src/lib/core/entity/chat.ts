@@ -49,6 +49,33 @@ export class ChatMessage {
         this.upload = data.upload ?? null;
     }
 
+    applyAck(dto: ChatMessageDTO): this {
+        this.id = dto.id;
+        this.chat_id = dto.chat_id ?? this.chat_id;
+        this.cr_time = dto.cr_time ?? this.cr_time;
+        this.type = dto.type ?? this.type;
+        this.transport_type = dto.transport_type ?? this.transport_type;
+        this.transport_type_icon = dto.transport_type_icon ?? this.transport_type_icon;
+        this.user = dto.user ?? this.user;
+        this.content = dto.content ?? this.content;
+        this.avatar = dto.avatar ?? this.avatar;
+        this.file_path = dto.file_path ?? this.file_path;
+        this.file_list = dto.file_list ?? this.file_list;
+        this.checked = dto.checked ?? true;
+        this.pending = false;
+        this.failed = false;
+        this.edited = dto.edited ?? this.edited;
+        this.pinned = dto.pinned ?? this.pinned;
+        this.unread = dto.unread ?? false;
+        this.actions = Array.isArray(dto.actions) ? dto.actions : this.actions;
+        this.reply_to = dto.reply_to ?? this.reply_to;
+        this.reactions = Array.isArray(dto.reactions) ? dto.reactions : this.reactions;
+        this.edit_history = Array.isArray(dto.edit_history) ? dto.edit_history : this.edit_history;
+        this.upload = dto.upload ?? {progress: 100, status: 'done'};
+
+        return this;
+    }
+
     get dateSimple(): string {
         const d = new Date(this.cr_time.replace(' ', 'T'));
         const dd = String(d.getDate()).padStart(2, '0');

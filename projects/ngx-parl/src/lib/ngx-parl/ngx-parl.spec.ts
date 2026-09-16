@@ -118,6 +118,7 @@ describe('NgxParlComponent', () => {
         component.confirmPending(pending.id, createOutgoingDto(42, 'hello'));
 
         const confirmed = component.messageList()[0];
+        expect(confirmed).toBe(pending);
         expect(confirmed.id).toBe(42);
         expect(confirmed.pending).toBe(false);
         expect(confirmed.content).toBe('hello');

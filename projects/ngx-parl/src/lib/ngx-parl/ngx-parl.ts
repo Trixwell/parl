@@ -172,17 +172,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
             this.lastUpdateKey = key;
 
             queueMicrotask(() => {
-                this.messageList.update(list => {
-                    const index = list.findIndex(m => m.id === updatedMessage.id);
-
-                    if (index > -1) {
-                        const updated = [...list];
-                        updated[index] = updatedMessage;
-                        return updated;
-                    }
-
-                    return [...list, updatedMessage];
-                });
+                this.upsertRealtimeMessage(updatedMessage);
 
                 if (this.chatFlow?.isAtBottom() ?? true) {
                     this.scrollToBottom();
@@ -850,34 +840,15 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 return list;
             }
 
-            const current = list[index];
-            const updated = [...list];
-            updated[index] = new ChatMessage({
-                id: dto.id,
-                chat_id: dto.chat_id ?? current.chat_id,
-                cr_time: dto.cr_time ?? current.cr_time,
-                type: dto.type ?? current.type,
-                transport_type: dto.transport_type ?? current.transport_type,
-                transport_type_icon: dto.transport_type_icon ?? current.transport_type_icon,
-                user: dto.user ?? current.user,
-                content: dto.content ?? current.content,
-                avatar: dto.avatar ?? current.avatar,
-                file_path: dto.file_path ?? current.file_path,
-                file_list: dto.file_list ?? current.file_list,
-                checked: dto.checked ?? true,
-                pending: false,
-                failed: false,
-                edited: dto.edited ?? current.edited,
-                pinned: dto.pinned ?? current.pinned,
-                unread: dto.unread ?? false,
-                actions: dto.actions ?? current.actions,
-                reply_to: dto.reply_to ?? current.reply_to,
-                reactions: dto.reactions ?? current.reactions,
-                edit_history: dto.edit_history ?? current.edit_history,
-                upload: dto.upload ?? {progress: 100, status: 'done'},
-            });
+            const duplicateIndex = list.findIndex(message =>
+                message.id === dto.id && message.id !== tempId
+            );
+            if (duplicateIndex > -1) {
+                return list.filter((_, itemIndex) => itemIndex !== index);
+            }
 
-            return updated;
+            list[index].applyAck(dto);
+            return [...list];
         });
 
         return this;
@@ -885,6 +856,32 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
     rejectPending(tempId: number): this {
         this.messageList.update(list => list.filter(message => message.id !== tempId));
+
+        return this;
+    }
+
+    private upsertRealtimeMessage(updatedMessage: ChatMessage): this {
+        this.messageList.update(list => {
+            const index = list.findIndex(message => message.id === updatedMessage.id);
+
+            if (index > -1) {
+                list[index].applyAck(toDto(updatedMessage));
+                return [...list];
+            }
+
+            const pendingIndex = list.findIndex(message =>
+                message.pending
+                && message.type === updatedMessage.type
+                && message.content === updatedMessage.content
+            );
+
+            if (pendingIndex > -1) {
+                list[pendingIndex].applyAck(toDto(updatedMessage));
+                return [...list];
+            }
+
+            return [...list, updatedMessage];
+        });
 
         return this;
     }
