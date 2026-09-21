@@ -1,4 +1,4 @@
-import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClient, withXhr} from '@angular/common/http';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 
 import {provideNgxParl} from '../../../ngx-parl.providers';
@@ -41,7 +41,7 @@ describe('PreviewFile', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [PreviewFile],
-            providers: [provideHttpClient(), provideNgxParl()],
+            providers: [provideHttpClient(withXhr()), provideNgxParl()],
         }).compileComponents();
 
         fixture = TestBed.createComponent(PreviewFile);

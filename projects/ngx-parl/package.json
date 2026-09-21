@@ -1,11 +1,11 @@
 {
     "name": "@trixwell/ngx-parl",
-    "version": "10.2.0",
+    "version": "11.0.0",
     "license": "LGPL-3.0",
     "description": "Highly customizable Angular Material chat component",
     "keywords": [
         "angular",
-        "angular-21",
+        "angular-22",
         "angular-material",
         "angular-chat",
         "chat",
@@ -30,18 +30,18 @@
         "parl"
     ],
     "peerDependencies": {
-        "@angular/animations": "^21.2.12",
-        "@angular/cdk": "^21.2.10",
-        "@angular/common": "^21.2.12",
-        "@angular/core": "^21.2.12",
-        "@angular/forms": "^21.2.12",
-        "@angular/material": "^21.2.10",
-        "@ionic/angular": "^8.8.2",
-        "@ionic/core": "^8.8.2",
+        "@angular/animations": "^22.1.7",
+        "@angular/cdk": "^22.1.7",
+        "@angular/common": "^22.1.7",
+        "@angular/core": "^22.1.7",
+        "@angular/forms": "^22.1.7",
+        "@angular/material": "^22.1.7",
+        "@ionic/angular": "^9.0.4",
+        "@ionic/core": "^9.0.4",
         "@ngneat/transloco": "^6.0.0 || ^7.0.0",
         "emoji-mart": "^5.6.0",
         "@emoji-mart/data": "^1.2.1",
-        "ngx-infinite-scroll": "^21.0.0",
+        "ngx-infinite-scroll": "^22.0.0",
         "rxjs": "^7.8.0"
     },
     "peerDependenciesMeta": {
@@ -57,8 +57,8 @@
     },
     "sideEffects": false,
     "devDependencies": {
-        "@angular/animations": "^21.2.12",
-        "@angular/cdk": "^21.2.10",
-        "@angular/material": "^21.2.10"
+        "@angular/animations": "^22.1.7",
+        "@angular/cdk": "^22.1.7",
+        "@angular/material": "^22.1.7"
     }
 }

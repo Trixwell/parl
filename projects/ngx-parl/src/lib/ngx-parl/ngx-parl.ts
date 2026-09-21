@@ -1,18 +1,19 @@
 import {
-    AfterViewInit,
-    Component,
-    computed,
-    DestroyRef,
-    effect,
-    ElementRef,
-    inject,
-    input,
-    model,
-    NgZone,
-    OnDestroy,
-    Optional,
-    signal,
-    ViewChild,
+  AfterViewInit,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  model,
+  NgZone,
+  OnDestroy,
+  Optional,
+  signal,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {takeUntilDestroyed, toObservable} from '@angular/core/rxjs-interop';
 import {NgClass, NgOptimizedImage} from '@angular/common';
@@ -62,6 +63,7 @@ import {loadMessageDraft} from '../core/service/draft/message-draft';
     templateUrl: './ngx-parl.html',
     styleUrl: './ngx-parl.scss',
     providers: [],
+    changeDetection: ChangeDetectionStrategy.Eager,
     host: {
         '[class.ngx-parl--fill]': 'isFillLayout()',
         '[class.ngx-parl--mobile]': 'mobileMode()',

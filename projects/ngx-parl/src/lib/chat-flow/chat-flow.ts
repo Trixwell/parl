@@ -1,18 +1,19 @@
 import {
-    AfterViewInit,
-    afterNextRender,
-    Component,
-    computed,
-    effect,
-    ElementRef,
-    inject,
-    Injector,
-    input,
-    model,
-    OnDestroy,
-    signal,
-    ViewEncapsulation,
-    ViewChild,
+  AfterViewInit,
+  afterNextRender,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  input,
+  model,
+  OnDestroy,
+  signal,
+  ViewEncapsulation,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {ChatMessage, MessageType, PARL_DEFAULT_REACTION_EMOJIS} from '../core/entity/chat';
@@ -51,6 +52,7 @@ import {ensureEmojiMartReady} from '../core/service/emoji-mart/emoji-mart';
     templateUrl: './chat-flow.html',
     styleUrl: './chat-flow.scss',
     standalone: true,
+    changeDetection: ChangeDetectionStrategy.Eager,
     encapsulation: ViewEncapsulation.None,
 })
 
