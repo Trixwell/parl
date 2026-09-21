@@ -1,16 +1,17 @@
 import {
-    Component,
-    computed,
-    DestroyRef,
-    effect,
-    ElementRef,
-    inject,
-    input,
-    model,
-    SecurityContext,
-    signal,
-    Signal,
-    ViewChild,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  model,
+  SecurityContext,
+  signal,
+  Signal,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {DatePipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -67,6 +68,7 @@ const openReactionPickerMessageId = signal<number | null>(null);
     ],
     templateUrl: './chat-message.html',
     styleUrl: './chat-message.scss',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: true,
 })
 

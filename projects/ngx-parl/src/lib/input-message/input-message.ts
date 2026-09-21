@@ -1,17 +1,18 @@
 import {
-    AfterViewInit,
-    ChangeDetectorRef,
-    Component,
-    computed,
-    effect,
-    ElementRef,
-    inject,
-    input,
-    model,
-    NgZone,
-    OnDestroy,
-    signal,
-    ViewChild
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  model,
+  NgZone,
+  OnDestroy,
+  signal,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {FileType, OriginalKind, PreviewItem} from '../core/entity/file';
 import {TranslocoPipe, TranslocoService} from '@ngneat/transloco';
@@ -35,6 +36,7 @@ import {
     imports: [TranslocoPipe, NgOptimizedImage],
     templateUrl: './input-message.html',
     styleUrl: './input-message.scss',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: true,
 })
 

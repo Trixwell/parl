@@ -1,15 +1,16 @@
 import {
-    Component,
-    ElementRef,
-    ViewChild,
-    computed,
-    effect,
-    input,
-    model,
-    inject,
-    OnDestroy,
-    AfterViewInit,
-    signal,
+  Component,
+  ElementRef,
+  ViewChild,
+  computed,
+  effect,
+  input,
+  model,
+  inject,
+  OnDestroy,
+  AfterViewInit,
+  signal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {TranslocoPipe} from '@ngneat/transloco';
 import {FocusTrap, FocusTrapFactory} from '@angular/cdk/a11y';
@@ -21,6 +22,7 @@ import {FocusTrap, FocusTrapFactory} from '@angular/cdk/a11y';
     ],
     templateUrl: './preview-file.html',
     styleUrl: './preview-file.scss',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: true,
 })
 export class PreviewFile implements OnDestroy, AfterViewInit {

@@ -1,16 +1,17 @@
 import {
-    afterNextRender,
-    ChangeDetectorRef,
-    Component,
-    DestroyRef,
-    ElementRef,
-    inject,
-    Injector,
-    input,
-    model,
-    NgZone,
-    signal,
-    ViewChild,
+  afterNextRender,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  Injector,
+  input,
+  model,
+  NgZone,
+  signal,
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import {NgOptimizedImage} from '@angular/common';
 import {TranslocoPipe} from '@ngneat/transloco';
@@ -25,6 +26,7 @@ import {
     imports: [NgOptimizedImage, TranslocoPipe],
     templateUrl: './emoji-picker.html',
     styleUrl: './emoji-picker.scss',
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: true,
 })
 export class EmojiPicker {

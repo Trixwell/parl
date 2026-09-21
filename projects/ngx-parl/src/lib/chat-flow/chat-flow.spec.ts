@@ -1,4 +1,4 @@
-import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClient, withXhr} from '@angular/common/http';
 import {ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick} from '@angular/core/testing';
 
 import {ChatMessage} from '../core/entity/chat';
@@ -33,7 +33,7 @@ describe('ChatFlowComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [ChatFlowComponent],
-            providers: [provideHttpClient(), provideNgxParl()],
+            providers: [provideHttpClient(withXhr()), provideNgxParl()],
         }).compileComponents();
 
         fixture = TestBed.createComponent(ChatFlowComponent);

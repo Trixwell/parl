@@ -1,4 +1,4 @@
-import {provideHttpClient} from '@angular/common/http';
+import {provideHttpClient, withXhr} from '@angular/common/http';
 import {ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick} from '@angular/core/testing';
 import {provideNoopAnimations} from '@angular/platform-browser/animations';
 
@@ -36,7 +36,7 @@ describe('ChatMessageComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [ChatMessageComponent],
-            providers: [provideHttpClient(), provideNgxParl(), provideNoopAnimations()],
+            providers: [provideHttpClient(withXhr()), provideNgxParl(), provideNoopAnimations()],
         }).compileComponents();
 
         fixture = TestBed.createComponent(ChatMessageComponent);
