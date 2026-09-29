@@ -82,6 +82,7 @@ export class ChatMessageComponent {
     @ViewChild('messageBody') messageBodyRef?: ElementRef<HTMLElement>;
 
     private longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    private singleTapTimer: ReturnType<typeof setTimeout> | null = null;
     private longPressOriginX = 0;
     private longPressOriginY = 0;
     private longPressOpened = false;
@@ -266,6 +267,7 @@ export class ChatMessageComponent {
         this.bindReactionPickerOutsideClose();
         this.destroyRef.onDestroy(() => {
             this.clearLongPressTimer();
+            this.clearSingleTapTimer();
             this.closeReactionPicker();
         });
         effect(() => {
@@ -356,7 +358,7 @@ export class ChatMessageComponent {
 
         this.longPressFromPointer = true;
 
-        return this.beginLongPress(event.clientX, event.clientY, 'select');
+        return this.beginLongPress(event.clientX, event.clientY);
     }
 
     onMessagePointerMove(event: PointerEvent): this {
@@ -392,7 +394,7 @@ export class ChatMessageComponent {
             return this;
         }
 
-        return this.beginLongPress(touch.clientX, touch.clientY, 'select');
+        return this.beginLongPress(touch.clientX, touch.clientY);
     }
 
     onMessageTouchMove(event: TouchEvent): this {
@@ -426,7 +428,9 @@ export class ChatMessageComponent {
         }
 
         if (touch && !this.longPressFromPointer && !this.selectionMode() && !this.longPressOpened) {
-            this.registerTapForDoubleTap(touch.clientX, touch.clientY);
+            if (!this.isInteractivePointerTarget(touch.target)) {
+                this.registerTapForDoubleTap(touch.clientX, touch.clientY);
+            }
         }
 
         return this;
@@ -437,7 +441,12 @@ export class ChatMessageComponent {
             this.finishSwipe(event.clientX);
         }
 
-        if (event.pointerType !== 'mouse' && !this.selectionMode() && !this.longPressOpened) {
+        if (
+            event.pointerType !== 'mouse'
+            && !this.selectionMode()
+            && !this.longPressOpened
+            && !this.isInteractivePointerTarget(event.target)
+        ) {
             this.registerTapForDoubleTap(event.clientX, event.clientY);
         }
 
@@ -460,6 +469,7 @@ export class ChatMessageComponent {
         }
 
         this.clearLongPressTimer();
+        this.clearSingleTapTimer();
         this.closeReactionPicker();
         this.requestMessageActions.set(this.currentMessage());
         queueMicrotask(() => this.requestMessageActions.set(null));
@@ -557,24 +567,34 @@ export class ChatMessageComponent {
     }
 
     private registerTapForDoubleTap(clientX: number, clientY: number): this {
-        if (!this.canOpenContextMenu()) {
+        if (!this.canOpenContextMenu() || !this.useMobileMessageActions()) {
             return this;
         }
 
         const now = Date.now();
-        const withinTime = now - this.lastTapAt <= this.doubleTapWindowMs;
+        const withinTime = this.lastTapAt > 0 && now - this.lastTapAt <= this.doubleTapWindowMs;
         const withinDistance =
             Math.abs(clientX - this.lastTapX) <= this.doubleTapMoveThresholdPx &&
             Math.abs(clientY - this.lastTapY) <= this.doubleTapMoveThresholdPx;
 
+        if (withinTime && withinDistance) {
+            this.clearSingleTapTimer();
+            this.lastTapAt = 0;
+            this.reactWithFirstEmoji();
+
+            return this;
+        }
+
         this.lastTapAt = now;
         this.lastTapX = clientX;
         this.lastTapY = clientY;
-
-        if (withinTime && withinDistance) {
+        this.clearSingleTapTimer();
+        // Wait out the double-tap window so a second tap can react instead.
+        this.singleTapTimer = setTimeout(() => {
+            this.singleTapTimer = null;
             this.lastTapAt = 0;
-            this.reactWithFirstEmoji();
-        }
+            this.openMobileActionSheet();
+        }, this.doubleTapWindowMs);
 
         return this;
     }
@@ -668,6 +688,8 @@ export class ChatMessageComponent {
         this.resetSwipe();
 
         if (offset >= this.swipeReplyThresholdPx && this.canOpenContextMenu()) {
+            this.clearSingleTapTimer();
+            this.lastTapAt = 0;
             this.replyMessage();
         }
 
@@ -772,12 +794,27 @@ export class ChatMessageComponent {
         return this;
     }
 
+    private clearSingleTapTimer(): this {
+        if (this.singleTapTimer !== null) {
+            clearTimeout(this.singleTapTimer);
+            this.singleTapTimer = null;
+        }
+
+        return this;
+    }
+
+    private isInteractivePointerTarget(target: EventTarget | null): boolean {
+        return target instanceof Element
+            && !!target.closest('button, a, input, textarea, [role="button"]');
+    }
+
     private beginLongPress(
         clientX: number,
         clientY: number,
         action: 'sheet' | 'select' = 'sheet',
     ): this {
         this.clearLongPressTimer();
+        this.clearSingleTapTimer();
         this.longPressOpened = false;
         this.longPressOriginX = clientX;
         this.longPressOriginY = clientY;
