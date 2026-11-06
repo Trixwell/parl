@@ -863,10 +863,12 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
 
     /**
      * Match an unacked optimistic row for a realtime upsert.
-     * Requires type/content/chat_id; when several pendings collide, pick closest cr_time
-     * so out-of-order ACKs do not rewrite an earlier bubble.
+     * Requires type/content/chat_id and the same media vs text shape; when several
+     * pendings collide, pick closest cr_time so out-of-order ACKs do not rewrite
+     * an earlier bubble (e.g. media then text with the same caption).
      */
     private findPendingMessageIndex(list: ChatMessage[], updatedMessage: ChatMessage): number {
+        const incomingHasMedia = this.messageHasMedia(updatedMessage);
         const candidates = list
             .map((message, index) => ({message, index}))
             .filter(({message}) =>
@@ -874,6 +876,7 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
                 && message.type === updatedMessage.type
                 && message.chat_id === updatedMessage.chat_id
                 && message.content === updatedMessage.content
+                && this.messageHasMedia(message) === incomingHasMedia
             );
 
         if (candidates.length === 0) {
@@ -897,6 +900,18 @@ export class NgxParlComponent implements AfterViewInit, OnDestroy {
         }
 
         return bestIndex;
+    }
+
+    private messageHasMedia(message: Pick<ChatMessage, 'file_path' | 'file_list' | 'upload'>): boolean {
+        if ((message.file_path?.length ?? 0) > 0) {
+            return true;
+        }
+
+        if ((message.file_list?.length ?? 0) > 0) {
+            return true;
+        }
+
+        return message.upload?.status === 'uploading' || message.upload?.status === 'done';
     }
 
     isCurrMessage(event: unknown): event is CurrMessage {
