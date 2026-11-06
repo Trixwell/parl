@@ -30,6 +30,7 @@ import {
     createEmojiMartPicker,
     ensureEmojiMartReady,
 } from '../core/service/emoji-mart/emoji-mart';
+import {UtilsService} from '../core/service/utils/utils';
 
 @Component({
     selector: 'app-input-message',
@@ -48,6 +49,7 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     private readonly changeDetector = inject(ChangeDetectorRef);
     private readonly ngZone = inject(NgZone);
     private readonly transloco = inject(TranslocoService);
+    private readonly utils = inject(UtilsService);
 
     public editMessage = input<ChatMessage | { id: number; content: string; file_path?: string[] | null } | null>(null);
     public replyTo = model<ChatMessage | null>(null);
@@ -83,6 +85,12 @@ export class InputMessageComponent implements AfterViewInit, OnDestroy {
     public composerInputMode = signal<'text' | 'none'>('text');
 
     public isEditMode = computed(() => !!this.editMessage());
+    public editPreviewText = computed(() =>
+        this.utils.stripHtmlTags(this.editMessage()?.content ?? ''),
+    );
+    public replyPreviewText = computed(() =>
+        this.utils.stripHtmlTags(this.replyTo()?.content ?? ''),
+    );
     public canSend = computed(() =>
         !this.sending() && (
             this.hasText() ||

@@ -21,7 +21,7 @@
                 </button>
 
                 <div class="message__edit-hint">
-                    <p>{{ editMessage()?.content }}</p>
+                    <p>{{ editPreviewText() }}</p>
                 </div>
             </div>
 
@@ -42,7 +42,7 @@
                     <p class="message__reply-label">
                         {{ 'chat.replying_to' | transloco: {user: reply.user, __: language()}: language() }}
                     </p>
-                    <p>{{ reply.content }}</p>
+                    <p>{{ replyPreviewText() }}</p>
                 </div>
             </div>
 

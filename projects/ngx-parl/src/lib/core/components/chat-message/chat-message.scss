@@ -7,6 +7,11 @@
 $outgoing-bg: tokens.$gradient-bg;
 $outgoing-color: tokens.$neutral-50;
 
+:host {
+    display: block;
+    width: 100%;
+}
+
 .message {
     display: flex;
     gap: tokens.$margin-2;
@@ -467,40 +472,20 @@ $outgoing-color: tokens.$neutral-50;
     }
 
     &--selection {
+        position: relative;
         width: 100%;
         max-width: 100%;
+        box-sizing: border-box;
         cursor: pointer;
-        align-items: center;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: tokens.$margin-2;
-        grid-template-columns: none;
+        padding-left: calc(22px + #{tokens.$margin-2});
 
-        &.message--outgoing {
-            .message__column {
-                margin-left: auto;
-            }
+        &.message--mobile.message--outgoing {
+            width: 100%;
+            max-width: 100%;
         }
 
         &:hover:not(.message--selected) .message__body {
             filter: brightness(0.97);
-        }
-
-        &.message--mobile.message--incoming {
-            .message__column {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                min-width: 0;
-                flex: 1 1 auto;
-            }
-
-            .message__avatar,
-            .message__body,
-            .message__meta {
-                grid-column: auto;
-                grid-row: auto;
-            }
         }
     }
 
@@ -511,13 +496,15 @@ $outgoing-color: tokens.$neutral-50;
     }
 
     &__select {
-        flex: 0 0 22px;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
         width: 22px;
         height: 22px;
         display: grid;
         place-items: center;
-        align-self: center;
-        order: -1;
+        z-index: 1;
 
         img {
             display: block;

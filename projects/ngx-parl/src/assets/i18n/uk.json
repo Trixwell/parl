@@ -37,7 +37,7 @@
         "edited": "Змінено",
         "edit_history": "Історія змін",
         "pinned": "Закріплене повідомлення",
-        "pinned_of": "Закріплене {{current}} з {{total}}",
+        "pinned_of": "Закріплене повідомлення {{current}} з {{total}}",
         "replying_to": "Відповідь для {{user}}",
         "search": "Пошук повідомлень",
         "search_placeholder": "Пошук…",

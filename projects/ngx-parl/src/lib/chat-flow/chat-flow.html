@@ -171,7 +171,7 @@
                         }
                     </span>
                 </span>
-                <span class="chat__pinned-text">{{ pinned.content }}</span>
+                <span class="chat__pinned-text" [innerHTML]="safePinnedHtml()"></span>
             </button>
         </div>
     }
@@ -297,14 +297,14 @@
                             }
                         </div>
                     }
-                    <!--                    <button type="button"-->
-                    <!--                            class="chat__message-actions-item"-->
-                    <!--                            (click)="onMessageActionsCopy()">-->
-                    <!--                        <img ngSrc="assets/ngx-parl/icons/copy.svg"-->
-                    <!--                             width="20" height="20" alt=""-->
-                    <!--                             priority/>-->
-                    <!--                        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>-->
-                    <!--                    </button>-->
+                    <button type="button"
+                            class="chat__message-actions-item"
+                            (click)="onMessageActionsCopy()">
+                        <img ngSrc="assets/ngx-parl/icons/copy.svg"
+                             width="20" height="20" alt=""
+                             priority/>
+                        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>
+                    </button>
                     <button type="button"
                             class="chat__message-actions-item"
                             (click)="onMessageActionsPin()">

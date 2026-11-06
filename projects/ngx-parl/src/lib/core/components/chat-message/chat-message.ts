@@ -189,6 +189,10 @@ export class ChatMessageComponent {
         return this.sanitizer.sanitize(SecurityContext.HTML, filtered) ?? '';
     });
 
+    public readonly replyPreviewText: Signal<string> = computed(() =>
+        this.utils.stripHtmlTags(this.currentMessage().reply_to?.content ?? ''),
+    );
+
     public readonly isOutgoingMessage: Signal<boolean> = computed(
         () => this.currentMessage().type === this.messageType.Outgoing,
     );
