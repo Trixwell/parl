@@ -112,8 +112,13 @@ export class ChatMessage {
             user: dto.user ?? this.user,
             content: dto.content ?? this.content,
             avatar: dto.avatar ?? this.avatar,
-            file_path: dto.file_path ?? this.file_path,
-            file_list: dto.file_list ?? this.file_list,
+            // Prefer explicit ACK media fields so a text ACK cannot keep a prior image.
+            file_path: dto.file_path !== undefined
+                ? (Array.isArray(dto.file_path) && dto.file_path.length ? dto.file_path : null)
+                : this.file_path,
+            file_list: dto.file_list !== undefined
+                ? (Array.isArray(dto.file_list) && dto.file_list.length ? dto.file_list : null)
+                : this.file_list,
             // Pending send ACK may omit checked → treat as delivered. Other upserts must not
             // invent a read/delivered state when the DTO left it unset (null/undefined).
             checked: dto.checked ?? (wasPending ? true : this.checked),

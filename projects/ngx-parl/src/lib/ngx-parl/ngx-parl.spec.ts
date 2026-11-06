@@ -256,6 +256,45 @@ describe('NgxParlComponent', () => {
         expect(list[1].pending).toBe(false);
     }));
 
+    it('does not attach a media ack to a later text pending with the same content', fakeAsync(() => {
+        const mediaPending = new ChatMessage({
+            id: -1,
+            chat_id: 1,
+            cr_time: '2026-01-01 12:00:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'qq',
+            pending: true,
+            file_path: ['assets/demo.png'],
+            upload: {progress: 5, status: 'uploading'},
+        });
+        const textPending = createPendingOutgoing(-2, 'qq', '2026-01-01 12:00:10');
+        component.messageList.set([mediaPending, textPending]);
+
+        component.messageUpdate.set(new ChatMessage({
+            id: 50,
+            chat_id: 1,
+            cr_time: '2026-01-01 12:00:01',
+            type: 'outgoing',
+            user: 'user',
+            content: 'qq',
+            file_path: ['assets/demo.png'],
+        }));
+        fixture.detectChanges();
+        flushMicrotasks();
+
+        const list = component.messageList();
+        expect(list.length).toBe(2);
+        expect(list[0].id).toBe(50);
+        expect(list[0].pending).toBe(false);
+        expect(list[0].file_path).toEqual(['assets/demo.png']);
+        expect(list[0].clientKey).toBe(mediaPending.clientKey);
+        expect(list[1].id).toBe(-2);
+        expect(list[1].pending).toBe(true);
+        expect(list[1].file_path ?? []).toEqual([]);
+        expect(list[1].clientKey).toBe(textPending.clientKey);
+    }));
+
     it('does not double-send a quick action click', () => {
         const sendSpy = spyOn(component, 'sendMessage').and.callThrough();
 
