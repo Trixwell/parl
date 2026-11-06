@@ -268,12 +268,12 @@
              width="20" height="20" alt=""/>
         <span>{{ 'chat.react' | transloco: {__: language()}: language() }}</span>
     </button>
-<!--    <button mat-menu-item class="message__menu-item" (click)="copyMessage()">-->
-<!--        <img ngSrc="assets/ngx-parl/icons/copy.svg"-->
-<!--             class="message__icon&#45;&#45;menu"-->
-<!--             width="20" height="20" alt=""/>-->
-<!--        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>-->
-<!--    </button>-->
+    <button mat-menu-item class="message__menu-item" (click)="copyMessage()">
+        <img ngSrc="assets/ngx-parl/icons/copy.svg"
+             class="message__icon--menu"
+             width="20" height="20" alt=""/>
+        <span>{{ 'chat.copy' | transloco: {__: language()}: language() }}</span>
+    </button>
     <button mat-menu-item class="message__menu-item" (click)="pinMessage()">
         <img ngSrc="assets/ngx-parl/icons/pin.svg"
              class="message__icon--menu"
