@@ -95,7 +95,7 @@
                             class="chat__search-nav-btn"
                             [disabled]="!searchMatchIds().length"
                             [attr.aria-label]="'chat.search_prev' | transloco: {__: language()}: language()"
-                            (click)="goToSearchMatch(-1)">
+                            (click)="goToSearchMatch(1)">
                         <img ngSrc="assets/ngx-parl/icons/chevron-up.svg"
                              width="18"
                              height="18"
@@ -106,7 +106,7 @@
                             class="chat__search-nav-btn"
                             [disabled]="!searchMatchIds().length"
                             [attr.aria-label]="'chat.search_next' | transloco: {__: language()}: language()"
-                            (click)="goToSearchMatch(1)">
+                            (click)="goToSearchMatch(-1)">
                         <img ngSrc="assets/ngx-parl/icons/chevron-down.svg"
                              width="18"
                              height="18"

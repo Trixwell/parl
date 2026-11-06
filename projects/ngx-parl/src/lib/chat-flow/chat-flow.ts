@@ -321,7 +321,8 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
             const matches = this.messageList()
                 .filter(message => (message.content ?? '').toLowerCase().includes(query))
-                .map(message => message.id);
+                .map(message => message.id)
+                .reverse();
 
             this.searchMatchIds.set(matches);
             this.searchMatchIndex.set(0);
@@ -561,7 +562,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
         if (event.key === 'Enter') {
             event.preventDefault();
-            return this.goToSearchMatch(event.shiftKey ? -1 : 1);
+            return this.goToSearchMatch(event.shiftKey ? 1 : -1);
         }
 
         return this;
