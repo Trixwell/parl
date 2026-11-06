@@ -212,4 +212,41 @@ describe('ChatFlowComponent', () => {
         expect(confirmed.clientKey).toBe(pending.clientKey);
         expect(confirmed.id).toBe(42);
     });
+
+    it('starts message search from the most recent match', fakeAsync(() => {
+        const older = new ChatMessage({
+            id: 1,
+            chat_id: 1,
+            cr_time: '2026-07-30 12:00:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'query older',
+        });
+        const newer = new ChatMessage({
+            id: 2,
+            chat_id: 1,
+            cr_time: '2026-07-30 12:01:00',
+            type: 'outgoing',
+            user: 'user',
+            content: 'query newer',
+        });
+
+        fixture.componentRef.setInput('messageListInput', [older, newer]);
+        fixture.detectChanges();
+
+        component.searchQuery.set('query');
+        fixture.detectChanges();
+        flushMicrotasks();
+
+        expect(component.searchMatchIds()).toEqual([2, 1]);
+        expect(component.searchMatchIndex()).toBe(0);
+
+        component.goToSearchMatch(1);
+        expect(component.searchMatchIndex()).toBe(1);
+        expect(component.searchMatchIds()[component.searchMatchIndex()]).toBe(1);
+
+        component.goToSearchMatch(-1);
+        expect(component.searchMatchIndex()).toBe(0);
+        expect(component.searchMatchIds()[component.searchMatchIndex()]).toBe(2);
+    }));
 });
