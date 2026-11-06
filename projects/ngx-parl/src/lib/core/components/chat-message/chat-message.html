@@ -93,7 +93,7 @@
                             class="message__quote"
                             (click)="openReplyTarget($event)">
                         <span class="message__quote-user">{{ reply.user }}</span>
-                        <span class="message__quote-text">{{ reply.content }}</span>
+                        <span class="message__quote-text">{{ replyPreviewText() }}</span>
                     </button>
                 }
 

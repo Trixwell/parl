@@ -10,12 +10,14 @@ import {
   input,
   model,
   OnDestroy,
+  SecurityContext,
   signal,
   ViewEncapsulation,
   ViewChild,
   ChangeDetectionStrategy
 } from '@angular/core';
 import {FormsModule} from '@angular/forms';
+import {DomSanitizer} from '@angular/platform-browser';
 import {ChatMessage, MessageType, PARL_DEFAULT_REACTION_EMOJIS} from '../core/entity/chat';
 import {
     ChatMessageActionRequest,
@@ -63,6 +65,7 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
     @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
 
     private utils = inject(UtilsService);
+    private sanitizer = inject(DomSanitizer);
     private injector = inject(Injector);
 
     public scrollToBottomTrigger = model<number>(0);
@@ -154,6 +157,16 @@ export class ChatFlowComponent implements AfterViewInit, OnDestroy {
 
         const index = ((this.pinnedPreviewIndex() % pins.length) + pins.length) % pins.length;
         return pins[index];
+    });
+
+    public safePinnedHtml = computed(() => {
+        const pinned = this.activePinnedMessage();
+        if (!pinned) {
+            return '';
+        }
+
+        const filtered = this.utils.filterAllowedHtml(pinned.content ?? '');
+        return this.sanitizer.sanitize(SecurityContext.HTML, filtered) ?? '';
     });
 
     public pinnedPreviewLabel = computed(() => {

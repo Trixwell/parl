@@ -90,6 +90,14 @@ export class UtilsService {
         );
     }
 
+    stripHtmlTags(source: string): string {
+        return (source ?? '')
+            .replace(/<br\s*\/?>/gi, ' ')
+            .replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b[^>]*>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
     private readonly allowedMessageTags = new Set([
         'a',
         'b',
